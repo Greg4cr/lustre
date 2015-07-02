@@ -5,6 +5,8 @@ import java.util.Set;
 
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
+import jkind.lustre.UnaryExpr;
+import jkind.lustre.UnaryOp;
 import jkind.lustre.visitors.ExprIterVisitor;
 
 /**
@@ -22,6 +24,15 @@ public final class DependencyVisitor extends ExprIterVisitor {
 	@Override
 	public Void visit(IdExpr expr) {
 		set.add(expr.id);
+		return null;
+	}
+
+	@Override
+	public Void visit(UnaryExpr expr) {
+		// Delayed variables are always available
+		if (!expr.op.equals(UnaryOp.PRE)) {
+			expr.expr.accept(this);
+		}
 		return null;
 	}
 }

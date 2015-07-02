@@ -27,4 +27,10 @@ public final class DependencySet implements Comparable<DependencySet> {
 			return -1;
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "DependencySet [equation=" + equation + ", dependOn=" + dependOn
+				+ "]";
+	}
 }

@@ -7,7 +7,7 @@ import java.util.Set;
 import jkind.lustre.values.Value;
 import jkind.results.Signal;
 
-public class LustreTrace {
+public final class LustreTrace {
 	private final Map<String, Signal<Value>> variables;
 	private int length;
 
@@ -30,5 +30,10 @@ public class LustreTrace {
 
 	public Set<String> getVariableNames() {
 		return this.variables.keySet();
+	}
+
+	@Override
+	public String toString() {
+		return "LustreTrace [variables=" + variables + "]";
 	}
 }

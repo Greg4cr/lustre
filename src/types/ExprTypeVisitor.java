@@ -51,29 +51,6 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 	private final Map<String, Type> variableTable = new HashMap<>();
 	private final Map<String, Node> nodeTable = new HashMap<>();
 
-	public void print() {
-		System.out.println("---------------------------");
-		for (String str : this.typeTable.keySet()) {
-			System.out.println(str + " " + this.typeTable.get(str) + " "
-					+ this.typeTable.get(str).getClass());
-		}
-		System.out.println("---------------------------");
-		for (String str : this.constantTable.keySet()) {
-			System.out.println(str + " " + this.constantTable.get(str) + " "
-					+ this.constantTable.get(str).getClass());
-		}
-		System.out.println("---------------------------");
-		for (String str : this.enumValueTable.keySet()) {
-			System.out.println(str + " " + this.enumValueTable.get(str));
-		}
-		System.out.println("---------------------------");
-		for (String str : this.variableTable.keySet()) {
-			System.out.println(str + " " + this.variableTable.get(str) + " "
-					+ this.variableTable.get(str).getClass());
-		}
-		System.out.println("---------------------------");
-	}
-
 	public ExprTypeVisitor(Program program) {
 		populateTypeTable(program.types);
 		populateEnumValueTable(program.types);
@@ -110,24 +87,23 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 
 	private void addVariable(VarDecl varDecl) {
 		variableTable.put(varDecl.id, this.resolveType(varDecl.type));
-		System.out.println("addvariable: " + varDecl.id + " "
-				+ this.resolveType(varDecl.type));
 	}
 
 	@Override
-	public Type visit(ArrayAccessExpr e) {
-		ArrayType array = (ArrayType) e.array.accept(this);
+	public Type visit(ArrayAccessExpr expr) {
+		ArrayType array = (ArrayType) expr.array.accept(this);
 		return array.base;
 	}
 
 	@Override
-	public Type visit(ArrayExpr e) {
-		return new ArrayType(e.elements.get(0).accept(this), e.elements.size());
+	public Type visit(ArrayExpr expr) {
+		return new ArrayType(expr.elements.get(0).accept(this),
+				expr.elements.size());
 	}
 
 	@Override
-	public Type visit(ArrayUpdateExpr e) {
-		return e.array.accept(this);
+	public Type visit(ArrayUpdateExpr expr) {
+		return expr.array.accept(this);
 	}
 
 	@Override
@@ -180,30 +156,30 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 	}
 
 	@Override
-	public Type visit(BoolExpr e) {
+	public Type visit(BoolExpr expr) {
 		return NamedType.BOOL;
 	}
 
 	@Override
-	public Type visit(CastExpr e) {
-		return e.type;
+	public Type visit(CastExpr expr) {
+		return expr.type;
 	}
 
 	@Override
-	public Type visit(CondactExpr e) {
-		return e.call.accept(this);
+	public Type visit(CondactExpr expr) {
+		return expr.call.accept(this);
 	}
 
 	@Override
-	public Type visit(IdExpr e) {
-		if (variableTable.containsKey(e.id)) {
-			return variableTable.get(e.id);
-		} else if (constantTable.containsKey(e.id)) {
-			return constantTable.get(e.id);
-		} else if (enumValueTable.containsKey(e.id)) {
-			return enumValueTable.get(e.id);
+	public Type visit(IdExpr expr) {
+		if (variableTable.containsKey(expr.id)) {
+			return variableTable.get(expr.id);
+		} else if (constantTable.containsKey(expr.id)) {
+			return constantTable.get(expr.id);
+		} else if (enumValueTable.containsKey(expr.id)) {
+			return enumValueTable.get(expr.id);
 		} else {
-			throw new IllegalArgumentException("Unknown variable: " + e.id);
+			throw new IllegalArgumentException("Unknown variable: " + expr.id);
 		}
 	}
 
@@ -226,8 +202,8 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 	}
 
 	@Override
-	public Type visit(NodeCallExpr e) {
-		Node node = nodeTable.get(e.node);
+	public Type visit(NodeCallExpr expr) {
+		Node node = nodeTable.get(expr.node);
 		List<Type> outputs = new ArrayList<>();
 		for (VarDecl output : node.outputs) {
 			outputs.add(resolveType(output.type));
@@ -236,40 +212,40 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 	}
 
 	@Override
-	public Type visit(RealExpr e) {
+	public Type visit(RealExpr expr) {
 		return NamedType.REAL;
 	}
 
 	@Override
-	public Type visit(RecordAccessExpr e) {
-		RecordType record = (RecordType) e.record.accept(this);
-		return record.fields.get(e.field);
+	public Type visit(RecordAccessExpr expr) {
+		RecordType record = (RecordType) expr.record.accept(this);
+		return record.fields.get(expr.field);
 	}
 
 	@Override
-	public Type visit(RecordExpr e) {
-		if (typeTable.containsKey(e.id)) {
-			return typeTable.get(e.id);
+	public Type visit(RecordExpr expr) {
+		if (typeTable.containsKey(expr.id)) {
+			return typeTable.get(expr.id);
 		} else {
 			// If user types have already been inlined, we reconstruct the type
 			Map<String, Type> fields = new HashMap<>();
-			for (String field : e.fields.keySet()) {
-				fields.put(field, e.fields.get(field).accept(this));
+			for (String field : expr.fields.keySet()) {
+				fields.put(field, expr.fields.get(field).accept(this));
 			}
-			return new RecordType(e.id, fields);
+			return new RecordType(expr.id, fields);
 		}
 	}
 
 	@Override
-	public Type visit(RecordUpdateExpr e) {
-		return e.record.accept(this);
+	public Type visit(RecordUpdateExpr expr) {
+		return expr.record.accept(this);
 	}
 
 	@Override
-	public Type visit(TupleExpr e) {
+	public Type visit(TupleExpr expr) {
 		List<Type> types = new ArrayList<>();
-		for (Expr expr : e.elements) {
-			types.add(expr.accept(this));
+		for (Expr e : expr.elements) {
+			types.add(e.accept(this));
 		}
 		return new TupleType(types);
 	}
