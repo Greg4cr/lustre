@@ -1,5 +1,6 @@
 package coverage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import types.ExprTypeVisitor;
@@ -10,6 +11,7 @@ import jkind.lustre.BinaryExpr;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.CastExpr;
 import jkind.lustre.CondactExpr;
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
 import jkind.lustre.IntExpr;
@@ -31,103 +33,154 @@ public class CoverageVisitor implements ExprVisitor<List<Obligation>> {
 
 	@Override
 	public List<Obligation> visit(ArrayAccessExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.array.accept(this));
+		currentObs.addAll(expr.index.accept(this));
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(ArrayExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		for (Expr e : expr.elements) {
+			currentObs.addAll(e.accept(this));
+		}
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(ArrayUpdateExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.array.accept(this));
+		currentObs.addAll(expr.index.accept(this));
+		currentObs.addAll(expr.value.accept(this));
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(BinaryExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.left.accept(this));
+		currentObs.addAll(expr.right.accept(this));
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(BoolExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<Obligation>();
 	}
 
 	@Override
 	public List<Obligation> visit(CastExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		return expr.expr.accept(this);
 	}
 
 	@Override
 	public List<Obligation> visit(CondactExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.clock.accept(this));
+		currentObs.addAll(expr.call.accept(this));
+
+		for (Expr e : expr.args) {
+			currentObs.addAll(e.accept(this));
+		}
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(IdExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<Obligation>();
 	}
 
 	@Override
 	public List<Obligation> visit(IfThenElseExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.cond.accept(this));
+		currentObs.addAll(expr.thenExpr.accept(this));
+		currentObs.addAll(expr.elseExpr.accept(this));
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(IntExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<Obligation>();
 	}
 
 	@Override
 	public List<Obligation> visit(NodeCallExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		for (Expr e : expr.args) {
+			currentObs.addAll(e.accept(this));
+		}
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(RealExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<Obligation>();
 	}
 
 	@Override
 	public List<Obligation> visit(RecordAccessExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.record.accept(this));
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(RecordExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		for (Expr e : expr.fields.values()) {
+			currentObs.addAll(e.accept(this));
+		}
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(RecordUpdateExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.record.accept(this));
+		currentObs.addAll(expr.value.accept(this));
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(TupleExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		for (Expr e : expr.elements) {
+			currentObs.addAll(e.accept(this));
+		}
+
+		return currentObs;
 	}
 
 	@Override
 	public List<Obligation> visit(UnaryExpr expr) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		currentObs.addAll(expr.expr.accept(this));
+
+		return currentObs;
 	}
 }
