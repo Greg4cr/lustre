@@ -2,6 +2,7 @@ package coverage;
 
 import java.util.List;
 
+import main.LustreMain;
 import types.ExprTypeVisitor;
 import jkind.lustre.Equation;
 import jkind.lustre.IdExpr;
@@ -56,17 +57,20 @@ public class LustreCoverage {
 		if (coverage.equals(Coverage.MCDC)) {
 			coverageVisitor = new MCDCVisitor(exprTypeVisitor);
 			coverageType = "MCDC";
-			System.out.println("------------Generating MC/DC obligations\n");
+			LustreMain.log("------------Generating MC/DC obligations for "
+					+ node.id + "\n");
 		} else if (coverage.equals(Coverage.CONDITION)) {
 			coverageVisitor = new ConditionVisitor(exprTypeVisitor);
 			coverageType = "CONDITION";
-			System.out
-					.println("------------Generating Condition Coverage obligations\n");
+			LustreMain
+					.log("------------Generating Condition Coverage obligations for "
+							+ node.id + "\n");
 		} else if (coverage.equals(Coverage.BRANCH)) {
 			coverageVisitor = new BranchVisitor(exprTypeVisitor);
 			coverageType = "BRANCH";
-			System.out
-					.println("------------Generating Branch Coverage obligations\n");
+			LustreMain
+					.log("------------Generating Branch Coverage obligations for "
+							+ node.id + "\n");
 		} else {
 			throw new IllegalArgumentException("Unknown coverage: " + coverage);
 		}
@@ -114,7 +118,8 @@ public class LustreCoverage {
 				builder.addProperty(property);
 			}
 		}
-		System.out.println("Number of Obligations: " + count + "\n");
+
+		LustreMain.log("Number of Obligations: " + count + "\n\n");
 		return builder.build();
 	}
 }

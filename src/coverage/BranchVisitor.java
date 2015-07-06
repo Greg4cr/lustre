@@ -8,6 +8,9 @@ import jkind.lustre.IfThenElseExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
+/**
+ * Generate obligations for branch coverage
+ */
 public final class BranchVisitor extends CoverageVisitor {
 	public BranchVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);

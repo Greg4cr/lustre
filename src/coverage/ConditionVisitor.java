@@ -16,6 +16,9 @@ import jkind.lustre.RecordAccessExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
+/**
+ * Generate obligations for condition coverage
+ */
 public class ConditionVisitor extends CoverageVisitor {
 	public ConditionVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);

@@ -33,13 +33,13 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 
 	@Override
 	public Expr visit(BinaryExpr expr) {
-		Expr leftExpr = expr.left.accept(this);
-		Expr rightExpr = expr.right.accept(this);
-
 		if ((expr.op.equals(BinaryOp.XOR) || expr.op.equals(BinaryOp.EQUAL) || expr.op
 				.equals(BinaryOp.NOTEQUAL))
 				&& expr.left.accept(this.exprTypeVisitor)
 						.equals(NamedType.BOOL)) {
+			Expr leftExpr = expr.left.accept(this);
+			Expr rightExpr = expr.right.accept(this);
+
 			if (expr.op.equals(BinaryOp.EQUAL)) {
 				Expr left = new BinaryExpr(leftExpr, BinaryOp.AND, rightExpr);
 				Expr right = new BinaryExpr(
