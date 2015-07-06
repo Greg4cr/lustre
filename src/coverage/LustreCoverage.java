@@ -18,7 +18,8 @@ public class LustreCoverage {
 	public static Program program(Program program, Coverage coverage,
 			Polarity polarity) {
 		// Remove XOR and boolean equality/inequality
-		return new LustreCoverage(program, coverage, polarity).generate();
+		return new LustreCoverage(LustreCleanVisitor.program(program),
+				coverage, polarity).generate();
 	}
 
 	private final Program program;
