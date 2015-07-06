@@ -8,6 +8,7 @@ import jkind.lustre.ArrayAccessExpr;
 import jkind.lustre.ArrayExpr;
 import jkind.lustre.ArrayUpdateExpr;
 import jkind.lustre.BinaryExpr;
+import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.CastExpr;
 import jkind.lustre.CondactExpr;
@@ -22,6 +23,7 @@ import jkind.lustre.RecordExpr;
 import jkind.lustre.RecordUpdateExpr;
 import jkind.lustre.TupleExpr;
 import jkind.lustre.UnaryExpr;
+import jkind.lustre.UnaryOp;
 import jkind.lustre.visitors.ExprVisitor;
 
 public class CoverageVisitor implements ExprVisitor<List<Obligation>> {
@@ -67,8 +69,23 @@ public class CoverageVisitor implements ExprVisitor<List<Obligation>> {
 	public List<Obligation> visit(BinaryExpr expr) {
 		List<Obligation> currentObs = new ArrayList<Obligation>();
 
-		currentObs.addAll(expr.left.accept(this));
-		currentObs.addAll(expr.right.accept(this));
+		List<Obligation> leftObs = expr.left.accept(this);
+		List<Obligation> rightObs = expr.right.accept(this);
+
+		// Add the ARROW operator to the obligation
+		if (expr.op.equals(BinaryOp.ARROW)) {
+			for (Obligation leftOb : leftObs) {
+				leftOb.obligation = new BinaryExpr(leftOb.obligation,
+						BinaryOp.ARROW, new BoolExpr(false));
+			}
+			for (Obligation rightOb : rightObs) {
+				rightOb.obligation = new BinaryExpr(new BoolExpr(false),
+						BinaryOp.ARROW, rightOb.obligation);
+			}
+		}
+
+		currentObs.addAll(leftObs);
+		currentObs.addAll(rightObs);
 
 		return currentObs;
 	}
@@ -107,8 +124,24 @@ public class CoverageVisitor implements ExprVisitor<List<Obligation>> {
 		List<Obligation> currentObs = new ArrayList<Obligation>();
 
 		currentObs.addAll(expr.cond.accept(this));
-		currentObs.addAll(expr.thenExpr.accept(this));
-		currentObs.addAll(expr.elseExpr.accept(this));
+
+		List<Obligation> thenObs = expr.thenExpr.accept(this);
+		List<Obligation> elseObs = expr.elseExpr.accept(this);
+
+		// Add true if condition to the then branch obligation
+		for (Obligation thenOb : thenObs) {
+			thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND,
+					thenOb.obligation);
+		}
+
+		// Add false if condition to the else branch obligation
+		for (Obligation elseOb : elseObs) {
+			elseOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT,
+					expr.cond), BinaryOp.AND, elseOb.obligation);
+		}
+
+		currentObs.addAll(thenObs);
+		currentObs.addAll(elseObs);
 
 		return currentObs;
 	}
@@ -179,7 +212,20 @@ public class CoverageVisitor implements ExprVisitor<List<Obligation>> {
 	public List<Obligation> visit(UnaryExpr expr) {
 		List<Obligation> currentObs = new ArrayList<Obligation>();
 
-		currentObs.addAll(expr.expr.accept(this));
+		List<Obligation> unaryObs = expr.expr.accept(this);
+
+		for (Obligation unaryOb : unaryObs) {
+			// Negate expression polarity for NOT operator
+			if (expr.op.equals(UnaryOp.NOT)) {
+				unaryOb.expressionPolarity = !unaryOb.expressionPolarity;
+			}
+			// Add the unary operator to the obligation
+			else {
+				unaryOb.obligation = new UnaryExpr(expr.op, unaryOb.obligation);
+			}
+		}
+
+		currentObs.addAll(unaryObs);
 
 		return currentObs;
 	}

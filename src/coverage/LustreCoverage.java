@@ -17,6 +17,7 @@ import jkind.lustre.builders.ProgramBuilder;
 public class LustreCoverage {
 	public static Program program(Program program, Coverage coverage,
 			Polarity polarity) {
+		// Remove XOR and boolean equality/inequality
 		return new LustreCoverage(program, coverage, polarity).generate();
 	}
 
@@ -72,7 +73,13 @@ public class LustreCoverage {
 		// Start generating obligations
 		int count = 0;
 		for (Equation equation : node.equations) {
-			String id = equation.lhs.get(0).id;
+			String id = null;
+
+			if (equation.lhs.isEmpty()) {
+				id = "EMPTY";
+			} else {
+				id = equation.lhs.get(0).id;
+			}
 
 			// Concatenate IDs with more than one left-hand variables
 			for (int i = 1; i < equation.lhs.size(); i++) {

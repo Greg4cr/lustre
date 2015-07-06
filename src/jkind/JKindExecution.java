@@ -59,9 +59,10 @@ public class JKindExecution {
 		return output;
 	}
 
-	// Generate input values for the program from counter-examples
-	// Null values are added if an input variable is not available
-	private static LustreTrace generateInputValues(Counterexample ce,
+	// Generate input values for the program from a counter-example
+	// Null values are added if an input variable is "don't care"
+	// Each signal may also contain null values.
+	public static LustreTrace generateInputValues(Counterexample ce,
 			Program program) {
 		LustreTrace output = new LustreTrace(ce.getLength());
 
