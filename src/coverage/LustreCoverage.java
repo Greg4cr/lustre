@@ -54,24 +54,35 @@ public class LustreCoverage {
 		String coverageType = null;
 
 		// Determine the coverage type
-		if (coverage.equals(Coverage.MCDC)) {
+		switch (coverage) {
+		case MCDC:
 			coverageVisitor = new MCDCVisitor(exprTypeVisitor);
 			coverageType = "MCDC";
 			LustreMain.log("------------Generating MC/DC obligations for "
 					+ node.id + "\n");
-		} else if (coverage.equals(Coverage.CONDITION)) {
-			coverageVisitor = new ConditionVisitor(exprTypeVisitor);
-			coverageType = "CONDITION";
-			LustreMain
-					.log("------------Generating Condition Coverage obligations for "
-							+ node.id + "\n");
-		} else if (coverage.equals(Coverage.BRANCH)) {
+			break;
+		case BRANCH:
 			coverageVisitor = new BranchVisitor(exprTypeVisitor);
 			coverageType = "BRANCH";
 			LustreMain
 					.log("------------Generating Branch Coverage obligations for "
 							+ node.id + "\n");
-		} else {
+			break;
+		case CONDITION:
+			coverageVisitor = new ConditionVisitor(exprTypeVisitor);
+			coverageType = "CONDITION";
+			LustreMain
+					.log("------------Generating Condition Coverage obligations for "
+							+ node.id + "\n");
+			break;
+		case DECISION:
+			coverageVisitor = new DecisionVisitor(exprTypeVisitor);
+			coverageType = "DECISION";
+			LustreMain
+					.log("------------Generating Decision Coverage obligations for "
+							+ node.id + "\n");
+			break;
+		default:
 			throw new IllegalArgumentException("Unknown coverage: " + coverage);
 		}
 

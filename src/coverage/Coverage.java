@@ -1,5 +1,5 @@
 package coverage;
 
 public enum Coverage {
-	MCDC, CONDITION, BRANCH
+	MCDC, CONDITION, BRANCH, DECISION
 }
