@@ -102,7 +102,7 @@ public final class DecisionVisitor extends CoverageVisitor {
 	}
 
 	// Check if an expression is a boolean
-	// Boolean expressions are conditions
+	// Boolean expressions are decisions
 	protected List<Obligation> addDecisions(Expr expr) {
 		List<Obligation> currentObs = new ArrayList<Obligation>();
 
