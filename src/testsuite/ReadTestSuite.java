@@ -21,7 +21,8 @@ import lustre.LustreTrace;
 /**
  * Read a test suite from a file in CSV format. The test suite file may not
  * contain all inputs (i.e., there are null values). Enum values are translated
- * to integers.
+ * to integers. Only input variables are read in. Input variables that are not
+ * in the file will also be created with null values.
  */
 public class ReadTestSuite {
 	public static List<LustreTrace> read(String fileName, Program program) {

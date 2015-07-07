@@ -47,9 +47,13 @@ public class StringToValue implements TypeVisitor<Value> {
 
 	@Override
 	public Value visit(EnumType type) {
-		// Enum values are translated to integers
-		int index = type.values.indexOf(valueStr);
-		return new IntegerValue(new BigInteger("" + index));
+		// If Enum values are translated to integers
+		if (type.values.contains(valueStr)) {
+			int index = type.values.indexOf(valueStr);
+			return new IntegerValue(new BigInteger("" + index));
+		} else {
+			throw new IllegalArgumentException("Invalid valueStr: " + valueStr);
+		}
 	}
 
 	@Override

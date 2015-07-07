@@ -7,6 +7,7 @@ import jkind.lustre.RecordType;
 import jkind.lustre.SubrangeIntType;
 import jkind.lustre.TupleType;
 import jkind.lustre.Type;
+import jkind.lustre.values.EnumValue;
 import jkind.lustre.values.IntegerValue;
 import jkind.lustre.values.Value;
 import jkind.lustre.visitors.TypeVisitor;
@@ -41,8 +42,20 @@ public class ValueToString implements TypeVisitor<String> {
 
 	@Override
 	public String visit(EnumType type) {
-		IntegerValue iv = (IntegerValue) value;
-		return type.values.get(iv.value.intValue());
+		// If this is already an EnumValue
+		if (value instanceof EnumValue) {
+			return value.toString();
+		}
+		// If this is an integer
+		else if (value instanceof IntegerValue) {
+			IntegerValue iv = (IntegerValue) value;
+			return type.values.get(iv.value.intValue());
+		}
+		// Others should be error
+		else {
+			throw new IllegalArgumentException("Invalid EnumType value: "
+					+ value);
+		}
 	}
 
 	@Override

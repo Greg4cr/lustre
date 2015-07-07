@@ -109,6 +109,7 @@ public class FillNullValues {
 				}
 				newSignal.putValue(step, value);
 			}
+			newTestCase.addVariable(newSignal);
 		}
 
 		return newTestCase;

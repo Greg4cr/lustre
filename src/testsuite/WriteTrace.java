@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,41 +13,44 @@ import values.ValueToString;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
-import jkind.lustre.VarDecl;
 import jkind.lustre.values.Value;
 import jkind.translation.Translate;
+import jkind.util.StringNaturalOrdering;
+import jkind.util.Util;
 import lustre.LustreTrace;
 
 /**
- * Write a test suite to a file in CSV format. The test suite may contain
- * "don't care" values (i.e., null values in the file). EnumType variable values
- * are translated back to Enum values.
+ * Write a test suite/trace to a file in CSV format. The test suite/trace may
+ * contain "don't care" values (i.e., null values in the file). EnumType
+ * variable values are translated back to Enum values. All signals in a trace
+ * are written to the file.
  */
-public class WriteTestSuite {
+public class WriteTrace {
 	public static void write(List<LustreTrace> testSuite, String fileName,
 			Program program) {
-		WriteTestSuite writer = new WriteTestSuite();
+		WriteTrace writer = new WriteTrace();
 
 		Node node = Translate.translate(program);
-		List<VarDecl> inputs = writer.naturalOrderedInputs(node);
+		Map<String, Type> typeMap = Util.getTypeMap(node);
 
-		writer.write(testSuite, fileName, inputs);
+		writer.write(testSuite, fileName, typeMap);
 	}
 
-	private void write(List<LustreTrace> testSuite, String fileName,
-			List<VarDecl> inputs) {
+	private void write(List<LustreTrace> traces, String fileName,
+			Map<String, Type> typeMap) {
 		String output = "";
 
-		Map<String, Type> inputTypes = new HashMap<String, Type>();
+		List<String> variables = new ArrayList<String>();
+		variables.addAll(traces.get(0).getVariableNames());
+
+		Collections.sort(variables, new StringNaturalOrdering());
 
 		// Write variable names
-		Iterator<VarDecl> inputIter = inputs.iterator();
+		Iterator<String> variableIter = variables.iterator();
 
-		while (inputIter.hasNext()) {
-			VarDecl input = inputIter.next();
-			output += input.id;
-			inputTypes.put(input.id, input.type);
-			if (inputIter.hasNext()) {
+		while (variableIter.hasNext()) {
+			output += variableIter.next();
+			if (variableIter.hasNext()) {
 				output += ",";
 			}
 		}
@@ -56,24 +58,24 @@ public class WriteTestSuite {
 		output += "\n";
 
 		// Write values
-		Iterator<LustreTrace> testIter = testSuite.iterator();
+		Iterator<LustreTrace> traceIter = traces.iterator();
 
 		// Iterate all test cases
-		while (testIter.hasNext()) {
-			LustreTrace testCase = testIter.next();
-			int length = testCase.getLength();
+		while (traceIter.hasNext()) {
+			LustreTrace trace = traceIter.next();
+			int length = trace.getLength();
 
 			// Iterate from step 0 to (length - 1)
 			for (int step = 0; step < length; step++) {
-				inputIter = inputs.iterator();
+				variableIter = variables.iterator();
 
 				// Iterate all input variables
-				while (inputIter.hasNext()) {
-					String variable = inputIter.next().id;
+				while (variableIter.hasNext()) {
+					String variable = variableIter.next();
 
 					// Value can be null
-					Value value = testCase.getVariable(variable).getValue(step);
-					Type type = inputTypes.get(variable);
+					Value value = trace.getVariable(variable).getValue(step);
+					Type type = typeMap.get(variable);
 
 					if (value == null) {
 						output += "null";
@@ -85,7 +87,7 @@ public class WriteTestSuite {
 					}
 
 					// Add comma if not ending
-					if (inputIter.hasNext()) {
+					if (variableIter.hasNext()) {
 						output += ",";
 					}
 				}
@@ -93,7 +95,7 @@ public class WriteTestSuite {
 			}
 
 			// Add new line if not ending
-			if (testIter.hasNext()) {
+			if (traceIter.hasNext()) {
 				output += "\n";
 			}
 		}
@@ -108,12 +110,5 @@ public class WriteTestSuite {
 		}
 		pw.print(output);
 		pw.close();
-	}
-
-	private List<VarDecl> naturalOrderedInputs(Node node) {
-		List<VarDecl> inputs = new ArrayList<VarDecl>();
-		inputs.addAll(node.inputs);
-		Collections.sort(inputs, new VarDeclNaturalOrdering());
-		return inputs;
 	}
 }
