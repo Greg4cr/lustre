@@ -19,8 +19,8 @@ import jkind.translation.Translate;
 import lustre.LustreTrace;
 
 /**
- * Read a test suite from a file. The test suite file may not contain all inputs
- * (i.e., there are null values).
+ * Read a test suite from a file in CSV format. The test suite file may not
+ * contain all inputs (i.e., there are null values).
  */
 public class ReadTestSuite {
 	public static List<LustreTrace> read(String fileName, Program program) {

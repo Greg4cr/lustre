@@ -15,8 +15,8 @@ import jkind.translation.Translate;
 import lustre.LustreTrace;
 
 /**
- * Write a test suite to a file. The test suite may contain "don't care" values
- * (i.e., null values in the file).
+ * Write a test suite to a file in CSV format. The test suite may contain
+ * "don't care" values (i.e., null values in the file).
  */
 public class WriteTestSuite {
 	public static void write(List<LustreTrace> testSuite, String fileName,
