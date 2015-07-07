@@ -3,6 +3,7 @@ package values;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import jkind.lustre.EnumType;
 import jkind.lustre.NamedType;
 import jkind.lustre.SubrangeIntType;
 import jkind.lustre.Type;
@@ -13,13 +14,20 @@ import jkind.lustre.values.Value;
 import jkind.util.BigFraction;
 
 /**
- * Generate a random value for a type.
- * Random values are restricted to the range 0 - 255.
+ * Generate a random value for a type. Random values are restricted to the range
+ * 0 - 255. Used to fill in null values for test suites. Assuming Lustre is in
+ * simple format, EnumType is treated as integers.
  */
 public final class RandomValueVisitor extends ValueVisitor {
 	public static Value get(Type type) {
 		RandomValueVisitor visitor = new RandomValueVisitor();
 		return type.accept(visitor);
+	}
+
+	@Override
+	public Value visit(EnumType type) {
+		int randomNum = this.randomInt(0, type.values.size() - 1);
+		return new IntegerValue(new BigInteger("" + randomNum));
 	}
 
 	@Override

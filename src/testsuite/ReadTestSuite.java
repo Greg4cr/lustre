@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import values.ValueFromString;
+import values.StringToValue;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
@@ -20,7 +20,8 @@ import lustre.LustreTrace;
 
 /**
  * Read a test suite from a file in CSV format. The test suite file may not
- * contain all inputs (i.e., there are null values).
+ * contain all inputs (i.e., there are null values). Enum values are translated
+ * to integers.
  */
 public class ReadTestSuite {
 	public static List<LustreTrace> read(String fileName, Program program) {
@@ -94,15 +95,24 @@ public class ReadTestSuite {
 							"The number of variables and values do not match.");
 				}
 
+				// Iterate all input variables
 				for (int inputIndex = 0; inputIndex < variables.length; inputIndex++) {
 					String variable = variables[inputIndex];
 
 					// If this variable is an input
 					if (inputVars.contains(variable)) {
+						String valueStr = values[inputIndex];
+						Type type = inputTypes.get(variable);
+
 						// Value can be null
-						Value value = ValueFromString.get(values[inputIndex],
-								inputTypes.get(variable));
-						inputVariables.get(variable).putValue(step, value);
+						if (valueStr.equals("null")) {
+							inputVariables.get(variable).putValue(step, null);
+						} else {
+							// Also Convert EnumType values from EnumValue to
+							// integers
+							Value value = StringToValue.get(valueStr, type);
+							inputVariables.get(variable).putValue(step, value);
+						}
 					}
 				}
 			}

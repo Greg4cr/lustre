@@ -11,7 +11,6 @@ import jkind.lustre.SubrangeIntType;
 import jkind.lustre.TupleType;
 import jkind.lustre.Type;
 import jkind.lustre.values.BooleanValue;
-import jkind.lustre.values.EnumValue;
 import jkind.lustre.values.IntegerValue;
 import jkind.lustre.values.RealValue;
 import jkind.lustre.values.Value;
@@ -20,21 +19,24 @@ import jkind.util.BigFraction;
 
 /**
  * Convert a value from String to Value. This class assumes that ArrayType,
- * RecordType,and TupleType have been flattened
+ * RecordType,and TupleType have been flattened. Also Convert EnumType values
+ * from EnumValue to integers.
  */
-public class ValueFromString implements TypeVisitor<Value> {
-	public static Value get(String value, Type type) {
-		if (value.equals("null")) {
-			return null;
+public class StringToValue implements TypeVisitor<Value> {
+	public static Value get(String valueStr, Type type) {
+		StringToValue visitor = new StringToValue(valueStr);
+		Value value = type.accept(visitor);
+		if (value == null) {
+			throw new IllegalArgumentException("Null value for valueStr "
+					+ valueStr + " and type " + type);
 		}
-		ValueFromString visitor = new ValueFromString(value);
-		return type.accept(visitor);
+		return value;
 	}
 
-	private final String value;
+	private final String valueStr;
 
-	private ValueFromString(String value) {
-		this.value = value;
+	private StringToValue(String valueStr) {
+		this.valueStr = valueStr;
 	}
 
 	@Override
@@ -45,39 +47,42 @@ public class ValueFromString implements TypeVisitor<Value> {
 
 	@Override
 	public Value visit(EnumType type) {
-		return new EnumValue(value);
+		// Enum values are translated to integers
+		int index = type.values.indexOf(valueStr);
+		return new IntegerValue(new BigInteger("" + index));
 	}
 
 	@Override
 	public Value visit(NamedType type) {
 		if (type.equals(NamedType.BOOL)) {
-			if (value.equals("true") || value.equals("1")) {
+			if (valueStr.equals("true") || valueStr.equals("1")) {
 				return BooleanValue.TRUE;
-			} else if (value.equals("false") || value.equals("0")) {
+			} else if (valueStr.equals("false") || valueStr.equals("0")) {
 				return BooleanValue.FALSE;
 			} else {
 				throw new IllegalArgumentException("Unknown Boolean value: "
-						+ value);
+						+ valueStr);
 			}
 		} else if (type.equals(NamedType.INT)) {
-			return new IntegerValue(new BigInteger(value));
+			return new IntegerValue(new BigInteger(valueStr));
 		} else if (type.equals(NamedType.REAL)) {
 			BigFraction fractionValue = null;
 			// If raw value is a fraction
-			if (value.contains("/")) {
-				String numerator = value.substring(0, value.indexOf("/"));
-				String denominator = value.substring(value.indexOf("/") + 1);
+			if (valueStr.contains("/")) {
+				String numerator = valueStr.substring(0, valueStr.indexOf("/"));
+				String denominator = valueStr
+						.substring(valueStr.indexOf("/") + 1);
 				fractionValue = new BigFraction(new BigInteger(numerator),
 						new BigInteger(denominator));
 			}
 			// Otherwise, it should be a decimal
 			else {
-				fractionValue = new BigFraction(new BigDecimal(value));
+				fractionValue = new BigFraction(new BigDecimal(valueStr));
 			}
 			return new RealValue(fractionValue);
 		} else {
 			throw new IllegalArgumentException("Unknown NamedType value: "
-					+ value);
+					+ valueStr);
 		}
 	}
 
@@ -95,7 +100,7 @@ public class ValueFromString implements TypeVisitor<Value> {
 
 	@Override
 	public Value visit(SubrangeIntType type) {
-		BigInteger intermediateValue = new BigInteger(value);
+		BigInteger intermediateValue = new BigInteger(valueStr);
 
 		if (intermediateValue.compareTo(type.high) <= 0
 				&& intermediateValue.compareTo(type.low) >= 0) {
