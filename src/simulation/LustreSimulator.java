@@ -3,7 +3,6 @@ package simulation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,71 +38,75 @@ import jkind.util.BigFraction;
 import lustre.LustreTrace;
 
 public final class LustreSimulator {
-	private final Node node;
 	private final List<Equation> equations;
 	private final Map<String, Signal<Value>> values;
 
 	private final List<String> inputVars;
 	private final List<String> localVars;
 	private final List<String> outputVars;
-
-	private final Set<String> oracleVars;
+	private final List<String> properties;
+	private final List<String> oracleVars;
 
 	private final ExprTypeVisitor exprTypeVisitor;
 
 	public LustreSimulator(Program program) {
-		this.node = Translate.translate(program);
-		System.out.println(this.node);
-		this.values = new HashMap<String, Signal<Value>>();
+		Node node = Translate.translate(program);
+		System.out.println(node);
+
 		this.equations = new ArrayList<Equation>();
+		this.values = new HashMap<String, Signal<Value>>();
 
 		this.inputVars = new ArrayList<String>();
 		this.localVars = new ArrayList<String>();
 		this.outputVars = new ArrayList<String>();
-		this.oracleVars = new HashSet<String>();
+		this.properties = new ArrayList<String>();
+		this.oracleVars = new ArrayList<String>();
 
 		// Create expression type visitor
 		this.exprTypeVisitor = new ExprTypeVisitor(program);
-		this.exprTypeVisitor.setNodeContext(this.node);
+		this.exprTypeVisitor.setNodeContext(node);
 
-		this.initialize();
-		this.reOrderEquations();
+		this.initialize(node);
 	}
 
-	private void initialize() {
+	// Add all variables, re-order equations based on dependency
+	private void initialize(Node node) {
 		// Add inputs
-		for (VarDecl varDecl : this.node.inputs) {
+		for (VarDecl varDecl : node.inputs) {
 			this.inputVars.add(varDecl.id);
 		}
 
 		// Add locals
-		for (VarDecl varDecl : this.node.locals) {
+		for (VarDecl varDecl : node.locals) {
 			this.localVars.add(varDecl.id);
 		}
 
 		// Add outputs
-		for (VarDecl varDecl : this.node.outputs) {
+		for (VarDecl varDecl : node.outputs) {
 			this.outputVars.add(varDecl.id);
 		}
 
-		// Add oracle variables
-		this.oracleVars.addAll(this.inputVars);
-		this.oracleVars.addAll(this.localVars);
-		this.outputVars.addAll(this.outputVars);
-	}
+		// Add properties
+		this.properties.addAll(node.properties);
 
-	// Re-order equations
-	private void reOrderEquations() {
+		// Add oracle variables
+		// By default, all local and output variables
+		this.oracleVars.addAll(this.localVars);
+		this.oracleVars.addAll(this.outputVars);
+
+		// Re-order equations
 		List<DependencySet> allEquations = new ArrayList<DependencySet>();
 
-		// Go through all expressions and get the set of non-input variables
-		// that is used by each equation
-		for (Equation equation : this.node.equations) {
+		// Go through all equations and get the set of non-delayed variables
+		// that are used by each equation
+		for (Equation equation : node.equations) {
 			Set<String> use = DependencyVisitor.get(equation.expr);
-			DependencySet current = new DependencySet(equation);
-			current.dependOn.addAll(use);
+			DependencySet current = new DependencySet(equation, use);
 			allEquations.add(current);
 		}
+		
+		System.out.println(allEquations);
+		System.exit(1);
 
 		List<String> availableVars = new ArrayList<String>();
 
@@ -157,7 +160,7 @@ public final class LustreSimulator {
 	}
 
 	public List<String> getProperties() {
-		return this.node.properties;
+		return this.properties;
 	}
 
 	public List<LustreTrace> simulate(List<LustreTrace> testSuite,

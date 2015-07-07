@@ -99,6 +99,7 @@ public class ReadTestSuite {
 
 					// If this variable is an input
 					if (inputVars.contains(variable)) {
+						// Value can be null
 						Value value = ValueFromString.get(values[inputIndex],
 								inputTypes.get(variable));
 						inputVariables.get(variable).putValue(step, value);

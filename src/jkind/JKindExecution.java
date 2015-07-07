@@ -1,7 +1,9 @@
 package jkind;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import jkind.SolverOption;
@@ -27,6 +29,23 @@ public class JKindExecution {
 	public static int iteration = 40; // 40 steps
 	public static int timeout = 172800; // 48 hours
 
+	public static List<LustreTrace> generateTests(String fileName,
+			Program program) {
+		Map<String, LustreTrace> mapping = execute(fileName, program);
+		List<LustreTrace> testSuite = new ArrayList<LustreTrace>();
+
+		for (LustreTrace testCase : mapping.values()) {
+			if (testCase != null) {
+				testSuite.add(testCase);
+			}
+		}
+
+		LustreMain.log(testSuite.size() + "/" + mapping.size()
+				+ " properties have counterexamples.\n");
+
+		return testSuite;
+	}
+
 	// Returns a mapping from a property name to its counterexample (if exists)
 	// or null
 	public static Map<String, LustreTrace> execute(String fileName,
@@ -42,8 +61,9 @@ public class JKindExecution {
 		// Set timeout
 		jkind.setN(iteration);
 		jkind.setTimeout(timeout);
+		LustreMain.log("------------Executing JKind\n");
 		LustreMain.log("Iterations: " + iteration + "\n");
-		LustreMain.log("Timeout: " + timeout + "\n");
+		LustreMain.log("Timeout: " + timeout + " seconds\n");
 
 		jkind.execute(new File(fileName), result, monitor);
 

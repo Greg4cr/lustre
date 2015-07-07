@@ -12,9 +12,10 @@ public final class DependencySet implements Comparable<DependencySet> {
 	public final Equation equation;
 	public final Set<String> dependOn;
 
-	public DependencySet(Equation equation) {
+	public DependencySet(Equation equation, Set<String> dependOn) {
 		this.equation = equation;
 		this.dependOn = new HashSet<String>();
+		this.dependOn.addAll(dependOn);
 	}
 
 	@Override

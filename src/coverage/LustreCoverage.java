@@ -119,7 +119,7 @@ public class LustreCoverage {
 			}
 		}
 
-		LustreMain.log("Number of Obligations: " + count + "\n\n");
+		LustreMain.log("Number of Obligations: " + count + "\n");
 		return builder.build();
 	}
 }

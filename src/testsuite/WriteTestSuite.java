@@ -11,6 +11,7 @@ import java.util.List;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.VarDecl;
+import jkind.lustre.values.Value;
 import jkind.translation.Translate;
 import lustre.LustreTrace;
 
@@ -61,7 +62,8 @@ public class WriteTestSuite {
 					String variable = inputIter.next().id;
 
 					// Value can be null
-					output += testCase.getVariable(variable).getValue(step);
+					Value value = testCase.getVariable(variable).getValue(step);
+					output += value;
 
 					// Add comma if not ending
 					if (inputIter.hasNext()) {
