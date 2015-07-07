@@ -23,13 +23,19 @@ import jkind.util.BigFraction;
  * RecordType,and TupleType have been flattened
  */
 public class ValueFromString implements TypeVisitor<Value> {
-	public static Value get(String str, Type type) {
-		ValueFromString visitor = new ValueFromString();
-		visitor.value = str;
+	public static Value get(String value, Type type) {
+		if (value.equals("null")) {
+			return null;
+		}
+		ValueFromString visitor = new ValueFromString(value);
 		return type.accept(visitor);
 	}
 
-	private String value;
+	private final String value;
+
+	private ValueFromString(String value) {
+		this.value = value;
+	}
 
 	@Override
 	public Value visit(ArrayType type) {

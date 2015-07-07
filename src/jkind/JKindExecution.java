@@ -2,7 +2,6 @@ package jkind;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import jkind.SolverOption;
@@ -10,13 +9,16 @@ import jkind.api.JKindApi;
 import jkind.api.results.JKindResult;
 import jkind.api.results.PropertyResult;
 import jkind.api.results.Status;
+import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.VarDecl;
 import jkind.lustre.values.Value;
 import jkind.results.Counterexample;
 import jkind.results.InvalidProperty;
 import jkind.results.Signal;
+import jkind.translation.Translate;
 import lustre.LustreTrace;
+import main.LustreMain;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 
@@ -26,6 +28,7 @@ public class JKindExecution {
 	public static int timeout = 172800; // 48 hours
 
 	// Returns a mapping from a property name to its counterexample (if exists)
+	// or null
 	public static Map<String, LustreTrace> execute(String fileName,
 			Program program) {
 		Map<String, LustreTrace> output = new HashMap<String, LustreTrace>();
@@ -35,14 +38,16 @@ public class JKindExecution {
 
 		JKindApi jkind = new JKindApi();
 		jkind.setSolver(SolverOption.Z3);
+
 		// Set timeout
 		jkind.setN(iteration);
 		jkind.setTimeout(timeout);
-		System.out.println("Iterations: " + iteration + "\n");
-		System.out.println("Timeout: " + timeout + "\n");
+		LustreMain.log("Iterations: " + iteration + "\n");
+		LustreMain.log("Timeout: " + timeout + "\n");
+
 		jkind.execute(new File(fileName), result, monitor);
 
-		System.out.println("------------JKind checked "
+		LustreMain.log("------------JKind checked "
 				+ result.getPropertyResults().size() + " properties.\n");
 
 		for (PropertyResult pr : result.getPropertyResults()) {
@@ -66,25 +71,18 @@ public class JKindExecution {
 			Program program) {
 		LustreTrace output = new LustreTrace(ce.getLength());
 
-		List<VarDecl> inputs = program.getMainNode().inputs;
+		// Translate Lustre program to simple format
+		Node node = Translate.translate(program);
 
-		for (VarDecl input : inputs) {
+		for (VarDecl input : node.inputs) {
 			Signal<Value> signal = ce.getSignal(input.id);
 
-			if (signal != null) {
+			// If JKind does not produce values for this variable
+			if (signal == null) {
+				output.addVariable(new Signal<Value>(input.id));
+			} else {
 				output.addVariable(signal);
-				continue;
 			}
-
-			// This is a don't care variable
-			Signal<Value> variable = new Signal<Value>(input.id);
-
-			int length = ce.getLength();
-
-			for (int step = 0; step < length; step++) {
-				variable.putValue(step, null);
-			}
-			output.addVariable(variable);
 		}
 
 		return output;

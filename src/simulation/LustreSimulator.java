@@ -10,9 +10,6 @@ import java.util.Set;
 
 import types.ExprTypeVisitor;
 import values.DefaultValueVisitor;
-import jkind.Main;
-import jkind.SolverOption;
-import jkind.analysis.StaticAnalyzer;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
@@ -54,12 +51,7 @@ public final class LustreSimulator {
 
 	private final ExprTypeVisitor exprTypeVisitor;
 
-	public LustreSimulator(String fileName) throws Exception {
-		this(Main.parseLustre(fileName));
-	}
-
 	public LustreSimulator(Program program) {
-		StaticAnalyzer.check(program, SolverOption.Z3);
 		this.node = Translate.translate(program);
 		System.out.println(this.node);
 		this.values = new HashMap<String, Signal<Value>>();
