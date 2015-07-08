@@ -18,6 +18,11 @@ import jkind.lustre.builders.NodeBuilder;
 import jkind.lustre.builders.ProgramBuilder;
 
 public class LustreCoverage {
+	// By default, use polarity ALL
+	public static Program program(Program program, Coverage coverage) {
+		return program(program, coverage, Polarity.ALL);
+	}
+
 	public static Program program(Program program, Coverage coverage,
 			Polarity polarity) {
 		// Remove XOR and boolean equality/inequality

@@ -1,6 +1,5 @@
 package jkind;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +28,8 @@ public class JKindExecution {
 	public static int iteration = 40; // 40 steps
 	public static int timeout = 172800; // 48 hours
 
-	public static List<LustreTrace> generateTests(String fileName,
-			Program program) {
-		Map<String, LustreTrace> mapping = execute(fileName, program);
+	public static List<LustreTrace> generateTests(Program program) {
+		Map<String, LustreTrace> mapping = execute(program);
 		List<LustreTrace> testSuite = new ArrayList<LustreTrace>();
 
 		for (LustreTrace testCase : mapping.values()) {
@@ -41,15 +39,14 @@ public class JKindExecution {
 		}
 
 		LustreMain.log(testSuite.size() + "/" + mapping.size()
-				+ " properties have counterexamples.");
+				+ " properties have counterexamples");
 
 		return testSuite;
 	}
 
 	// Returns a mapping from a property name to its counterexample (if exists)
 	// or null
-	public static Map<String, LustreTrace> execute(String fileName,
-			Program program) {
+	public static Map<String, LustreTrace> execute(Program program) {
 		Map<String, LustreTrace> output = new HashMap<String, LustreTrace>();
 
 		JKindResult result = new JKindResult(null);
@@ -65,10 +62,10 @@ public class JKindExecution {
 		LustreMain.log("Iterations: " + iteration);
 		LustreMain.log("Timeout: " + timeout + " seconds");
 
-		jkind.execute(new File(fileName), result, monitor);
+		jkind.execute(program, result, monitor);
 
 		LustreMain.log("------------JKind checked "
-				+ result.getPropertyResults().size() + " properties.");
+				+ result.getPropertyResults().size() + " properties");
 
 		for (PropertyResult pr : result.getPropertyResults()) {
 			if (pr.getStatus().equals(Status.INVALID)) {

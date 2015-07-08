@@ -1,17 +1,17 @@
 package main;
 
 import enums.Coverage;
+import enums.Generation;
 import enums.Polarity;
-import enums.ValueType;
 import enums.Simulation;
 
 public class LustreSettings {
-	public String fileName = null;
+	public String program = null;
+	public String tests = null;
+	public String oracle = null;
+
 	public Coverage coverage = null;
 	public Polarity polarity = null;
-	public ValueType valueType = null;
+	public Generation generation = null;
 	public Simulation simulation = null;
-	public String test = null;
-	public String oracle = null;
-	public String measure = null;
 }

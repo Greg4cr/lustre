@@ -2,8 +2,14 @@ package main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.antlr.v4.runtime.RecognitionException;
+
+import jkind.Main;
+import jkind.SolverOption;
+import jkind.analysis.StaticAnalyzer;
 import jkind.lustre.Program;
 
 public class LustreMain {
@@ -12,7 +18,7 @@ public class LustreMain {
 
 	public static void main(String[] args) {
 		LustreSettings settings = LustreArgumentParser.parse(args);
-		Program program = Utils.getProgram(settings.fileName);
+		Program program = getProgram(settings.program);
 
 		LustreProcessing lustre = new LustreProcessing(program, settings);
 		lustre.process();
@@ -33,7 +39,7 @@ public class LustreMain {
 	}
 
 	public static void writeLogToFile() {
-		System.out.println("------------Writing log file to " + logFile);
+		System.out.println("------------Writing log file\n" + logFile);
 
 		// Initialize log file writer
 		File file = new File(logFile);
@@ -51,5 +57,18 @@ public class LustreMain {
 		}
 		pw.write(log);
 		pw.close();
+	}
+
+	// Read in Lustre program from a file
+	public static Program getProgram(String fileName) {
+		Program program = null;
+		try {
+			program = Main.parseLustre(fileName);
+		} catch (RecognitionException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		StaticAnalyzer.check(program, SolverOption.Z3);
+		return program;
 	}
 }

@@ -1,6 +1,6 @@
 package enums;
 
-public enum ValueType {
+public enum Generation {
 	NULL, DEFAULT, RANDOM;
 
 	@Override

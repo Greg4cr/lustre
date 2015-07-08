@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import enums.Simulation;
 import testsuite.VerifyTestSuite;
 import types.ExprTypeVisitor;
 import values.DefaultValueVisitor;
@@ -49,7 +50,7 @@ public final class LustreSimulator {
 
 	private final ExprTypeVisitor exprTypeVisitor;
 
-	private boolean partialEvaluation;
+	private Simulation simulation;
 
 	public LustreSimulator(Program program) {
 		Node node = Translate.translate(program);
@@ -67,7 +68,7 @@ public final class LustreSimulator {
 		this.exprTypeVisitor = new ExprTypeVisitor(program);
 		this.exprTypeVisitor.setNodeContext(node);
 
-		this.partialEvaluation = false;
+		this.simulation = Simulation.COMPLETE;
 		this.initialize(node);
 	}
 
@@ -154,43 +155,35 @@ public final class LustreSimulator {
 		return this.properties;
 	}
 
-	// Completely simulate a test suite
-	public List<LustreTrace> simulatePartial(List<LustreTrace> testSuite) {
-		this.partialEvaluation = true;
-		LustreMain.log("------------Starting partial simulator");
-		if (!VerifyTestSuite.isComplete(testSuite)) {
-			LustreMain.log("WARNING: test suite has null values.");
-		}
-		return this.simulate(testSuite, null);
+	// Simulate a test suite
+	public List<LustreTrace> simulate(List<LustreTrace> testSuite,
+			Simulation simulation) {
+		return this.simulate(testSuite, simulation, null);
 	}
 
-	public List<LustreTrace> simulatePartial(List<LustreTrace> testSuite,
-			List<String> oracles) {
-		this.partialEvaluation = true;
-		LustreMain.log("------------Starting partial simulator");
-		if (!VerifyTestSuite.isComplete(testSuite)) {
-			LustreMain.log("WARNING: test suite has null values.");
-		}
-		return this.simulate(testSuite, oracles);
-	}
+	public List<LustreTrace> simulate(List<LustreTrace> testSuite,
+			Simulation simulation, List<String> oracles) {
+		this.simulation = simulation;
+		boolean isComplete = VerifyTestSuite.isComplete(testSuite);
 
-	// Partially simulate a test suite
-	public List<LustreTrace> simulateComplete(List<LustreTrace> testSuite) {
-		this.partialEvaluation = false;
-		LustreMain.log("------------Starting complete simulator");
-		if (!VerifyTestSuite.isComplete(testSuite)) {
-			throw new IllegalArgumentException("Test suite has null values");
+		switch (this.simulation) {
+		case COMPLETE:
+			LustreMain.log("------------Starting complete simulator");
+			if (!isComplete) {
+				throw new IllegalArgumentException("Test suite has null values");
+			}
+			break;
+		case PARTIAL:
+			LustreMain.log("------------Starting partial simulator");
+			if (!isComplete) {
+				LustreMain.log("Test suite has null values.");
+			}
+			break;
+		default:
+			throw new IllegalArgumentException("Unknown simulation: "
+					+ simulation);
 		}
-		return this.simulate(testSuite, null);
-	}
 
-	public List<LustreTrace> simulateComplete(List<LustreTrace> testSuite,
-			List<String> oracles) {
-		this.partialEvaluation = false;
-		LustreMain.log("------------Starting complete simulator");
-		if (!VerifyTestSuite.isComplete(testSuite)) {
-			throw new IllegalArgumentException("Test suite has null values");
-		}
 		return this.simulate(testSuite, oracles);
 	}
 
@@ -206,7 +199,7 @@ public final class LustreSimulator {
 		List<LustreTrace> traces = new ArrayList<LustreTrace>();
 		int count = 1;
 		for (LustreTrace testCase : testSuite) {
-			LustreMain.log("Executing Test Case (" + (count++) + "/"
+			LustreMain.log("Executing test case (" + (count++) + "/"
 					+ testSuite.size() + ") ...");
 			traces.add(this.simulate(testCase));
 		}
@@ -268,7 +261,7 @@ public final class LustreSimulator {
 				Value value = this.evaluate(expr, step);
 
 				// Error if value evaluates to null with complete evaluation
-				if (value == null && !this.partialEvaluation) {
+				if (value == null && this.simulation == Simulation.COMPLETE) {
 					throw new NullPointerException("Value evaluates to null: "
 							+ equation);
 				}
@@ -283,14 +276,17 @@ public final class LustreSimulator {
 	private Value evaluate(Expr expr, int step) {
 		// If this is an unguarded PRE
 		if (step < 0) {
-			// Assign null for partial evaluation
-			if (this.partialEvaluation) {
-				return null;
-			}
-			// Assign a default value for complete evaluation
-			else {
+			switch (this.simulation) {
+			case COMPLETE:
+				// Assign a default value for complete evaluation
 				Type type = expr.accept(this.exprTypeVisitor);
 				return DefaultValueVisitor.get(type);
+			case PARTIAL:
+				// Assign null for partial evaluation
+				return null;
+			default:
+				throw new IllegalArgumentException("Unknown simulation: "
+						+ simulation);
 			}
 		}
 		// Unary operators
@@ -318,11 +314,15 @@ public final class LustreSimulator {
 				Value rightValue = this.evaluate(be.right, step);
 
 				if (leftValue == null || rightValue == null) {
-					if (this.partialEvaluation) {
+					switch (this.simulation) {
+					case COMPLETE:
 						return booleanPartialEvaluation(leftValue, rightValue,
 								be.op);
-					} else {
+					case PARTIAL:
 						return null;
+					default:
+						throw new IllegalArgumentException(
+								"Unknown simulation: " + simulation);
 					}
 				} else {
 					return leftValue.applyBinaryOp(be.op, rightValue);

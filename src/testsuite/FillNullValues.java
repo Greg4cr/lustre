@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import enums.ValueType;
+import enums.Generation;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
@@ -22,52 +22,33 @@ import lustre.LustreTrace;
  * Fill in null values with concrete values
  */
 public class FillNullValues {
-	// Fill in default values for a test suite
-	public static List<LustreTrace> defaultValue(List<LustreTrace> testSuite,
-			Program program) {
+	// Fill in a test suite
+	public static List<LustreTrace> fill(List<LustreTrace> testSuite,
+			Program program, Generation generation) {
 		Node node = Translate.translate(program);
 		List<VarDecl> inputs = node.inputs;
 
-		return new FillNullValues().fillNullValues(testSuite,
-				ValueType.DEFAULT, inputs);
+		return new FillNullValues().fillNullValues(testSuite, inputs,
+				generation);
 	}
 
-	// Fill in default values for a test case
-	public static LustreTrace defaultValue(LustreTrace testCase, Program program) {
+	// Fill in a test case
+	public static LustreTrace fill(LustreTrace testCase, Program program,
+			Generation generation) {
 		Node node = Translate.translate(program);
 		List<VarDecl> inputs = node.inputs;
 
-		return new FillNullValues().fillNullValues(testCase, ValueType.DEFAULT,
-				inputs);
-	}
-
-	// Fill in random values for a test suite
-	public static List<LustreTrace> randomValue(List<LustreTrace> testSuite,
-			Program program) {
-		Node node = Translate.translate(program);
-		List<VarDecl> inputs = node.inputs;
-
-		return new FillNullValues().fillNullValues(testSuite, ValueType.RANDOM,
-				inputs);
-
-	}
-
-	// Fill in random values for a test case
-	public static LustreTrace randomValue(LustreTrace testCase, Program program) {
-		Node node = Translate.translate(program);
-		List<VarDecl> inputs = node.inputs;
-
-		return new FillNullValues().fillNullValues(testCase, ValueType.RANDOM,
-				inputs);
+		return new FillNullValues()
+				.fillNullValues(testCase, inputs, generation);
 	}
 
 	// Fill null values for a test suite
 	private List<LustreTrace> fillNullValues(List<LustreTrace> testSuite,
-			ValueType valueType, List<VarDecl> inputs) {
+			List<VarDecl> inputs, Generation generation) {
 		List<LustreTrace> newTestSuite = new ArrayList<LustreTrace>();
 
 		for (LustreTrace testCase : testSuite) {
-			newTestSuite.add(this.fillNullValues(testCase, valueType, inputs));
+			newTestSuite.add(this.fillNullValues(testCase, inputs, generation));
 		}
 
 		return newTestSuite;
@@ -75,7 +56,7 @@ public class FillNullValues {
 
 	// Fill null values for a test case
 	private LustreTrace fillNullValues(LustreTrace testCase,
-			ValueType valueType, List<VarDecl> inputs) {
+			List<VarDecl> inputs, Generation generation) {
 		int length = testCase.getLength();
 		LustreTrace newTestCase = new LustreTrace(length);
 
@@ -98,13 +79,18 @@ public class FillNullValues {
 			for (int step = 0; step < length; step++) {
 				Value value = signal.getValue(step);
 				if (value == null) {
-					if (valueType.equals(ValueType.DEFAULT)) {
+					switch (generation) {
+					case NULL:
+						break;
+					case DEFAULT:
 						value = DefaultValueVisitor.get(type);
-					} else if (valueType.equals(ValueType.RANDOM)) {
+						break;
+					case RANDOM:
 						value = RandomValueVisitor.get(type);
-					} else {
+						break;
+					default:
 						throw new IllegalArgumentException(
-								"Unknown value type: " + valueType);
+								"Unknown generation: " + generation);
 					}
 				}
 				newSignal.putValue(step, value);
