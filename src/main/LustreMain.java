@@ -20,9 +20,16 @@ public class LustreMain {
 		writeLogToFile();
 	}
 
+	// Print error message and exit
+	public static void error(String msg) {
+		System.out.println("ERROR: " + msg);
+		System.out.println(0);
+	}
+
+	// Print and add log message
 	public static void log(String msg) {
-		System.out.print(msg);
-		log += msg;
+		System.out.println(msg);
+		log += msg + "\n";
 	}
 
 	public static void writeLogToFile() {
@@ -44,21 +51,5 @@ public class LustreMain {
 		}
 		pw.write(log);
 		pw.close();
-	}
-
-	public static void printToFile(String fileName, String content) {
-		PrintWriter pw = null;
-		try {
-			pw = new PrintWriter(new File(fileName));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		pw.print(content);
-		pw.close();
-	}
-
-	public static String removeFileExtension(String fileName) {
-		return fileName.substring(0, fileName.lastIndexOf("."));
 	}
 }

@@ -157,9 +157,9 @@ public final class LustreSimulator {
 	// Completely simulate a test suite
 	public List<LustreTrace> simulatePartial(List<LustreTrace> testSuite) {
 		this.partialEvaluation = true;
-		LustreMain.log("------------Starting partial simulator\n");
+		LustreMain.log("------------Starting partial simulator");
 		if (!VerifyTestSuite.isComplete(testSuite)) {
-			LustreMain.log("WARNING: test suite has null values.\n");
+			LustreMain.log("WARNING: test suite has null values.");
 		}
 		return this.simulate(testSuite, null);
 	}
@@ -167,9 +167,9 @@ public final class LustreSimulator {
 	public List<LustreTrace> simulatePartial(List<LustreTrace> testSuite,
 			List<String> oracles) {
 		this.partialEvaluation = true;
-		LustreMain.log("------------Starting partial simulator\n");
+		LustreMain.log("------------Starting partial simulator");
 		if (!VerifyTestSuite.isComplete(testSuite)) {
-			LustreMain.log("WARNING: test suite has null values.\n");
+			LustreMain.log("WARNING: test suite has null values.");
 		}
 		return this.simulate(testSuite, oracles);
 	}
@@ -177,7 +177,7 @@ public final class LustreSimulator {
 	// Partially simulate a test suite
 	public List<LustreTrace> simulateComplete(List<LustreTrace> testSuite) {
 		this.partialEvaluation = false;
-		LustreMain.log("------------Starting complete simulator\n");
+		LustreMain.log("------------Starting complete simulator");
 		if (!VerifyTestSuite.isComplete(testSuite)) {
 			throw new IllegalArgumentException("Test suite has null values");
 		}
@@ -187,7 +187,7 @@ public final class LustreSimulator {
 	public List<LustreTrace> simulateComplete(List<LustreTrace> testSuite,
 			List<String> oracles) {
 		this.partialEvaluation = false;
-		LustreMain.log("------------Starting complete simulator\n");
+		LustreMain.log("------------Starting complete simulator");
 		if (!VerifyTestSuite.isComplete(testSuite)) {
 			throw new IllegalArgumentException("Test suite has null values");
 		}
@@ -207,7 +207,7 @@ public final class LustreSimulator {
 		int count = 1;
 		for (LustreTrace testCase : testSuite) {
 			LustreMain.log("Executing Test Case (" + (count++) + "/"
-					+ testSuite.size() + ") ... \n");
+					+ testSuite.size() + ") ...");
 			traces.add(this.simulate(testCase));
 		}
 		return traces;

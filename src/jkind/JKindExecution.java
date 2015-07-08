@@ -41,7 +41,7 @@ public class JKindExecution {
 		}
 
 		LustreMain.log(testSuite.size() + "/" + mapping.size()
-				+ " properties have counterexamples.\n");
+				+ " properties have counterexamples.");
 
 		return testSuite;
 	}
@@ -61,14 +61,14 @@ public class JKindExecution {
 		// Set timeout
 		jkind.setN(iteration);
 		jkind.setTimeout(timeout);
-		LustreMain.log("------------Executing JKind\n");
-		LustreMain.log("Iterations: " + iteration + "\n");
-		LustreMain.log("Timeout: " + timeout + " seconds\n");
+		LustreMain.log("------------Executing JKind ...");
+		LustreMain.log("Iterations: " + iteration);
+		LustreMain.log("Timeout: " + timeout + " seconds");
 
 		jkind.execute(new File(fileName), result, monitor);
 
 		LustreMain.log("------------JKind checked "
-				+ result.getPropertyResults().size() + " properties.\n");
+				+ result.getPropertyResults().size() + " properties.");
 
 		for (PropertyResult pr : result.getPropertyResults()) {
 			if (pr.getStatus().equals(Status.INVALID)) {

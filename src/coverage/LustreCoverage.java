@@ -53,36 +53,24 @@ public class LustreCoverage {
 
 		this.exprTypeVisitor.setNodeContext(node);
 		CoverageVisitor coverageVisitor = null;
-		String coverageType = null;
+		String coverageType = coverage.toString();
+
+		LustreMain.log("------------Generating " + coverageType
+				+ " obligations for " + node.id);
 
 		// Determine the coverage type
 		switch (coverage) {
 		case MCDC:
 			coverageVisitor = new MCDCVisitor(exprTypeVisitor);
-			coverageType = "MCDC";
-			LustreMain.log("------------Generating MC/DC obligations for "
-					+ node.id + "\n");
 			break;
 		case BRANCH:
 			coverageVisitor = new BranchVisitor(exprTypeVisitor);
-			coverageType = "BRANCH";
-			LustreMain
-					.log("------------Generating Branch Coverage obligations for "
-							+ node.id + "\n");
 			break;
 		case CONDITION:
 			coverageVisitor = new ConditionVisitor(exprTypeVisitor);
-			coverageType = "CONDITION";
-			LustreMain
-					.log("------------Generating Condition Coverage obligations for "
-							+ node.id + "\n");
 			break;
 		case DECISION:
 			coverageVisitor = new DecisionVisitor(exprTypeVisitor);
-			coverageType = "DECISION";
-			LustreMain
-					.log("------------Generating Decision Coverage obligations for "
-							+ node.id + "\n");
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown coverage: " + coverage);
@@ -132,7 +120,7 @@ public class LustreCoverage {
 			}
 		}
 
-		LustreMain.log("Number of Obligations: " + count + "\n");
+		LustreMain.log("Number of Obligations: " + count);
 		return builder.build();
 	}
 }
