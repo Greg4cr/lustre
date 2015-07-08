@@ -1,5 +1,10 @@
 package enums;
 
 public enum Simulation {
-	COMPLETE, PARTIAL
+	COMPLETE, PARTIAL;
+
+	@Override
+	public String toString() {
+		return super.toString().toLowerCase();
+	}
 }

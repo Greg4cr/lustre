@@ -53,7 +53,7 @@ public class LustreCoverage {
 
 		this.exprTypeVisitor.setNodeContext(node);
 		CoverageVisitor coverageVisitor = null;
-		String coverageType = coverage.toString();
+		String coverageType = coverage.name();
 
 		LustreMain.log("------------Generating " + coverageType
 				+ " obligations for " + node.id);

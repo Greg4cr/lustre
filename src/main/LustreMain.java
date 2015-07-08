@@ -22,8 +22,8 @@ public class LustreMain {
 
 	// Print error message and exit
 	public static void error(String msg) {
-		System.out.println("ERROR: " + msg);
-		System.out.println(0);
+		System.out.println("ERROR " + msg);
+		System.exit(0);
 	}
 
 	// Print and add log message
