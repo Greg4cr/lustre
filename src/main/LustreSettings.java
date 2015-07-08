@@ -1,15 +1,17 @@
 package main;
 
-import values.ValueType;
-import coverage.Coverage;
-import coverage.Polarity;
-import jkind.Settings;
+import enums.Coverage;
+import enums.Polarity;
+import enums.ValueType;
+import enums.Simulation;
 
-public class LustreSettings extends Settings {
+public class LustreSettings {
+	public String fileName = null;
 	public Coverage coverage = null;
 	public Polarity polarity = null;
-	public ValueType generate = null;
-	public boolean simulate = false;
-	public boolean oracle = false;
-	public boolean measure = false;
+	public ValueType valueType = null;
+	public Simulation simulation = null;
+	public String test = null;
+	public String oracle = null;
+	public String measure = null;
 }

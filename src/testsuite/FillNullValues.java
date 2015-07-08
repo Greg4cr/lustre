@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import enums.ValueType;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
@@ -15,7 +16,6 @@ import jkind.results.Signal;
 import jkind.translation.Translate;
 import values.DefaultValueVisitor;
 import values.RandomValueVisitor;
-import values.ValueType;
 import lustre.LustreTrace;
 
 /**

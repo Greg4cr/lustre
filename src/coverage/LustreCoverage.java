@@ -2,6 +2,8 @@ package coverage;
 
 import java.util.List;
 
+import enums.Coverage;
+import enums.Polarity;
 import main.LustreMain;
 import types.ExprTypeVisitor;
 import jkind.lustre.Equation;

@@ -1,4 +1,4 @@
-package coverage;
+package enums;
 
 public enum Coverage {
 	MCDC, CONDITION, BRANCH, DECISION

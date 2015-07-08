@@ -1,13 +1,14 @@
 package main;
 
-import jkind.ArgumentParser;
-
+import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
-import coverage.Coverage;
-
-public class LustreArgumentParser extends ArgumentParser {
+public class LustreArgumentParser {
+	private static final String HELP = "help";
 	private static final String COVERAGE = "coverage";
 	private static final String POLARITY = "polarity";
 	private static final String GENERATE = "generate";
@@ -15,20 +16,17 @@ public class LustreArgumentParser extends ArgumentParser {
 	private static final String ORACLE = "oracle";
 	private static final String MEASURE = "measure";
 
+	private final String name;
 	private final LustreSettings settings;
 
 	private LustreArgumentParser() {
-		this("LustreMain", new LustreSettings());
+		this.name = "LustreMain";
+		this.settings = new LustreSettings();
 	}
 
-	private LustreArgumentParser(String name, LustreSettings settings) {
-		super(name, settings);
-		this.settings = settings;
-	}
-
-	@Override
 	protected Options getOptions() {
-		Options options = super.getOptions();
+		Options options = new Options();
+		options.addOption(HELP, false, "print this message");
 		options.addOption(COVERAGE, true, "generate coverage obligations");
 		options.addOption(POLARITY, true,
 				"polarity of generated coverage obligations");
@@ -46,12 +44,32 @@ public class LustreArgumentParser extends ArgumentParser {
 		return parser.settings;
 	}
 
-	@Override
-	protected void parseCommandLine(CommandLine line) {
-		super.parseCommandLine(line);
+	private void parseArguments(String[] args) {
+		CommandLineParser parser = new BasicParser();
+		try {
+			parseCommandLine(parser.parse(getOptions(), args));
+		} catch (ParseException e) {
+			System.out.println(e.getMessage());
+			System.exit(0);
+		}
+	}
+
+	private void parseCommandLine(CommandLine line) {
+		if (line.hasOption(HELP)) {
+			printHelp();
+			System.exit(0);
+		}
+
+		String[] input = line.getArgs();
+		if (input.length != 1) {
+			printHelp();
+			System.exit(0);
+		}
+
+		this.settings.fileName = input[0];
 
 		if (line.hasOption(COVERAGE)) {
-			settings.coverage = getCoverageOption(line.getOptionValue(COVERAGE));
+
 		}
 
 		if (line.hasOption(POLARITY)) {
@@ -79,17 +97,8 @@ public class LustreArgumentParser extends ArgumentParser {
 		return;
 	}
 
-	private static Coverage getCoverageOption(String coverage) {
-		Coverage[] options = Coverage.values();
-		for (Coverage option : options) {
-			if (coverage.equals(option.toString())) {
-				return option;
-			}
-		}
-
-		System.out.println("Unknown coverage: " + coverage);
-		System.out.println("Valid options: " + options);
-		System.exit(0);
-		return null;
+	private void printHelp() {
+		HelpFormatter formatter = new HelpFormatter();
+		formatter.printHelp(this.name + " [options] <input>", getOptions());
 	}
 }
