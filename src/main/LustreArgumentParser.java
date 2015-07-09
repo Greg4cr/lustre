@@ -49,8 +49,10 @@ public class LustreArgumentParser {
 				"generate test cases, fill in don't care values (null, default, random)");
 		options.addOption(SIMULATE, true,
 				"execute a test suite (complete, partial)");
-		options.addOption(MEASURE, true,
-				"measure satisfaction of obligations (complete, partial)");
+		options.addOption(
+				MEASURE,
+				true,
+				"measure satisfaction of obligations (complete, partial), generate a reduced test suite");
 		return options;
 	}
 

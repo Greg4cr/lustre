@@ -75,6 +75,7 @@ public class LustreProcessing {
 						oracle);
 			}
 
+			// By default, only outputs are printed
 			String outputFile = this.nameNoExtension + ".trace.csv";
 			LustreMain.log("------------Printing trace to file");
 			LustreMain.log(outputFile);
