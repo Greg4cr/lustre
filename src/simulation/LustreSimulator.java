@@ -170,7 +170,7 @@ public final class LustreSimulator {
 		case COMPLETE:
 			LustreMain.log("------------Starting complete simulator");
 			if (!isComplete) {
-				throw new IllegalArgumentException("Test suite has null values");
+				LustreMain.error("Test suite has null values");
 			}
 			break;
 		case PARTIAL:
@@ -296,7 +296,13 @@ public final class LustreSimulator {
 			if (ue.op.equals(UnaryOp.PRE)) {
 				return this.evaluate(ue.expr, step - 1);
 			} else {
-				return this.evaluate(ue.expr, step);
+				Value ueValue = this.evaluate(ue.expr, step);
+
+				if (ueValue == null) {
+					return null;
+				} else {
+					return ueValue.applyUnaryOp(ue.op);
+				}
 			}
 		}
 		// Binary operators
@@ -316,10 +322,10 @@ public final class LustreSimulator {
 				if (leftValue == null || rightValue == null) {
 					switch (this.simulation) {
 					case COMPLETE:
+						return null;
+					case PARTIAL:
 						return booleanPartialEvaluation(leftValue, rightValue,
 								be.op);
-					case PARTIAL:
-						return null;
 					default:
 						throw new IllegalArgumentException(
 								"Unknown simulation: " + simulation);

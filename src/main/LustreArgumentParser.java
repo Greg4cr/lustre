@@ -21,6 +21,7 @@ public class LustreArgumentParser {
 	private static final String POLARITY = "polarity";
 	private static final String GENERATE = "generate";
 	private static final String SIMULATE = "simulate";
+	private static final String MEASURE = "measure";
 
 	private final String name;
 	private final LustreSettings settings;
@@ -48,6 +49,8 @@ public class LustreArgumentParser {
 				"generate test cases, fill in don't care values (null, default, random)");
 		options.addOption(SIMULATE, true,
 				"execute a test suite (complete, partial)");
+		options.addOption(MEASURE, true,
+				"measure satisfaction of properties (complete, partial)");
 		return options;
 	}
 
@@ -99,18 +102,33 @@ public class LustreArgumentParser {
 			this.settings.simulation = this.getSimulation(line
 					.getOptionValue(SIMULATE));
 		}
+
+		if (line.hasOption(MEASURE)) {
+			this.settings.measure = this.getSimulation(line
+					.getOptionValue(MEASURE));
+			;
+		}
 	}
 
 	private void checkSettings() {
-		if (settings.coverage == null && settings.polarity != null) {
+		if (settings.polarity != null && settings.coverage == null) {
 			LustreMain.error("polarity should be used with coverage");
 		}
-		if (settings.generation != null && settings.simulation != null) {
+		if (settings.simulation != null && settings.measure != null) {
 			LustreMain
-					.error("generate and simulate should not be used together");
+					.error("simulate and measure should not be used together");
+		}
+		if (settings.generation != null && settings.tests == null) {
+			LustreMain.error("please specify the test suite to generate");
 		}
 		if (settings.simulation != null && settings.tests == null) {
-			LustreMain.error("simulate should be used with a test suite");
+			LustreMain.error("please specify the test suite to simulate");
+		}
+		if (settings.measure != null && settings.tests == null) {
+			LustreMain.error("please specify the test suite to measure");
+		}
+		if (settings.measure != null && settings.oracle != null) {
+			LustreMain.error("measure should not be used with oracle");
 		}
 	}
 

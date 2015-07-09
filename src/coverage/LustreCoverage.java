@@ -34,34 +34,41 @@ public class LustreCoverage {
 	private final Coverage coverage;
 	private final Polarity polarity;
 	private final ExprTypeVisitor exprTypeVisitor;
+	private int count;
 
 	private LustreCoverage(Program program, Coverage coverage, Polarity polarity) {
 		this.program = program;
 		this.coverage = coverage;
 		this.polarity = polarity;
 		this.exprTypeVisitor = new ExprTypeVisitor(program);
+		this.count = 0;
 	}
 
 	private Program generate() {
+		String coverageType = coverage.name();
+
+		LustreMain.log("------------Generating " + coverageType
+				+ " obligations");
+
 		ProgramBuilder builder = new ProgramBuilder();
 		builder.addConstants(this.program.constants)
 				.addTypes(this.program.types).setMain(this.program.main);
 		for (Node node : this.program.nodes) {
 			builder.addNode(this.generate(node));
 		}
+
+		LustreMain.log("Number of Obligations: " + count);
 		return builder.build();
 	}
 
 	// Generate obligations for a node
 	private Node generate(Node node) {
+		LustreMain.log("Node: " + node.id);
+
 		NodeBuilder builder = new NodeBuilder(node);
 
-		this.exprTypeVisitor.setNodeContext(node);
 		CoverageVisitor coverageVisitor = null;
-		String coverageType = coverage.name();
-
-		LustreMain.log("------------Generating " + coverageType
-				+ " obligations for " + node.id);
+		this.exprTypeVisitor.setNodeContext(node);
 
 		// Determine the coverage type
 		switch (coverage) {
@@ -82,7 +89,6 @@ public class LustreCoverage {
 		}
 
 		// Start generating obligations
-		int count = 0;
 		for (Equation equation : node.equations) {
 			String id = null;
 
@@ -114,7 +120,7 @@ public class LustreCoverage {
 
 				String property = obligation.condition + "_"
 						+ (obligation.polarity ? "TRUE" : "FALSE") + "_AT_"
-						+ id + "_" + coverageType + "_"
+						+ id + "_" + coverage.name() + "_"
 						+ (obligation.expressionPolarity ? "TRUE" : "FALSE")
 						+ "_" + (count++);
 
@@ -124,8 +130,6 @@ public class LustreCoverage {
 				builder.addProperty(property);
 			}
 		}
-
-		LustreMain.log("Number of Obligations: " + count);
 		return builder.build();
 	}
 }

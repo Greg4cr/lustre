@@ -14,4 +14,5 @@ public class LustreSettings {
 	public Polarity polarity = null;
 	public Generation generation = null;
 	public Simulation simulation = null;
+	public Simulation measure = null;
 }
