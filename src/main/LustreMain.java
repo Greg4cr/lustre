@@ -19,6 +19,7 @@ public class LustreMain {
 	public static void main(String[] args) {
 		LustreSettings settings = LustreArgumentParser.parse(args);
 		Program program = getProgram(settings.program);
+		log("Main node: " + program.main);
 
 		LustreProcessing lustre = new LustreProcessing(program, settings);
 		lustre.process();

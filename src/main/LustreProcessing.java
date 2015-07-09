@@ -3,11 +3,9 @@ package main;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import property.LustreProperty;
+import property.Measurement;
 import simulation.LustreSimulator;
 import testsuite.FillNullValues;
 import testsuite.ReadOracle;
@@ -16,9 +14,6 @@ import testsuite.WriteTrace;
 import coverage.LustreCoverage;
 import jkind.JKindExecution;
 import jkind.lustre.Program;
-import jkind.lustre.values.BooleanValue;
-import jkind.lustre.values.Value;
-import jkind.results.Signal;
 import lustre.LustreTrace;
 
 public class LustreProcessing {
@@ -95,55 +90,23 @@ public class LustreProcessing {
 			List<LustreTrace> traces = simulator.simulate(testSuite,
 					settings.measure, simulator.getProperties());
 
-			String outputFile = this.nameNoExtension + ".trace.csv";
-			LustreMain.log("------------Printing trace to file");
+			// Skip printing trace
+			// String outputFile = this.nameNoExtension + ".trace.csv";
+			// LustreMain.log("------------Printing trace to file");
+			// LustreMain.log(outputFile);
+			// WriteTrace.write(traces, outputFile, programTranslated);
+
+			LustreMain
+					.log("------------Measuring coverage and reducing test suite");
+			List<LustreTrace> reducedTestSuite = Measurement.measure(testSuite,
+					traces, programTranslated);
+			String outputFile = removeFileExtension(settings.tests)
+					+ ".reduced.csv";
+			LustreMain.log("------------Printing reduced test suite to file");
 			LustreMain.log(outputFile);
-			WriteTrace.write(traces, outputFile, programTranslated);
-
-			LustreMain.log("------------Coverage measurement summary");
-			this.satisfiedProperties(traces, programTranslated);
-		}
-	}
-
-	private void satisfiedProperties(List<LustreTrace> traces, Program program) {
-		Set<LustreProperty> properties = LustreProperty.getProperties(program);
-		LustreMain.log("Number of trap properties: " + properties.size());
-
-		Set<LustreProperty> satisfied = new HashSet<LustreProperty>();
-
-		for (LustreTrace trace : traces) {
-			Set<String> variables = trace.getVariableNames();
-			for (String variable : variables) {
-				Signal<Value> signal = trace.getVariable(variable);
-				for (int step = 0; step < trace.getLength(); step++) {
-					// For trap properties, FALSE means the original obligation
-					// is satisfied
-					if (signal.getValue(step) != null
-							&& signal.getValue(step).equals(BooleanValue.FALSE)) {
-						LustreProperty property = LustreProperty.convert(
-								variable, program.main);
-						if (properties.contains(property)) {
-							satisfied.add(property);
-						} else {
-							throw new IllegalArgumentException(
-									"Uknown property: " + variable);
-						}
-					}
-				}
-			}
-		}
-
-		LustreMain
-				.log("------------Satisfied obligations: " + satisfied.size());
-		for (LustreProperty property : satisfied) {
-			LustreMain.log(property.toString());
-			properties.remove(property);
-		}
-
-		LustreMain.log("------------Unsatisfied obligations: "
-				+ properties.size());
-		for (LustreProperty property : properties) {
-			LustreMain.log(property.toString());
+			LustreMain.log("Reduced test suite size: "
+					+ reducedTestSuite.size() + "/" + testSuite.size());
+			WriteTrace.write(reducedTestSuite, outputFile, programTranslated);
 		}
 	}
 

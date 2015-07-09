@@ -50,7 +50,7 @@ public class LustreArgumentParser {
 		options.addOption(SIMULATE, true,
 				"execute a test suite (complete, partial)");
 		options.addOption(MEASURE, true,
-				"measure satisfaction of properties (complete, partial)");
+				"measure satisfaction of obligations (complete, partial)");
 		return options;
 	}
 
@@ -119,13 +119,13 @@ public class LustreArgumentParser {
 					.error("simulate and measure should not be used together");
 		}
 		if (settings.generation != null && settings.tests == null) {
-			LustreMain.error("please specify the test suite to generate");
+			LustreMain.error("generate should be used with a test suite");
 		}
 		if (settings.simulation != null && settings.tests == null) {
-			LustreMain.error("please specify the test suite to simulate");
+			LustreMain.error("simulate should be used with a test suite");
 		}
 		if (settings.measure != null && settings.tests == null) {
-			LustreMain.error("please specify the test suite to measure");
+			LustreMain.error("measure should be used with a test suite");
 		}
 		if (settings.measure != null && settings.oracle != null) {
 			LustreMain.error("measure should not be used with oracle");
