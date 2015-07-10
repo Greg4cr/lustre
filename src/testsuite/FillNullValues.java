@@ -7,13 +7,11 @@ import java.util.Map;
 import java.util.Set;
 
 import enums.Generation;
-import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
 import jkind.lustre.VarDecl;
 import jkind.lustre.values.Value;
 import jkind.results.Signal;
-import jkind.translation.Translate;
 import values.DefaultValueVisitor;
 import values.RandomValueVisitor;
 import lustre.LustreTrace;
@@ -25,8 +23,7 @@ public class FillNullValues {
 	// Fill in a test suite
 	public static List<LustreTrace> fill(List<LustreTrace> testSuite,
 			Program program, Generation generation) {
-		Node node = Translate.translate(program);
-		List<VarDecl> inputs = node.inputs;
+		List<VarDecl> inputs = program.getMainNode().inputs;
 
 		return new FillNullValues().fillNullValues(testSuite, inputs,
 				generation);
@@ -35,8 +32,7 @@ public class FillNullValues {
 	// Fill in a test case
 	public static LustreTrace fill(LustreTrace testCase, Program program,
 			Generation generation) {
-		Node node = Translate.translate(program);
-		List<VarDecl> inputs = node.inputs;
+		List<VarDecl> inputs = program.getMainNode().inputs;
 
 		return new FillNullValues()
 				.fillNullValues(testCase, inputs, generation);

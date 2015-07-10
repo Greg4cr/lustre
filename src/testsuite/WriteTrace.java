@@ -10,11 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 import values.ValueToString;
-import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
 import jkind.lustre.values.Value;
-import jkind.translation.Translate;
 import jkind.util.StringNaturalOrdering;
 import jkind.util.Util;
 import lustre.LustreTrace;
@@ -28,12 +26,9 @@ import lustre.LustreTrace;
 public class WriteTrace {
 	public static void write(List<LustreTrace> testSuite, String fileName,
 			Program program) {
-		WriteTrace writer = new WriteTrace();
+		Map<String, Type> typeMap = Util.getTypeMap(program.getMainNode());
 
-		Node node = Translate.translate(program);
-		Map<String, Type> typeMap = Util.getTypeMap(node);
-
-		writer.write(testSuite, fileName, typeMap);
+		new WriteTrace().write(testSuite, fileName, typeMap);
 	}
 
 	private void write(List<LustreTrace> traces, String fileName,
