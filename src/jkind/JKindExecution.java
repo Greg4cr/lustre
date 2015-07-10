@@ -10,14 +10,12 @@ import jkind.api.JKindApi;
 import jkind.api.results.JKindResult;
 import jkind.api.results.PropertyResult;
 import jkind.api.results.Status;
-import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.VarDecl;
 import jkind.lustre.values.Value;
 import jkind.results.Counterexample;
 import jkind.results.InvalidProperty;
 import jkind.results.Signal;
-import jkind.translation.Translate;
 import lustre.LustreTrace;
 import main.LustreMain;
 
@@ -88,10 +86,9 @@ public class JKindExecution {
 			Program program) {
 		LustreTrace output = new LustreTrace(ce.getLength());
 
-		// Translate Lustre program to simple format
-		Node node = Translate.translate(program);
+		List<VarDecl> inputs = program.getMainNode().inputs;
 
-		for (VarDecl input : node.inputs) {
+		for (VarDecl input : inputs) {
 			Signal<Value> signal = ce.getSignal(input.id);
 
 			// If JKind does not produce values for this variable

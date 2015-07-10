@@ -9,13 +9,11 @@ import java.util.Map;
 import java.util.Scanner;
 
 import values.StringToValue;
-import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
 import jkind.lustre.VarDecl;
 import jkind.lustre.values.Value;
 import jkind.results.Signal;
-import jkind.translation.Translate;
 import lustre.LustreTrace;
 
 /**
@@ -26,11 +24,9 @@ import lustre.LustreTrace;
  */
 public class ReadTestSuite {
 	public static List<LustreTrace> read(String fileName, Program program) {
-		ReadTestSuite reader = new ReadTestSuite();
+		List<VarDecl> inputs = program.getMainNode().inputs;
 
-		Node node = Translate.translate(program);
-
-		return reader.read(fileName, node.inputs);
+		return new ReadTestSuite().read(fileName, inputs);
 	}
 
 	private List<LustreTrace> read(String fileName, List<VarDecl> inputs) {
