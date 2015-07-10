@@ -1,0 +1,12 @@
+
+node top(a : int)
+   returns (b, c : int);
+
+var
+  d : int;
+
+let --%MAIN
+  b = 0 -> pre (b + 1);
+  c = a + b;
+  d = a - b;
+tel;

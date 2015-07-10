@@ -1,7 +1,6 @@
 package testsuite;
 
 import java.util.List;
-import java.util.Set;
 
 import jkind.lustre.values.Value;
 import jkind.results.Signal;
@@ -12,9 +11,10 @@ import lustre.LustreTrace;
  */
 public class VerifyTestSuite {
 	// Check null for a test suite
-	public static boolean isComplete(List<LustreTrace> testSuite) {
+	public static boolean isComplete(List<LustreTrace> testSuite,
+			List<String> inputs) {
 		for (LustreTrace testCase : testSuite) {
-			if (!isComplete(testCase)) {
+			if (!isComplete(testCase, inputs)) {
 				return false;
 			}
 		}
@@ -23,11 +23,13 @@ public class VerifyTestSuite {
 	}
 
 	// Check null for a test case
-	public static boolean isComplete(LustreTrace testCase) {
-		Set<String> variables = testCase.getVariableNames();
-
-		for (String variable : variables) {
+	public static boolean isComplete(LustreTrace testCase, List<String> inputs) {
+		for (String variable : inputs) {
 			Signal<Value> signal = testCase.getVariable(variable);
+
+			if (signal == null) {
+				return false;
+			}
 
 			int length = testCase.getLength();
 

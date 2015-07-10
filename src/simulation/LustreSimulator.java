@@ -68,7 +68,7 @@ public final class LustreSimulator {
 		this.exprTypeVisitor = new ExprTypeVisitor(program);
 		this.exprTypeVisitor.setNodeContext(node);
 
-		this.simulation = Simulation.COMPLETE;
+		this.simulation = null;
 		this.initialize(node);
 	}
 
@@ -155,47 +155,69 @@ public final class LustreSimulator {
 		return this.properties;
 	}
 
-	// Simulate a test suite
-	public List<LustreTrace> simulate(List<LustreTrace> testSuite,
-			Simulation simulation) {
-		return this.simulate(testSuite, simulation, null);
-	}
-
-	public List<LustreTrace> simulate(List<LustreTrace> testSuite,
-			Simulation simulation, List<String> oracles) {
-		this.simulation = simulation;
-		boolean isComplete = VerifyTestSuite.isComplete(testSuite);
-
-		switch (this.simulation) {
+	private void setSimulation(boolean isComplete, Simulation simulation) {
+		switch (simulation) {
 		case COMPLETE:
-			LustreMain.log("------------Starting complete simulator");
 			if (!isComplete) {
 				LustreMain.error("Test suite has null values");
 			}
+			LustreMain.log("------------Starting complete simulator");
 			break;
 		case PARTIAL:
-			LustreMain.log("------------Starting partial simulator");
 			if (!isComplete) {
 				LustreMain.log("Test suite has null values.");
 			}
+			LustreMain.log("------------Starting partial simulator");
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown simulation: "
 					+ simulation);
 		}
-
-		return this.simulate(testSuite, oracles);
+		this.simulation = simulation;
 	}
 
-	// Simulate a test suite on oracle
-	private List<LustreTrace> simulate(List<LustreTrace> testSuite,
-			List<String> oracles) {
-		// Clear and add oracle if specified
-		if (oracles != null) {
-			this.oracleVars.clear();
-			this.oracleVars.addAll(oracles);
-		}
+	private void setOracle(List<String> oracle) {
+		this.oracleVars.clear();
+		this.oracleVars.addAll(oracle);
+	}
 
+	// Simulate a test suite
+	public List<LustreTrace> simulate(List<LustreTrace> testSuite,
+			Simulation simulation) {
+		this.setSimulation(
+				VerifyTestSuite.isComplete(testSuite, this.inputVars),
+				simulation);
+		return this.simulate(testSuite);
+	}
+
+	public List<LustreTrace> simulate(List<LustreTrace> testSuite,
+			Simulation simulation, List<String> oracle) {
+		this.setSimulation(
+				VerifyTestSuite.isComplete(testSuite, this.inputVars),
+				simulation);
+		this.setOracle(oracle);
+		return this.simulate(testSuite);
+	}
+
+	// Simulate a test case
+	public LustreTrace simulate(LustreTrace testCase, Simulation simulation) {
+		this.setSimulation(
+				VerifyTestSuite.isComplete(testCase, this.inputVars),
+				simulation);
+		return this.simulate(testCase);
+	}
+
+	public LustreTrace simulate(LustreTrace testCase, Simulation simulation,
+			List<String> oracle) {
+		this.setSimulation(
+				VerifyTestSuite.isComplete(testCase, this.inputVars),
+				simulation);
+		this.setOracle(oracle);
+		return this.simulate(testCase);
+	}
+
+	// Simulate a test suite, assuming simulation and oracle have been set
+	private List<LustreTrace> simulate(List<LustreTrace> testSuite) {
 		List<LustreTrace> traces = new ArrayList<LustreTrace>();
 		int count = 1;
 		for (LustreTrace testCase : testSuite) {
@@ -206,7 +228,7 @@ public final class LustreSimulator {
 		return traces;
 	}
 
-	// Simulate a test case
+	// Simulate a test case, assuming simulation and oracle have been set
 	private LustreTrace simulate(LustreTrace testCase) {
 		int length = this.evaluate(testCase);
 		LustreTrace trace = new LustreTrace(length);

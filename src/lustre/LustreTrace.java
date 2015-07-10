@@ -76,8 +76,34 @@ public final class LustreTrace {
 					output += ",";
 				}
 			}
-			output += "\n";
+
+			if (step < length - 1) {
+				output += "\n";
+			}
 		}
 		return output;
+	}
+
+	// This method is used to concatenate this test with other
+	// The very initial step of other is ignored if this test is not empty
+	public void addLustreTrace(LustreTrace other) {
+		int origEnding = 0;
+		int initialStep = 0;
+
+		if (this.length == 0) {
+			this.length = other.length;
+		} else {
+			origEnding = this.length - 1;
+			initialStep = 1;
+			this.length += other.length - 1;
+		}
+
+		for (String variable : this.variables.keySet()) {
+			Signal<Value> signal = this.variables.get(variable);
+			Signal<Value> otherSignal = other.variables.get(variable);
+			for (int step = initialStep; step < other.length; step++) {
+				signal.putValue(origEnding + step, otherSignal.getValue(step));
+			}
+		}
 	}
 }
