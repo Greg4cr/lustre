@@ -1,6 +1,5 @@
-package translation;
+package cse;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,11 +17,10 @@ import jkind.lustre.NodeCallExpr;
 import jkind.lustre.RecordAccessExpr;
 import jkind.lustre.RecordExpr;
 import jkind.lustre.RecordUpdateExpr;
-import jkind.lustre.TupleExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.visitors.ExprIterVisitor;
 
-public class ExprUseVisitor extends ExprIterVisitor {
+public final class ExprUseVisitor extends ExprIterVisitor {
 	public static Map<String, Integer> get(Node node) {
 		ExprUseVisitor visitor = new ExprUseVisitor();
 
@@ -80,7 +78,8 @@ public class ExprUseVisitor extends ExprIterVisitor {
 	@Override
 	public Void visit(CondactExpr e) {
 		e.clock.accept(this);
-		e.call.accept(this);
+		// Do not visit calls
+		// e.call.accept(this);
 		visitExprs(e.args);
 		addExpr(e);
 		return null;
@@ -125,13 +124,6 @@ public class ExprUseVisitor extends ExprIterVisitor {
 	}
 
 	@Override
-	public Void visit(TupleExpr e) {
-		visitExprs(e.elements);
-		addExpr(e);
-		return null;
-	}
-
-	@Override
 	public Void visit(UnaryExpr e) {
 		e.expr.accept(this);
 		addExpr(e);
@@ -144,12 +136,5 @@ public class ExprUseVisitor extends ExprIterVisitor {
 			this.exprUse.put(eStr, 0);
 		}
 		this.exprUse.put(eStr, this.exprUse.get(eStr) + 1);
-	}
-
-	protected Void visitExprs(Collection<Expr> list) {
-		for (Expr e : list) {
-			e.accept(this);
-		}
-		return null;
 	}
 }

@@ -255,7 +255,18 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 		if (expr.op.equals(UnaryOp.NOT)) {
 			return NamedType.BOOL;
 		} else {
-			return expr.expr.accept(this);
+			Type type = expr.expr.accept(this);
+
+			// Negate and replace low and high for SubrangeIntType with
+			// UnaryOp.NEGATIVE
+			if (expr.op.equals(UnaryOp.NEGATIVE)
+					&& type instanceof SubrangeIntType) {
+				SubrangeIntType subrange = (SubrangeIntType) type;
+				return new SubrangeIntType(subrange.high.negate(),
+						subrange.low.negate());
+			} else {
+				return type;
+			}
 		}
 	}
 
