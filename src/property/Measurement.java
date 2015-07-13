@@ -13,7 +13,7 @@ import jkind.results.Signal;
 import lustre.LustreTrace;
 import main.LustreMain;
 
-public class Measurement {
+public final class Measurement {
 	private Set<LustreProperty> properties = new HashSet<LustreProperty>();
 
 	public static List<LustreTrace> measure(List<LustreTrace> testSuite,

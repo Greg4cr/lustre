@@ -10,7 +10,7 @@ import java.util.Scanner;
  * Read optional oracle variables from a file, in which variables are separated
  * by commas.
  */
-public class ReadOracle {
+public final class ReadOracle {
 	public static List<String> read(String fileName) {
 		return new ReadOracle()._read(fileName);
 	}

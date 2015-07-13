@@ -20,7 +20,7 @@ import lustre.LustreTrace;
 /**
  * Fill in null values with concrete values
  */
-public class FillNullValues {
+public final class FillNullValues {
 	// Fill in a test suite
 	public static List<LustreTrace> fill(List<LustreTrace> testSuite,
 			Program program, Generation generation) {

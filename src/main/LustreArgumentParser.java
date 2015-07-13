@@ -15,13 +15,14 @@ import enums.Polarity;
 import enums.Simulation;
 import enums.Generation;
 
-public class LustreArgumentParser {
+public final class LustreArgumentParser {
 	private static final String HELP = "help";
 	private static final String COVERAGE = "coverage";
 	private static final String POLARITY = "polarity";
 	private static final String GENERATE = "generate";
 	private static final String SIMULATE = "simulate";
 	private static final String MEASURE = "measure";
+	private static final String NO_CSE = "no_cse";
 
 	private final String name;
 	private final LustreSettings settings;
@@ -53,6 +54,8 @@ public class LustreArgumentParser {
 				MEASURE,
 				true,
 				"measure satisfaction of obligations (complete, partial), generate a reduced test suite");
+		options.addOption(NO_CSE, false,
+				"Disable common subexpression elimination");
 		return options;
 	}
 
@@ -108,7 +111,10 @@ public class LustreArgumentParser {
 		if (line.hasOption(MEASURE)) {
 			this.settings.measure = this.getSimulation(line
 					.getOptionValue(MEASURE));
-			;
+		}
+
+		if (line.hasOption(NO_CSE)) {
+			this.settings.cse = false;
 		}
 	}
 

@@ -45,7 +45,7 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 				Expr right = new BinaryExpr(
 						new UnaryExpr(UnaryOp.NOT, leftExpr), BinaryOp.AND,
 						new UnaryExpr(UnaryOp.NOT, rightExpr));
-				return new BinaryExpr(left, BinaryOp.OR, right);
+				return new BinaryExpr(expr.location, left, BinaryOp.OR, right);
 			}
 			// Otherwise it should be boolean unequal or XOR
 			else {
@@ -54,7 +54,7 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 				Expr right = new BinaryExpr(
 						new UnaryExpr(UnaryOp.NOT, leftExpr), BinaryOp.AND,
 						rightExpr);
-				return new BinaryExpr(left, BinaryOp.OR, right);
+				return new BinaryExpr(expr.location, left, BinaryOp.OR, right);
 			}
 		}
 		return super.visit(expr);

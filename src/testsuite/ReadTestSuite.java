@@ -22,7 +22,7 @@ import lustre.LustreTrace;
  * to integers. Only input variables are read in. Input variables that are not
  * in the file will also be created with null values.
  */
-public class ReadTestSuite {
+public final class ReadTestSuite {
 	public static List<LustreTrace> read(String fileName, Program program) {
 		List<VarDecl> inputs = program.getMainNode().inputs;
 

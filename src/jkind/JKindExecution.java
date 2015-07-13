@@ -21,7 +21,7 @@ import main.LustreMain;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-public class JKindExecution {
+public final class JKindExecution {
 	// Default parameters for JKind
 	public static int iteration = 40; // 40 steps
 	public static int timeout = 172800; // 48 hours

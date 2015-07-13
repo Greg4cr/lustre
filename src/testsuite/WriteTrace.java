@@ -23,7 +23,7 @@ import lustre.LustreTrace;
  * variable values are translated back to Enum values. All signals in a trace
  * are written to the file.
  */
-public class WriteTrace {
+public final class WriteTrace {
 	public static void write(List<LustreTrace> testSuite, String fileName,
 			Program program) {
 		Map<String, Type> typeMap = Util.getTypeMap(program.getMainNode());

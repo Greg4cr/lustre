@@ -9,7 +9,7 @@ import lustre.LustreTrace;
 /**
  * Verify if a test suite/case has null values
  */
-public class VerifyTestSuite {
+public final class VerifyTestSuite {
 	// Check null for a test suite
 	public static boolean isComplete(List<LustreTrace> testSuite,
 			List<String> inputs) {

@@ -5,7 +5,7 @@ import java.util.Set;
 
 import lustre.LustreTrace;
 
-public class PropertySet implements Comparable<PropertySet> {
+public final class PropertySet implements Comparable<PropertySet> {
 	public final LustreTrace testCase;
 	public final Set<LustreProperty> properties;
 

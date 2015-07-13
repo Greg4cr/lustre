@@ -12,7 +12,7 @@ import jkind.SolverOption;
 import jkind.analysis.StaticAnalyzer;
 import jkind.lustre.Program;
 
-public class LustreMain {
+public final class LustreMain {
 	private static String log = "";
 	private static String logFile = "LustreMain.log";
 

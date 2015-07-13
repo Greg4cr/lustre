@@ -12,11 +12,12 @@ import testsuite.ReadOracle;
 import testsuite.ReadTestSuite;
 import testsuite.WriteTrace;
 import coverage.LustreCoverage;
+import cse.LustreCSE;
 import jkind.JKindExecution;
 import jkind.lustre.Program;
 import lustre.LustreTrace;
 
-public class LustreProcessing {
+public final class LustreProcessing {
 	private final Program program;
 	private final LustreSettings settings;
 	private final String nameNoExtension;
@@ -45,6 +46,10 @@ public class LustreProcessing {
 			LustreMain.log("------------Printing obligations to file");
 			LustreMain.log(outputFile);
 			printToFile(outputFile, programTranslated.toString());
+		}
+
+		if (settings.cse) {
+			programTranslated = LustreCSE.program(programTranslated, 2);
 		}
 
 		// Process generation

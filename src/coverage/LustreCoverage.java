@@ -17,7 +17,7 @@ import jkind.lustre.VarDecl;
 import jkind.lustre.builders.NodeBuilder;
 import jkind.lustre.builders.ProgramBuilder;
 
-public class LustreCoverage {
+public final class LustreCoverage {
 	// By default, use polarity ALL
 	public static Program program(Program program, Coverage coverage) {
 		return program(program, coverage, Polarity.ALL);

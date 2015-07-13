@@ -6,7 +6,7 @@ import java.util.Set;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 
-public class LustreProperty {
+public final class LustreProperty {
 	public final String node;
 	public final String property;
 

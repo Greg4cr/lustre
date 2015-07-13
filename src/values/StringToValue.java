@@ -22,7 +22,7 @@ import jkind.util.BigFraction;
  * RecordType,and TupleType have been flattened. Also Convert EnumType values
  * from EnumValue to integers.
  */
-public class StringToValue implements TypeVisitor<Value> {
+public final class StringToValue implements TypeVisitor<Value> {
 	public static Value get(String valueStr, Type type) {
 		StringToValue visitor = new StringToValue(valueStr);
 		Value value = type.accept(visitor);

@@ -17,7 +17,7 @@ import jkind.lustre.visitors.TypeVisitor;
  * RecordType,and TupleType have been flattened. Also Convert EnumType values
  * from integer back to EnumValue.
  */
-public class ValueToString implements TypeVisitor<String> {
+public final class ValueToString implements TypeVisitor<String> {
 	public static String get(Value value, Type type) {
 		ValueToString visitor = new ValueToString(value);
 		String valueStr = type.accept(visitor);
