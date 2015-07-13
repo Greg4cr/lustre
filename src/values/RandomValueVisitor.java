@@ -46,7 +46,8 @@ public final class RandomValueVisitor extends ValueVisitor {
 			String randReal = String.format("%.8f", (double) randomNum);
 			return new RealValue(new BigFraction(new BigDecimal(randReal)));
 		} else {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Unknown type: " + type + " "
+					+ type.getClass());
 		}
 	}
 

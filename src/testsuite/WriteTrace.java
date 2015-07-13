@@ -9,12 +9,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import types.ResolvedTypeTable;
 import values.ValueToString;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
 import jkind.lustre.values.Value;
 import jkind.util.StringNaturalOrdering;
-import jkind.util.Util;
 import lustre.LustreTrace;
 
 /**
@@ -26,7 +26,7 @@ import lustre.LustreTrace;
 public final class WriteTrace {
 	public static void write(List<LustreTrace> testSuite, String fileName,
 			Program program) {
-		Map<String, Type> typeMap = Util.getTypeMap(program.getMainNode());
+		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
 
 		new WriteTrace().write(testSuite, fileName, typeMap);
 	}

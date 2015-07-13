@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import types.ResolvedTypeTable;
 import values.StringToValue;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
@@ -24,21 +25,20 @@ import lustre.LustreTrace;
  */
 public final class ReadTestSuite {
 	public static List<LustreTrace> read(String fileName, Program program) {
-		List<VarDecl> inputs = program.getMainNode().inputs;
+		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
 
-		return new ReadTestSuite().read(fileName, inputs);
+		List<String> inputVars = new ArrayList<String>();
+
+		for (VarDecl var : program.getMainNode().inputs) {
+			inputVars.add(var.id);
+		}
+
+		return new ReadTestSuite().read(inputVars, fileName, typeMap);
 	}
 
-	private List<LustreTrace> read(String fileName, List<VarDecl> inputs) {
+	private List<LustreTrace> read(List<String> inputVars, String fileName,
+			Map<String, Type> typeMap) {
 		List<LustreTrace> testSuite = new ArrayList<LustreTrace>();
-
-		// Get input names and types
-		List<String> inputVars = new ArrayList<String>();
-		Map<String, Type> inputTypes = new HashMap<String, Type>();
-		for (VarDecl input : inputs) {
-			inputVars.add(input.id);
-			inputTypes.put(input.id, input.type);
-		}
 
 		Scanner sc = null;
 
@@ -99,7 +99,7 @@ public final class ReadTestSuite {
 					// If this variable is an input
 					if (inputVars.contains(variable)) {
 						String valueStr = values[inputIndex];
-						Type type = inputTypes.get(variable);
+						Type type = typeMap.get(variable);
 
 						// Value can be null
 						if (valueStr.equals("null")) {

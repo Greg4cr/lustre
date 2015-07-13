@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import main.LustreMain;
 import types.ExprTypeVisitor;
+import main.LustreMain;
 import jkind.lustre.ArrayAccessExpr;
 import jkind.lustre.ArrayExpr;
 import jkind.lustre.ArrayUpdateExpr;
@@ -28,98 +28,87 @@ import jkind.lustre.TupleType;
 import jkind.lustre.Type;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.VarDecl;
-import jkind.lustre.visitors.AstMapVisitor;
+import jkind.lustre.visitors.ExprMapVisitor;
 
-/**
- * Perform common subexpression elimination on the Lustre program
- */
-public final class LustreCSE extends AstMapVisitor {
-	public static Program get(Program program, int cse) {
+public final class LustreCSE extends ExprMapVisitor {
+	public static Program program(Program program, int cse) {
 		LustreMain.log("------------Eliminating subexpressions used more than "
 				+ cse + " time(s)");
-		LustreCSE lustreCSE = new LustreCSE(program, cse);
+		ExprTypeVisitor exprTypeVisitor = new ExprTypeVisitor(program);
 
-		Program output = program;
-		int iteration = 1;
+		List<Node> nodes = new ArrayList<Node>();
 
-		do {
-			LustreMain.log("------------Iteration: " + iteration++);
-			output = lustreCSE.visit(output);
-		} while (lustreCSE.changed);
+		for (Node node : program.nodes) {
+			LustreMain.log("Node: " + node.id);
+			LustreCSE nodeCSE = new LustreCSE(exprTypeVisitor, node, cse);
 
-		return output;
-	}
+			Node translated = node;
+			int prevCSESize = -1;
 
-	private final ExprTypeVisitor exprTypeVisitor;
-	private final int cse;
-	// Count replaced expressions
-	private int count;
-	// Indicate whether there are replaced expressions in one iteration
-	private boolean changed;
-
-	private Map<String, Integer> exprUse;
-	private Map<String, CSEExpr> exprToVarMapping;
-
-	private LustreCSE(Program program, int cse) {
-		this.exprTypeVisitor = new ExprTypeVisitor(program);
-		this.cse = cse;
-		this.count = 0;
-		this.changed = false;
-	}
-
-	// Get a variable Expr for an Expr
-	private Expr getExprVar(Expr expr) {
-		String exprStr = expr.toString();
-		if (this.exprToVarMapping.containsKey(exprStr)) {
-			return this.exprToVarMapping.get(exprStr).exprVar;
-		} else {
-			Type type = expr.accept(this.exprTypeVisitor);
-			List<Expr> elements = new ArrayList<Expr>();
-
-			if (type instanceof TupleType) {
-				TupleType tupleType = (TupleType) type;
-
-				// Create the same number of IdExpr for this TupleType
-				for (int i = 0; i < tupleType.types.size(); i++) {
-					elements.add(new IdExpr("CSEVar_" + count++));
-				}
-			} else {
-				elements.add(new IdExpr("CSEVar_" + count++));
+			while (nodeCSE.exprToVarMapping.size() > prevCSESize) {
+				prevCSESize = nodeCSE.exprToVarMapping.size();
+				translated = nodeCSE.visitNode(translated);
 			}
 
-			Expr exprVar = TupleExpr.compress(elements);
-			this.exprToVarMapping
-					.put(exprStr, new CSEExpr(expr, exprVar, type));
-			return exprVar;
-		}
-	}
+			LustreMain.log("Replaced expressions: "
+					+ nodeCSE.exprToVarMapping.size());
 
-	@Override
-	public Program visit(Program program) {
-		this.changed = false;
-		// Iterate on nodes
-		List<Node> nodes = visitNodes(program.nodes);
+			nodes.add(translated);
+		}
+
 		return new Program(program.location, program.types, program.constants,
 				nodes, program.main);
 	}
 
-	@Override
-	public Node visit(Node node) {
+	private final ExprTypeVisitor exprTypeVisitor;
+	// Mapping from an expression as a String to the number of times it is used
+	private final Map<String, Integer> exprUse;
+	// Mapping from an expression as a String to a CSEExpr
+	private final Map<String, CSEExpr> exprToVarMapping;
+	// The set of subexpressions that are replaced in an iteration
+	private final List<CSEExpr> replacedExprs;
+
+	private final int cse;
+	// Count replaced expressions
+	private int count;
+
+	private LustreCSE(ExprTypeVisitor exprTypeVisitor, Node node, int cse) {
+		this.exprTypeVisitor = exprTypeVisitor;
 		this.exprTypeVisitor.setNodeContext(node);
-		this.exprUse = ExprUseVisitor.get(node);
+		this.exprUse = new HashMap<String, Integer>();
 		this.exprToVarMapping = new HashMap<String, CSEExpr>();
+		this.replacedExprs = new ArrayList<CSEExpr>();
+		this.cse = cse;
+		this.count = 0;
+		// Add existing variables
+		for (Equation equation : node.equations) {
+			String exprStr = equation.expr.toString();
+			if (!this.exprToVarMapping.containsKey(exprStr)) {
+				Type type = equation.expr.accept(this.exprTypeVisitor);
+				Expr exprVar = TupleExpr.compress(equation.lhs);
+				this.exprToVarMapping.put(exprStr, new CSEExpr(equation.expr,
+						exprVar, type));
+			}
+		}
+	}
+
+	private Node visitNode(Node node) {
+		this.exprTypeVisitor.setNodeContext(node);
+		this.exprUse.clear();
+		this.exprUse.putAll(ExprUseVisitor.get(node));
+		this.replacedExprs.clear();
 
 		// Iterate on locals and equations
-		List<VarDecl> locals = visitVarDecls(node.locals);
-		List<Equation> equations = visitEquations(node.equations);
+		List<VarDecl> locals = new ArrayList<VarDecl>();
+		locals.addAll(node.locals);
 
-		LustreMain.log(node.id + ": " + this.exprToVarMapping.size());
+		List<Equation> equations = new ArrayList<Equation>();
 
-		if (!this.exprToVarMapping.isEmpty()) {
-			this.changed = true;
+		for (Equation equation : node.equations) {
+			equations.add(visitEquation(equation));
 		}
 
-		for (CSEExpr cseExpr : this.exprToVarMapping.values()) {
+		for (CSEExpr cseExpr : this.replacedExprs) {
 			List<IdExpr> elements = new ArrayList<IdExpr>();
 
 			if (cseExpr.type instanceof TupleType) {
@@ -143,6 +132,48 @@ public final class LustreCSE extends AstMapVisitor {
 		return new Node(node.location, node.id, node.inputs, node.outputs,
 				locals, equations, node.properties, node.assertions,
 				node.realizabilityInputs);
+	}
+
+	private Equation visitEquation(Equation equation) {
+		Expr replaced = equation.expr.accept(this);
+
+		String lhs = TupleExpr.compress(equation.lhs).toString();
+
+		// Avoid replacing the expression with the variable itself
+		if (lhs.equals(replaced.toString())) {
+			return equation;
+		} else {
+			return new Equation(equation.location, equation.lhs, replaced);
+		}
+	}
+
+	// Get a variable Expr for an Expr
+	private Expr getExprVar(Expr expr) {
+		String exprStr = expr.toString();
+		// Get and return the variable if the expression already exists
+		if (this.exprToVarMapping.containsKey(exprStr)) {
+			return this.exprToVarMapping.get(exprStr).exprVar;
+		} else {
+			Type type = expr.accept(this.exprTypeVisitor);
+			List<Expr> elements = new ArrayList<Expr>();
+
+			if (type instanceof TupleType) {
+				TupleType tupleType = (TupleType) type;
+
+				// Create the same number of IdExpr for this TupleType
+				for (int i = 0; i < tupleType.types.size(); i++) {
+					elements.add(new IdExpr("CSEVar_" + count++));
+				}
+			} else {
+				elements.add(new IdExpr("CSEVar_" + count++));
+			}
+
+			Expr exprVar = TupleExpr.compress(elements);
+			CSEExpr cseExpr = new CSEExpr(expr, exprVar, type);
+			this.exprToVarMapping.put(exprStr, cseExpr);
+			this.replacedExprs.add(cseExpr);
+			return exprVar;
+		}
 	}
 
 	@Override
@@ -196,7 +227,7 @@ public final class LustreCSE extends AstMapVisitor {
 			return this.getExprVar(expr);
 		} else {
 			// Do not visit expr.call, CondactExpr requires expr.call to be a
-			// NodeCallExpr (cannot be replaced with an IdExpr)
+			// NodeCallExpr (cannot be replaced with other types of expressions)
 			return new CondactExpr(expr.clock.accept(this), expr.call,
 					visitExprs(expr.args));
 		}
