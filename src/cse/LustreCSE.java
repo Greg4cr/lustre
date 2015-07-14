@@ -28,12 +28,12 @@ import jkind.lustre.TupleType;
 import jkind.lustre.Type;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.VarDecl;
-import jkind.lustre.visitors.ExprMapVisitor;
+import jkind.lustre.visitors.AstMapVisitor;
 
 /**
  * Perform common subexpression elimination on a program.
  */
-public final class LustreCSE extends ExprMapVisitor {
+public final class LustreCSE extends AstMapVisitor {
 	public static Program program(Program program, int cse) {
 		LustreMain.log("------------Eliminating subexpressions used more than "
 				+ cse + " time(s)");
@@ -50,7 +50,7 @@ public final class LustreCSE extends ExprMapVisitor {
 
 			while (nodeCSE.exprToVarMapping.size() > prevCSESize) {
 				prevCSESize = nodeCSE.exprToVarMapping.size();
-				translated = nodeCSE.visitNode(translated);
+				translated = nodeCSE.visit(translated);
 			}
 
 			LustreMain.log("Replaced expressions: "
@@ -95,61 +95,6 @@ public final class LustreCSE extends ExprMapVisitor {
 		}
 	}
 
-	private Node visitNode(Node node) {
-		this.exprTypeVisitor.setNodeContext(node);
-		this.exprUse.clear();
-		this.exprUse.putAll(ExprUseVisitor.get(node));
-		this.replacedExprs.clear();
-
-		// Iterate on locals and equations
-		List<VarDecl> locals = new ArrayList<VarDecl>();
-		locals.addAll(node.locals);
-
-		List<Equation> equations = new ArrayList<Equation>();
-
-		for (Equation equation : node.equations) {
-			equations.add(visitEquation(equation));
-		}
-
-		for (CSEExpr cseExpr : this.replacedExprs) {
-			List<IdExpr> elements = new ArrayList<IdExpr>();
-
-			if (cseExpr.type instanceof TupleType) {
-				TupleExpr tupleExpr = (TupleExpr) cseExpr.exprVar;
-				TupleType tupleType = (TupleType) cseExpr.type;
-
-				// Create the same number of IdExpr for this TupleType
-				for (int i = 0; i < tupleType.types.size(); i++) {
-					String id = tupleExpr.elements.get(i).toString();
-					locals.add(new VarDecl(id, tupleType.types.get(i)));
-					elements.add(new IdExpr(id));
-				}
-			} else {
-				String id = cseExpr.exprVar.toString();
-				locals.add(new VarDecl(id, cseExpr.type));
-				elements.add(new IdExpr(id));
-			}
-			equations.add(new Equation(elements, cseExpr.expr));
-		}
-
-		return new Node(node.location, node.id, node.inputs, node.outputs,
-				locals, equations, node.properties, node.assertions,
-				node.realizabilityInputs);
-	}
-
-	private Equation visitEquation(Equation equation) {
-		Expr replaced = equation.expr.accept(this);
-
-		String lhs = TupleExpr.compress(equation.lhs).toString();
-
-		// Avoid replacing the expression with the variable itself
-		if (lhs.equals(replaced.toString())) {
-			return equation;
-		} else {
-			return new Equation(equation.location, equation.lhs, replaced);
-		}
-	}
-
 	// Get a variable Expr for an Expr
 	private Expr getExprVar(Expr expr) {
 		String exprStr = expr.toString();
@@ -176,6 +121,63 @@ public final class LustreCSE extends ExprMapVisitor {
 			this.exprToVarMapping.put(exprStr, cseExpr);
 			this.replacedExprs.add(cseExpr);
 			return exprVar;
+		}
+	}
+
+	@Override
+	public Program visit(Program program) {
+		return null;
+	}
+
+	@Override
+	public Node visit(Node node) {
+		this.exprTypeVisitor.setNodeContext(node);
+		this.exprUse.clear();
+		this.exprUse.putAll(ExprUseVisitor.get(node));
+		this.replacedExprs.clear();
+
+		// Iterate on locals and equations
+		List<VarDecl> locals = new ArrayList<VarDecl>();
+		locals.addAll(node.locals);
+
+		List<Equation> equations = visitEquations(node.equations);
+
+		for (CSEExpr cseExpr : this.replacedExprs) {
+			List<IdExpr> elements = new ArrayList<IdExpr>();
+
+			if (cseExpr.type instanceof TupleType) {
+				TupleExpr tupleExpr = (TupleExpr) cseExpr.exprVar;
+				TupleType tupleType = (TupleType) cseExpr.type;
+
+				// Create the same number of IdExpr for this TupleType
+				for (int i = 0; i < tupleType.types.size(); i++) {
+					String id = tupleExpr.elements.get(i).toString();
+					locals.add(new VarDecl(id, tupleType.types.get(i)));
+					elements.add(new IdExpr(id));
+				}
+			} else {
+				String id = cseExpr.exprVar.toString();
+				locals.add(new VarDecl(id, cseExpr.type));
+				elements.add(new IdExpr(id));
+			}
+			equations.add(new Equation(elements, cseExpr.expr));
+		}
+		// Get rid of e.realizabilityInputs
+		return new Node(node.location, node.id, node.inputs, node.outputs,
+				locals, equations, node.properties, node.assertions, null);
+	}
+
+	@Override
+	public Equation visit(Equation equation) {
+		Expr replaced = equation.expr.accept(this);
+
+		String lhs = TupleExpr.compress(equation.lhs).toString();
+
+		// Avoid replacing the expression with the variable itself
+		if (lhs.equals(replaced.toString())) {
+			return equation;
+		} else {
+			return new Equation(equation.location, equation.lhs, replaced);
 		}
 	}
 

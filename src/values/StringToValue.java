@@ -20,7 +20,7 @@ import jkind.util.BigFraction;
 /**
  * Convert a value from String to Value. This class assumes that ArrayType,
  * RecordType, and TupleType have been inlined/flattened. Also Convert EnumType
- * values from EnumValue to integers.
+ * values from EnumValue to integers. Assuming type has been resolved.
  */
 public final class StringToValue implements TypeVisitor<Value> {
 	public static Value get(String valueStr, Type type) {

@@ -33,6 +33,11 @@ public final class ReadTestSuite {
 			inputVars.add(var.id);
 		}
 
+		if (inputVars.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Lustre program does not have inputs");
+		}
+
 		return new ReadTestSuite().read(inputVars, fileName, typeMap);
 	}
 

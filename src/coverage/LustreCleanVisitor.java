@@ -1,8 +1,11 @@
 package coverage;
 
+import java.util.List;
+
 import types.ExprTypeVisitor;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
+import jkind.lustre.Equation;
 import jkind.lustre.Expr;
 import jkind.lustre.NamedType;
 import jkind.lustre.Node;
@@ -26,26 +29,36 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 	}
 
 	@Override
-	public Node visit(Node node) {
-		this.exprTypeVisitor.setNodeContext(node);
-		return super.visit(node);
+	public Program visit(Program e) {
+		// Only visit nodes
+		List<Node> nodes = visitNodes(e.nodes);
+		return new Program(e.location, e.types, e.constants, nodes, e.main);
 	}
 
 	@Override
-	public Expr visit(BinaryExpr expr) {
-		if ((expr.op.equals(BinaryOp.XOR) || expr.op.equals(BinaryOp.EQUAL) || expr.op
-				.equals(BinaryOp.NOTEQUAL))
-				&& expr.left.accept(this.exprTypeVisitor)
-						.equals(NamedType.BOOL)) {
-			Expr leftExpr = expr.left.accept(this);
-			Expr rightExpr = expr.right.accept(this);
+	public Node visit(Node e) {
+		this.exprTypeVisitor.setNodeContext(e);
+		// Only visit equations
+		List<Equation> equations = visitEquations(e.equations);
+		// Get rid of e.realizabilityInputs
+		return new Node(e.location, e.id, e.inputs, e.outputs, e.locals,
+				equations, e.properties, e.assertions, null);
+	}
 
-			if (expr.op.equals(BinaryOp.EQUAL)) {
+	@Override
+	public Expr visit(BinaryExpr e) {
+		if ((e.op.equals(BinaryOp.XOR) || e.op.equals(BinaryOp.EQUAL) || e.op
+				.equals(BinaryOp.NOTEQUAL))
+				&& e.left.accept(this.exprTypeVisitor).equals(NamedType.BOOL)) {
+			Expr leftExpr = e.left.accept(this);
+			Expr rightExpr = e.right.accept(this);
+
+			if (e.op.equals(BinaryOp.EQUAL)) {
 				Expr left = new BinaryExpr(leftExpr, BinaryOp.AND, rightExpr);
 				Expr right = new BinaryExpr(
 						new UnaryExpr(UnaryOp.NOT, leftExpr), BinaryOp.AND,
 						new UnaryExpr(UnaryOp.NOT, rightExpr));
-				return new BinaryExpr(expr.location, left, BinaryOp.OR, right);
+				return new BinaryExpr(e.location, left, BinaryOp.OR, right);
 			}
 			// Otherwise it should be boolean unequal or XOR
 			else {
@@ -54,9 +67,9 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 				Expr right = new BinaryExpr(
 						new UnaryExpr(UnaryOp.NOT, leftExpr), BinaryOp.AND,
 						rightExpr);
-				return new BinaryExpr(expr.location, left, BinaryOp.OR, right);
+				return new BinaryExpr(e.location, left, BinaryOp.OR, right);
 			}
 		}
-		return super.visit(expr);
+		return super.visit(e);
 	}
 }
