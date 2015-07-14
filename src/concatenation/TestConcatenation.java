@@ -45,7 +45,10 @@ public class TestConcatenation {
 		}
 
 		this.stateVariables = new ArrayList<String>();
-		// Add local and output variables as state variables
+		// Add all variables as state variables
+		for (VarDecl var : node.inputs) {
+			this.stateVariables.add(var.id);
+		}
 		for (VarDecl var : node.locals) {
 			this.stateVariables.add(var.id);
 		}
