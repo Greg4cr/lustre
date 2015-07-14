@@ -16,6 +16,7 @@ import jkind.lustre.Type;
 import jkind.lustre.values.Value;
 import jkind.util.StringNaturalOrdering;
 import lustre.LustreTrace;
+import main.LustreMain;
 
 /**
  * Write a test suite/trace to a file in CSV format. The test suite/trace may
@@ -24,15 +25,23 @@ import lustre.LustreTrace;
  * signals in a trace are written to the file.
  */
 public final class WriteTrace {
-	public static void write(List<LustreTrace> testSuite, String fileName,
+	public static void write(List<LustreTrace> traces, String fileName,
 			Program program) {
-		if (testSuite.isEmpty()) {
-			throw new IllegalArgumentException("Empty test suite.");
+		if (traces.isEmpty()) {
+			LustreMain.log("WARNING Empty traces");
+			LustreMain.log(fileName + " is NOT printed.");
+			return;
+		}
+
+		if (traces.get(0).getVariableNames().isEmpty()) {
+			LustreMain.log("WARNING Empty variable set");
+			LustreMain.log(fileName + " is NOT printed.");
+			return;
 		}
 
 		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
 
-		new WriteTrace().write(testSuite, fileName, typeMap);
+		new WriteTrace().write(traces, fileName, typeMap);
 	}
 
 	private void write(List<LustreTrace> traces, String fileName,
