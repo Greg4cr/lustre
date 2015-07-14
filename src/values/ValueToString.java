@@ -15,7 +15,7 @@ import jkind.lustre.visitors.TypeVisitor;
 /**
  * Convert a value from Value to String. This class assumes that ArrayType,
  * RecordType,and TupleType have been flattened. Also Convert EnumType values
- * from integer back to EnumValue.
+ * from integer back to EnumValue. Assuming type has been resolved.
  */
 public final class ValueToString implements TypeVisitor<String> {
 	public static String get(Value value, Type type) {
