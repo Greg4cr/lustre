@@ -16,7 +16,8 @@ import values.RandomValueVisitor;
 import lustre.LustreTrace;
 
 /**
- * Fill in null values with concrete values
+ * Fill in null values with concrete values, used to concretize incomplete test
+ * suite.
  */
 public final class FillNullValues {
 	// Fill in a test suite
@@ -40,6 +41,7 @@ public final class FillNullValues {
 		return fill.fillNullValues(testCase, generation);
 	}
 
+	// Resolved type table
 	private final Map<String, Type> typeMap;
 
 	private FillNullValues(Program program) {

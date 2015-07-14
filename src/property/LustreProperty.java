@@ -6,6 +6,9 @@ import java.util.Set;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 
+/**
+ * A property with its scope (i.e., node).
+ */
 public final class LustreProperty {
 	public final String node;
 	public final String property;

@@ -5,6 +5,10 @@ import java.util.Set;
 
 import lustre.LustreTrace;
 
+/**
+ * The set of properties that can be falsified by a test case. Assuming all
+ * properties are trap properties.
+ */
 public final class PropertySet implements Comparable<PropertySet> {
 	public final LustreTrace testCase;
 	public final Set<LustreProperty> properties;
@@ -23,10 +27,5 @@ public final class PropertySet implements Comparable<PropertySet> {
 		} else {
 			return -1;
 		}
-	}
-
-	@Override
-	public String toString() {
-		return properties.size() + "";
 	}
 }

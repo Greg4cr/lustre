@@ -42,7 +42,7 @@ import jkind.lustre.visitors.TypeMapVisitor;
 import jkind.util.Util;
 
 /**
- * Get type of an expression
+ * Get type of an expression.
  */
 public final class ExprTypeVisitor implements ExprVisitor<Type> {
 	private final Map<String, Type> typeTable = new HashMap<>();

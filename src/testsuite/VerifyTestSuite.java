@@ -7,7 +7,9 @@ import jkind.results.Signal;
 import lustre.LustreTrace;
 
 /**
- * Verify if a test suite/case has null values
+ * Verify if a test suite/case has null values. This class assumes that all
+ * input variables are in the test suite, used to verify test suite read from a
+ * file or generated from JKind.
  */
 public final class VerifyTestSuite {
 	// Check null for a test suite

@@ -8,6 +8,10 @@ import jkind.lustre.Program;
 import jkind.lustre.Type;
 import jkind.lustre.VarDecl;
 
+/**
+ * Get a type table for all variables in a Lustre program, compound types are
+ * resolved.
+ */
 public final class ResolvedTypeTable {
 	public static Map<String, Type> get(Program program) {
 		Map<String, Type> mapping = new HashMap<String, Type>();

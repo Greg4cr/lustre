@@ -20,12 +20,16 @@ import lustre.LustreTrace;
 /**
  * Write a test suite/trace to a file in CSV format. The test suite/trace may
  * contain "don't care" values (i.e., null values in the file). EnumType
- * variable values are translated back to Enum values. All signals in a trace
- * are written to the file.
+ * variable values are translated back to EnumValue from IntegerValue. All
+ * signals in a trace are written to the file.
  */
 public final class WriteTrace {
 	public static void write(List<LustreTrace> testSuite, String fileName,
 			Program program) {
+		if (testSuite.isEmpty()) {
+			throw new IllegalArgumentException("Empty test suite.");
+		}
+
 		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
 
 		new WriteTrace().write(testSuite, fileName, typeMap);

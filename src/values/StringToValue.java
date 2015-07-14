@@ -19,8 +19,8 @@ import jkind.util.BigFraction;
 
 /**
  * Convert a value from String to Value. This class assumes that ArrayType,
- * RecordType,and TupleType have been flattened. Also Convert EnumType values
- * from EnumValue to integers.
+ * RecordType, and TupleType have been inlined/flattened. Also Convert EnumType
+ * values from EnumValue to integers.
  */
 public final class StringToValue implements TypeVisitor<Value> {
 	public static Value get(String valueStr, Type type) {
@@ -59,9 +59,9 @@ public final class StringToValue implements TypeVisitor<Value> {
 	@Override
 	public Value visit(NamedType type) {
 		if (type.equals(NamedType.BOOL)) {
-			if (valueStr.equals("true") || valueStr.equals("1")) {
+			if (valueStr.equals("true")) {
 				return BooleanValue.TRUE;
-			} else if (valueStr.equals("false") || valueStr.equals("0")) {
+			} else if (valueStr.equals("false")) {
 				return BooleanValue.FALSE;
 			} else {
 				throw new IllegalArgumentException("Unknown Boolean value: "
@@ -110,7 +110,8 @@ public final class StringToValue implements TypeVisitor<Value> {
 				&& intermediateValue.compareTo(type.low) >= 0) {
 			return new IntegerValue(intermediateValue);
 		} else {
-			throw new IllegalArgumentException("Out of range: " + type);
+			throw new IllegalArgumentException("Out of range SubrangeIntType: "
+					+ type);
 		}
 	}
 }

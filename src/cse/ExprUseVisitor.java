@@ -20,6 +20,10 @@ import jkind.lustre.RecordUpdateExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.visitors.ExprIterVisitor;
 
+/**
+ * Get a mapping from an subexpression as a String to the number of times it is
+ * used in a node.
+ */
 public final class ExprUseVisitor extends ExprIterVisitor {
 	public static Map<String, Integer> get(Node node) {
 		ExprUseVisitor visitor = new ExprUseVisitor();

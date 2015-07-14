@@ -30,6 +30,9 @@ import jkind.lustre.UnaryExpr;
 import jkind.lustre.VarDecl;
 import jkind.lustre.visitors.ExprMapVisitor;
 
+/**
+ * Perform common subexpression elimination on a program.
+ */
 public final class LustreCSE extends ExprMapVisitor {
 	public static Program program(Program program, int cse) {
 		LustreMain.log("------------Eliminating subexpressions used more than "

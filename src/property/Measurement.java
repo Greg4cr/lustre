@@ -13,6 +13,10 @@ import jkind.results.Signal;
 import lustre.LustreTrace;
 import main.LustreMain;
 
+/**
+ * Measure coverage for a given test suite and reduce test suite size while
+ * maintaining coverage. Assuming all properties are trap properties.
+ */
 public final class Measurement {
 	private Set<LustreProperty> properties = new HashSet<LustreProperty>();
 
@@ -28,6 +32,7 @@ public final class Measurement {
 		return measure.testSuiteReduction(satisfiedByEachTest);
 	}
 
+	// Get the set of properties that can be falsified by each test case
 	private List<PropertySet> satisfiedByEachTest(List<LustreTrace> testSuite,
 			List<LustreTrace> traces, Program program) {
 		List<PropertySet> satisfiedByEachTest = new ArrayList<PropertySet>();
@@ -62,6 +67,7 @@ public final class Measurement {
 		return satisfiedByEachTest;
 	}
 
+	// Reduce a test suite using a greedy algorithm, while maintaining coverage
 	private List<LustreTrace> testSuiteReduction(
 			List<PropertySet> satisfiedByEachTest) {
 		List<PropertySet> allTests = new ArrayList<PropertySet>();

@@ -66,6 +66,10 @@ public final class ReadTestSuite {
 		}
 		sc.close();
 
+		if (variables == null) {
+			throw new IllegalArgumentException("Empty test suite.");
+		}
+
 		Map<String, Signal<Value>> inputVariables = new HashMap<String, Signal<Value>>();
 
 		// Split test cases by double newline
