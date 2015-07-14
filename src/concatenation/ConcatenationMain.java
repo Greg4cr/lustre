@@ -22,6 +22,7 @@ public class ConcatenationMain {
 
 		TestConcatenation tc = new TestConcatenation(program);
 		LustreTrace testCase = tc.generate();
+		System.out.println("------------Generated test case");
 		System.out.println("length: " + testCase.getLength());
 		System.out.println(testCase);
 	}

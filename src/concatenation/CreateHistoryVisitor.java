@@ -1,6 +1,7 @@
 package concatenation;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,13 +66,11 @@ public final class CreateHistoryVisitor extends AstMapVisitor {
 
 	@Override
 	public Node visit(Node e) {
-		List<VarDecl> inputs = visitVarDecls(e.inputs);
-		List<VarDecl> outputs = visitVarDecls(e.outputs);
-		List<VarDecl> locals = visitVarDecls(e.locals);
+		List<VarDecl> locals = new ArrayList<VarDecl>();
+		locals.addAll(e.locals);
 		locals.addAll(this.inputMapping.values());
+
 		List<Equation> equations = visitEquations(e.equations);
-		List<Expr> assertions = visitAssertions(e.assertions);
-		List<String> properties = visitProperties(e.properties);
 
 		// Add equations for auxiliary variables for inputs
 		for (String input : this.inputMapping.keySet()) {
@@ -82,9 +81,9 @@ public final class CreateHistoryVisitor extends AstMapVisitor {
 			equations.add(new Equation(lhs, newExpr));
 		}
 
-		// Get rid of e.realizabilityInputs
-		return new Node(e.location, e.id, inputs, outputs, locals, equations,
-				properties, assertions, null);
+		// Get rid of e.properties, e.assertions, and e.realizabilityInputs
+		return new Node(e.location, e.id, e.inputs, e.outputs, locals,
+				equations, null, null, null);
 	}
 
 	@Override
