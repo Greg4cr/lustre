@@ -33,18 +33,32 @@ public final class LustreProperty {
 
 	// Convert a translated property to its original form
 	// boat~0.swap~0.ArithExpr_0_TRUE_AT_other_MCDC_TRUE_0
+	// slow_counter~condact~0.toggle_TRUE_AT_toggle_MCDC_FALSE_4~clocked_property
 	public static LustreProperty convert(String property, String main) {
-		if (property.contains("~")) {
-			String prefix = property.substring(0, property.lastIndexOf("~"));
-			String suffix = property.substring(property.lastIndexOf("~") + 1);
+		// Check if this is a property for condact expression
+		if (property.endsWith("~clocked_property")) {
+			property = property.substring(0,
+					property.lastIndexOf("~clocked_property"));
+		}
 
-			prefix = prefix.substring(prefix.lastIndexOf(".") + 1);
-			suffix = suffix.substring(suffix.indexOf(".") + 1);
+		String separator = null;
 
-			return new LustreProperty(prefix, suffix);
+		if (property.contains("~condact~")) {
+			separator = "~condact~";
+		} else if (property.contains("~")) {
+			separator = "~";
 		} else {
 			return new LustreProperty(main, property);
 		}
+
+		String prefix = property.substring(0, property.lastIndexOf(separator));
+		String suffix = property.substring(property.lastIndexOf(separator) + 1);
+
+		// If prefix does not contain ".", starts from 0
+		prefix = prefix.substring(prefix.lastIndexOf(".") + 1);
+		suffix = suffix.substring(suffix.indexOf(".") + 1);
+
+		return new LustreProperty(prefix, suffix);
 	}
 
 	@Override

@@ -113,7 +113,10 @@ public final class LustreSimulator {
 		// Input variables are available already
 		availableVars.addAll(this.inputVars);
 
+		boolean progress = false;
+
 		while (!allEquations.isEmpty()) {
+			progress = false;
 			// Remove all right hand variables that have been available
 			for (DependencySet current : allEquations) {
 				current.dependOn.removeAll(availableVars);
@@ -130,9 +133,14 @@ public final class LustreSimulator {
 						availableVars.add(idExpr.id);
 					}
 					allEquations.remove(current);
+					progress = true;
 				} else {
 					break;
 				}
+			}
+			if (!progress) {
+				throw new IllegalArgumentException(
+						"Dependency cannot be resolved, possible algebraic loop");
 			}
 		}
 	}
