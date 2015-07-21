@@ -145,6 +145,14 @@ public final class LustreSimulator {
 		}
 	}
 
+	public List<String> getAllVars() {
+		List<String> allVars = new ArrayList<String>();
+		allVars.addAll(this.inputVars);
+		allVars.addAll(this.localVars);
+		allVars.addAll(this.outputVars);
+		return allVars;
+	}
+
 	public List<String> getInputVars() {
 		return this.inputVars;
 	}

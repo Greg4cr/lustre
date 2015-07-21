@@ -3,14 +3,15 @@ package concatenation;
 import java.util.ArrayList;
 import java.util.List;
 
+import enums.Simulation;
+import simulation.LustreSimulator;
 import testsuite.WriteTrace;
 import jkind.lustre.Program;
 import lustre.LustreTrace;
 import main.LustreMain;
-import main.LustreProcessing;
 
 public class ConcatenationMain {
-	public static final String lustreFile = "farmer2.lus";
+	public static final String lustreFile = "example.lus";
 
 	public static void main(String[] args) {
 		Program program = LustreMain.getProgram(lustreFile);
@@ -20,11 +21,17 @@ public class ConcatenationMain {
 		List<LustreTrace> tests = new ArrayList<LustreTrace>();
 		tests.add(tc.generate());
 
-		String testSuiteFile = LustreProcessing.removeFileExtension(lustreFile)
-				+ ".incremental.csv";
+		String testStr = WriteTrace.write(tests, program);
 
-		WriteTrace.write(tests, testSuiteFile, program);
-		System.out.println("------------Completed incremental test generation");
-		System.out.println("Test suite has been printed to " + testSuiteFile);
+		System.out.println("------------Generated tests");
+		System.out.println(testStr);
+
+		LustreSimulator simulator = new LustreSimulator(program);
+		List<LustreTrace> traces = simulator.simulate(tests,
+				Simulation.COMPLETE, simulator.getAllVars());
+		String traceStr = WriteTrace.write(traces, program);
+
+		System.out.println("------------Simulated results");
+		System.out.println(traceStr);
 	}
 }
