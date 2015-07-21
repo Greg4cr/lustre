@@ -3,9 +3,22 @@ node top(a : int)
 
 var
   d : int;
+  INC_GEN_TRAP_PROP_0 : bool;
+  INC_GEN_TRAP_PROP_1 : bool;
+  INC_GEN_TRAP_PROP_2 : bool;
 
 let --%MAIN
   b = 0 -> pre (b + 1);
   c = a + b;
   d = a - b;
+  
+  INC_GEN_TRAP_PROP_0 = (not ((b = 3) and (c = 13)));
+
+  INC_GEN_TRAP_PROP_1 = (not ((b = 5) and (c = 15)));
+
+  INC_GEN_TRAP_PROP_2 = (not ((b = 10) and (c = 20)));
+  
+  --%PROPERTY INC_GEN_TRAP_PROP_0;
+  --%PROPERTY INC_GEN_TRAP_PROP_1;
+  --%PROPERTY INC_GEN_TRAP_PROP_2;
 tel;

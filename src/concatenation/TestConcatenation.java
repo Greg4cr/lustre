@@ -7,18 +7,14 @@ import java.util.Map;
 import enums.Generation;
 import enums.Simulation;
 import jkind.JKindExecution;
-import jkind.lustre.Equation;
-import jkind.lustre.Expr;
-import jkind.lustre.IdExpr;
-import jkind.lustre.NamedType;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
-import jkind.lustre.UnaryExpr;
-import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 import jkind.lustre.builders.NodeBuilder;
+import jkind.lustre.builders.ProgramBuilder;
 import jkind.lustre.values.Value;
 import jkind.results.Signal;
+import jkind.translation.RemoveEnumTypes;
 import jkind.translation.Translate;
 import simulation.LustreSimulator;
 import testsuite.FillNullValues;
@@ -26,18 +22,35 @@ import lustre.LustreTrace;
 import main.LustreMain;
 
 public class TestConcatenation {
+	// All existing constraints from the program in order
+	private final List<String> properties;
+
 	private final Program program;
 	private final Node node;
 	private final LustreSimulator simulator;
 	private final LustreTrace testCase;
 	private final List<String> stateVariables;
 
-	private static final String PROPERTY = "trapProperty";
-
 	public TestConcatenation(Program program) {
-		this.program = program;
-		this.node = Translate.translate(program);
-		this.simulator = new LustreSimulator(program);
+		this.properties = new ArrayList<String>();
+		this.properties.addAll(program.getMainNode().properties);
+
+		ProgramBuilder programBuilder = new ProgramBuilder();
+		programBuilder.addTypes(program.types).addConstants(program.constants)
+				.setMain(program.main);
+
+		for (Node node : program.nodes) {
+			NodeBuilder nodeBuilder = new NodeBuilder(node);
+			// Clear existing properties
+			nodeBuilder.clearProperties();
+			programBuilder.addNode(nodeBuilder.build());
+		}
+
+		this.program = programBuilder.build();
+		// Besides translating program to simple format, also remove enum types
+		// in node. Otherwise, node does not contain type defines for enums.
+		this.node = RemoveEnumTypes.node(Translate.translate(this.program));
+		this.simulator = new LustreSimulator(this.program);
 		this.testCase = new LustreTrace(0);
 
 		for (VarDecl variable : node.inputs) {
@@ -58,13 +71,11 @@ public class TestConcatenation {
 	}
 
 	public LustreTrace generate() {
-		Expr constraint = null;
-
-		while ((constraint = ConcatenationMain.getConstraint()) != null) {
+		for (String property : this.properties) {
 			// First step generation
 			if (this.testCase.getLength() == 0) {
-				LustreMain.log("\nConstraint: " + constraint);
-				LustreTrace test = this.generateTest(this.node, constraint);
+				LustreMain.log("\nConstraint: " + property);
+				LustreTrace test = this.generateTest(this.node, property);
 
 				if (test == null) {
 					return this.testCase;
@@ -80,8 +91,8 @@ public class TestConcatenation {
 			Node nodeWithHistory = CreateHistoryVisitor
 					.node(this.node, history);
 
-			LustreMain.log("\nConstraint: " + constraint);
-			LustreTrace test = this.generateTest(nodeWithHistory, constraint);
+			LustreMain.log("\nConstraint: " + property);
+			LustreTrace test = this.generateTest(nodeWithHistory, property);
 
 			if (test == null) {
 				return this.testCase;
@@ -93,30 +104,21 @@ public class TestConcatenation {
 		return this.testCase;
 	}
 
-	private Node addConstraint(Node node, Expr constraint) {
-		NodeBuilder builder = new NodeBuilder(node);
-		VarDecl trapVar = new VarDecl(PROPERTY, NamedType.BOOL);
-		Equation trapProperty = new Equation(new IdExpr(trapVar.id),
-				new UnaryExpr(UnaryOp.NOT, constraint));
-
-		builder.addLocal(trapVar);
-		builder.addEquation(trapProperty);
-		builder.addProperty(PROPERTY);
-
-		return builder.build();
+	private Node addConstraint(Node node, String property) {
+		return new NodeBuilder(node).addProperty(property).build();
 	}
 
-	private LustreTrace generateTest(Node node, Expr constraint) {
-		Node newNode = this.addConstraint(node, constraint);
+	private LustreTrace generateTest(Node node, String property) {
+		Node newNode = this.addConstraint(node, property);
 
 		Map<String, LustreTrace> tests = JKindExecution.execute(new Program(
 				newNode));
-		LustreTrace test = tests.get(PROPERTY);
+		LustreTrace test = tests.get(property);
 
 		if (test == null) {
 			System.out
 					.println("WARNING: Test case cannot be generated for constraint "
-							+ constraint);
+							+ property);
 			return null;
 		}
 
