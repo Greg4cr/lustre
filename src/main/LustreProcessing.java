@@ -69,7 +69,7 @@ public final class LustreProcessing {
 
 			LustreMain.log("------------Printing test suite to file");
 			LustreMain.log(settings.tests);
-			WriteTrace.write(newTestSuite, settings.tests, programTranslated);
+			WriteTrace.write(newTestSuite, programTranslated, settings.tests);
 		}
 
 		// Process simulation
@@ -91,7 +91,7 @@ public final class LustreProcessing {
 			String outputFile = this.nameNoExtension + ".trace.csv";
 			LustreMain.log("------------Printing trace to file");
 			LustreMain.log(outputFile);
-			WriteTrace.write(traces, outputFile, programTranslated);
+			WriteTrace.write(traces, programTranslated, outputFile);
 		}
 
 		// Process measurement
@@ -119,7 +119,7 @@ public final class LustreProcessing {
 			LustreMain.log(outputFile);
 			LustreMain.log("Reduced test suite size: "
 					+ reducedTestSuite.size() + "/" + testSuite.size());
-			WriteTrace.write(reducedTestSuite, outputFile, programTranslated);
+			WriteTrace.write(reducedTestSuite, programTranslated, outputFile);
 		}
 	}
 
