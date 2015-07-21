@@ -25,27 +25,44 @@ import main.LustreMain;
  * signals in a trace are written to the file.
  */
 public final class WriteTrace {
-	public static void write(List<LustreTrace> traces, String fileName,
-			Program program) {
+	// Convert a list of traces to String
+	public static String write(List<LustreTrace> traces, Program program) {
 		if (traces.isEmpty()) {
 			LustreMain.log("WARNING Empty traces");
-			LustreMain.log(fileName + " is NOT printed.");
-			return;
+			return null;
 		}
 
 		if (traces.get(0).getVariableNames().isEmpty()) {
 			LustreMain.log("WARNING Empty variable set");
-			LustreMain.log(fileName + " is NOT printed.");
-			return;
+			return null;
 		}
 
-		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
-
-		new WriteTrace().write(traces, fileName, typeMap);
+		String output = new WriteTrace().traceToString(traces, program);
+		return output;
 	}
 
-	private void write(List<LustreTrace> traces, String fileName,
-			Map<String, Type> typeMap) {
+	// Print a list of traces to a file
+	public static void write(List<LustreTrace> traces, Program program,
+			String fileName) {
+		String output = write(traces, program);
+
+		// Print to file
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new File(fileName));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		pw.print(output);
+		pw.close();
+	}
+
+	// LustreMain.log(fileName + " is NOT printed.");
+
+	private String traceToString(List<LustreTrace> traces, Program program) {
+		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
+
 		String output = "";
 
 		List<String> variables = new ArrayList<String>();
@@ -85,6 +102,11 @@ public final class WriteTrace {
 					Value value = trace.getVariable(variable).getValue(step);
 					Type type = typeMap.get(variable);
 
+					if (type == null) {
+						throw new IllegalArgumentException("Type of "
+								+ variable + " cannot be resolved.");
+					}
+
 					if (value == null) {
 						output += "null";
 					} else {
@@ -108,15 +130,6 @@ public final class WriteTrace {
 			}
 		}
 
-		// Print to file
-		PrintWriter pw = null;
-		try {
-			pw = new PrintWriter(new File(fileName));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		pw.print(output);
-		pw.close();
+		return output;
 	}
 }

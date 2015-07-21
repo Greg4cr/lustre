@@ -110,6 +110,11 @@ public final class ReadTestSuite {
 						String valueStr = values[inputIndex];
 						Type type = typeMap.get(variable);
 
+						if (type == null) {
+							throw new IllegalArgumentException("Type of "
+									+ variable + " cannot be resolved.");
+						}
+
 						// Value can be null
 						if (valueStr.equals("null")) {
 							inputVariables.get(variable).putValue(step, null);

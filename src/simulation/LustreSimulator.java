@@ -145,8 +145,6 @@ public final class LustreSimulator {
 		}
 	}
 
-	// Get type of an expression
-
 	public List<String> getInputVars() {
 		return this.inputVars;
 	}
