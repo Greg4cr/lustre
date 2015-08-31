@@ -94,7 +94,7 @@ public final class LustreSimulator {
 
 		// Add oracle variables
 		// By default, all output variables
-		// this.oracleVars.addAll(this.localVars);
+		this.oracleVars.addAll(this.localVars);
 		this.oracleVars.addAll(this.outputVars);
 
 		// Re-order equations

@@ -51,12 +51,16 @@ public final class LustreProcessing {
 		if (settings.cse) {
 			programTranslated = LustreCSE.program(programTranslated, 2);
 
-			// Skip printing CSE file
-			// String outputFile = this.nameNoExtension + "." +
-			// settings.coverage + ".cse.lus";
-			// LustreMain.log("------------Printing CSE to file");
-			// LustreMain.log(outputFile);
-			// printToFile(outputFile, programTranslated.toString());
+			// Printing CSE file
+			String outputFile = this.nameNoExtension;
+			if (settings.coverage != null) {
+				outputFile += "." + settings.coverage;
+			}
+			outputFile += ".cse.lus";
+
+			LustreMain.log("------------Printing CSE to file");
+			LustreMain.log(outputFile);
+			printToFile(outputFile, programTranslated.toString());
 		}
 
 		// Process generation
