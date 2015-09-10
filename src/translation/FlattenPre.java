@@ -16,7 +16,9 @@ import jkind.lustre.visitors.AstMapVisitor;
  */
 public class FlattenPre extends AstMapVisitor {
 	public static Program program(Program program) {
-		return new FlattenPre(program).visit(program);
+		Program translated = new FlattenPre(program).visit(program);
+		translated = NonInlinePreVisitor.program(translated);
+		return translated;
 	}
 
 	private final ExprTypeVisitor exprTypeVisitor;
