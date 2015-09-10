@@ -97,8 +97,12 @@ public final class ExprTypeVisitor implements ExprVisitor<Type> {
 
 	@Override
 	public Type visit(ArrayExpr expr) {
-		return new ArrayType(expr.elements.get(0).accept(this),
-				expr.elements.size());
+		Type type = expr.elements.get(0).accept(this);
+		// Throw away SubrangeIntType for arrays
+		if (type instanceof SubrangeIntType) {
+			return new ArrayType(NamedType.INT, expr.elements.size());
+		}
+		return new ArrayType(type, expr.elements.size());
 	}
 
 	@Override
