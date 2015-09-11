@@ -11,8 +11,10 @@ import testsuite.FillNullValues;
 import testsuite.ReadOracle;
 import testsuite.ReadTestSuite;
 import testsuite.WriteTrace;
+import translation.FlattenPre;
 import coverage.LustreCoverage;
 import cse.LustreCSE;
+import cse.LustreRemoveDuplicate;
 import jkind.JKindExecution;
 import jkind.lustre.Program;
 import lustre.LustreTrace;
@@ -49,6 +51,9 @@ public final class LustreProcessing {
 		}
 
 		if (settings.cse) {
+			programTranslated = LustreRemoveDuplicate
+					.program(programTranslated);
+			programTranslated = FlattenPre.program(programTranslated);
 			programTranslated = LustreCSE.program(programTranslated, 2);
 
 			// Printing CSE file
