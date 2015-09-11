@@ -29,7 +29,8 @@ public class TestConcatenation {
 	private final Node node;
 	private final LustreSimulator simulator;
 	private final LustreTrace testCase;
-	private final List<String> stateVariables;
+
+	// private final List<String> stateVariables;
 
 	public TestConcatenation(Program program) {
 		this.properties = new ArrayList<String>();
@@ -57,17 +58,17 @@ public class TestConcatenation {
 			this.testCase.addVariable(new Signal<Value>(variable.id));
 		}
 
-		this.stateVariables = new ArrayList<String>();
+		// this.stateVariables = new ArrayList<String>();
 		// Add all variables as state variables
-		for (VarDecl var : node.inputs) {
-			this.stateVariables.add(var.id);
-		}
-		for (VarDecl var : node.locals) {
-			this.stateVariables.add(var.id);
-		}
-		for (VarDecl var : node.outputs) {
-			this.stateVariables.add(var.id);
-		}
+		// for (VarDecl var : node.inputs) {
+		// this.stateVariables.add(var.id);
+		// }
+		// for (VarDecl var : node.locals) {
+		// this.stateVariables.add(var.id);
+		// }
+		// for (VarDecl var : node.outputs) {
+		// this.stateVariables.add(var.id);
+		// }
 	}
 
 	public LustreTrace generate() {
@@ -87,7 +88,7 @@ public class TestConcatenation {
 
 			// Followed by step generation
 			LustreTrace history = simulator.simulate(this.testCase,
-					Simulation.COMPLETE, this.stateVariables);
+					Simulation.COMPLETE);
 			Node nodeWithHistory = CreateHistoryVisitor
 					.node(this.node, history);
 

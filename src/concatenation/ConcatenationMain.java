@@ -15,7 +15,6 @@ public class ConcatenationMain {
 
 	public static void main(String[] args) {
 		Program program = LustreMain.getProgram(lustreFile);
-
 		TestConcatenation tc = new TestConcatenation(program);
 
 		List<LustreTrace> tests = new ArrayList<LustreTrace>();
@@ -28,7 +27,7 @@ public class ConcatenationMain {
 
 		LustreSimulator simulator = new LustreSimulator(program);
 		List<LustreTrace> traces = simulator.simulate(tests,
-				Simulation.COMPLETE, simulator.getAllVars());
+				Simulation.COMPLETE);
 		String traceStr = WriteTrace.write(traces, program);
 
 		System.out.println("------------Simulated results");

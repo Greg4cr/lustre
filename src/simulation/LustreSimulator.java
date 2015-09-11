@@ -94,6 +94,7 @@ public final class LustreSimulator {
 
 		// Add oracle variables
 		// By default, all output variables
+		this.oracleVars.addAll(this.inputVars);
 		this.oracleVars.addAll(this.localVars);
 		this.oracleVars.addAll(this.outputVars);
 
@@ -145,13 +146,13 @@ public final class LustreSimulator {
 		}
 	}
 
-	public List<String> getAllVars() {
-		List<String> allVars = new ArrayList<String>();
-		allVars.addAll(this.inputVars);
-		allVars.addAll(this.localVars);
-		allVars.addAll(this.outputVars);
-		return allVars;
-	}
+	// public List<String> getAllVars() {
+	// List<String> allVars = new ArrayList<String>();
+	// allVars.addAll(this.inputVars);
+	// allVars.addAll(this.localVars);
+	// allVars.addAll(this.outputVars);
+	// return allVars;
+	// }
 
 	public List<String> getInputVars() {
 		return this.inputVars;
