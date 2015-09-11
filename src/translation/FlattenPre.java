@@ -2,6 +2,7 @@ package translation;
 
 import java.util.List;
 
+import main.LustreMain;
 import types.ExprTypeVisitor;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
@@ -16,6 +17,7 @@ import jkind.lustre.visitors.AstMapVisitor;
  */
 public final class FlattenPre extends AstMapVisitor {
 	public static Program program(Program program) {
+		LustreMain.log("------------Optimizing PRE expressions.");
 		return new FlattenPre(program).visit(program);
 	}
 
