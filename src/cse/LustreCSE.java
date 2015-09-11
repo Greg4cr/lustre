@@ -7,7 +7,6 @@ import java.util.Map;
 
 import types.ExprTypeVisitor;
 import main.LustreMain;
-import jkind.lustre.ArrayAccessExpr;
 import jkind.lustre.ArrayExpr;
 import jkind.lustre.ArrayUpdateExpr;
 import jkind.lustre.BinaryExpr;
@@ -20,13 +19,13 @@ import jkind.lustre.IfThenElseExpr;
 import jkind.lustre.Node;
 import jkind.lustre.NodeCallExpr;
 import jkind.lustre.Program;
-import jkind.lustre.RecordAccessExpr;
 import jkind.lustre.RecordExpr;
 import jkind.lustre.RecordUpdateExpr;
 import jkind.lustre.TupleExpr;
 import jkind.lustre.TupleType;
 import jkind.lustre.Type;
 import jkind.lustre.UnaryExpr;
+import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 import jkind.lustre.visitors.AstMapVisitor;
 
@@ -181,15 +180,11 @@ public final class LustreCSE extends AstMapVisitor {
 		}
 	}
 
-	@Override
-	public Expr visit(ArrayAccessExpr expr) {
-		if (this.exprUse.get(expr.toString()) > cse) {
-			return this.getExprVar(expr);
-		} else {
-			return super.visit(expr);
-		}
-	}
-
+	/*
+	 * @Override public Expr visit(ArrayAccessExpr expr) { if
+	 * (this.exprUse.get(expr.toString()) > cse) { return this.getExprVar(expr);
+	 * } else { return super.visit(expr); } }
+	 */
 	@Override
 	public Expr visit(ArrayExpr expr) {
 		if (this.exprUse.get(expr.toString()) > cse) {
@@ -256,15 +251,11 @@ public final class LustreCSE extends AstMapVisitor {
 		}
 	}
 
-	@Override
-	public Expr visit(RecordAccessExpr expr) {
-		if (this.exprUse.get(expr.toString()) > cse) {
-			return this.getExprVar(expr);
-		} else {
-			return super.visit(expr);
-		}
-	}
-
+	/*
+	 * @Override public Expr visit(RecordAccessExpr expr) { if
+	 * (this.exprUse.get(expr.toString()) > cse) { return this.getExprVar(expr);
+	 * } else { return super.visit(expr); } }
+	 */
 	@Override
 	public Expr visit(RecordExpr expr) {
 		if (this.exprUse.get(expr.toString()) > cse) {
@@ -285,7 +276,8 @@ public final class LustreCSE extends AstMapVisitor {
 
 	@Override
 	public Expr visit(UnaryExpr expr) {
-		if (this.exprUse.get(expr.toString()) > cse) {
+		if (expr.op.equals(UnaryOp.PRE)
+				|| this.exprUse.get(expr.toString()) > cse) {
 			return this.getExprVar(expr);
 		} else {
 			return super.visit(expr);
