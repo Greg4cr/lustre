@@ -14,7 +14,7 @@ import jkind.lustre.visitors.ExprMapVisitor;
 /**
  * Move PRE operator to top level, if possible.
  */
-public class FlattenPreVisitor extends ExprMapVisitor {
+public final class FlattenPreVisitor extends ExprMapVisitor {
 	private final ExprTypeVisitor exprTypeVisitor;
 	private boolean replacable = true;
 
