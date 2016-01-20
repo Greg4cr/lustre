@@ -81,7 +81,7 @@ public final class StringToValue implements TypeVisitor<Value> {
 			}
 			// Otherwise, it should be a decimal
 			else {
-				fractionValue = new BigFraction(new BigDecimal(valueStr));
+				fractionValue = BigFraction.valueOf(new BigDecimal(valueStr));
 			}
 			return new RealValue(fractionValue);
 		} else {

@@ -391,7 +391,7 @@ public final class LustreSimulator {
 		// RealExpr
 		else if (expr instanceof RealExpr) {
 			RealExpr value = (RealExpr) expr;
-			return new RealValue(new BigFraction(value.value));
+			return new RealValue(BigFraction.valueOf(value.value));
 		}
 		// BoolExpr
 		else if (expr instanceof BoolExpr) {

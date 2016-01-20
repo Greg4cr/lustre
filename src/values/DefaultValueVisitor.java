@@ -35,7 +35,7 @@ public final class DefaultValueVisitor extends ValueVisitor {
 		} else if (type.equals(NamedType.INT)) {
 			return new IntegerValue(new BigInteger("0"));
 		} else if (type.equals(NamedType.REAL)) {
-			return new RealValue(new BigFraction(new BigDecimal("0.0")));
+			return new RealValue(BigFraction.valueOf(new BigDecimal("0.0")));
 		} else {
 			throw new IllegalArgumentException("Unknown type: " + type + " "
 					+ type.getClass());
