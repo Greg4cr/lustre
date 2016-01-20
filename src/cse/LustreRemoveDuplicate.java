@@ -79,7 +79,8 @@ public final class LustreRemoveDuplicate extends AstMapVisitor {
 
 		// Get rid of e.realizabilityInputs
 		return new Node(node.location, node.id, node.inputs, node.outputs,
-				locals, equations, node.properties, node.assertions, null);
+				locals, equations, node.properties, node.assertions, null,
+				null, null);
 	}
 
 	@Override

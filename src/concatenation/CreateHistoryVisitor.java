@@ -83,7 +83,7 @@ public final class CreateHistoryVisitor extends AstMapVisitor {
 
 		// Get rid of e.properties, e.assertions, and e.realizabilityInputs
 		return new Node(e.location, e.id, e.inputs, e.outputs, locals,
-				equations, null, null, null);
+				equations, null, null, null, null, null);
 	}
 
 	@Override

@@ -43,7 +43,7 @@ public final class FlattenPre extends AstMapVisitor {
 		List<Equation> equations = visitEquations(e.equations);
 		// Get rid of e.realizabilityInputs
 		return new Node(e.location, e.id, e.inputs, e.outputs, e.locals,
-				equations, e.properties, e.assertions, null);
+				equations, e.properties, e.assertions, null, null, null);
 	}
 
 	@Override
