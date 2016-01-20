@@ -153,7 +153,7 @@ public final class LustreCSE extends AstMapVisitor {
 
 		// Get rid of e.realizabilityInputs
 		return new Node(e.location, e.id, e.inputs, e.outputs, locals,
-				equations, e.properties, e.assertions, null);
+				equations, e.properties, e.assertions, null, null, null);
 	}
 
 	@Override
