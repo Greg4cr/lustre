@@ -26,7 +26,6 @@ value1n, value2n,... (values at step n)
 Oracle file
 -----------
 
-By default, the Lustre simulator produces values for all local and output variables. An optional oracle file can be specified for the Lustre simulator to produce a subset of all the variables. The oracle file contains a set of variables separated by commas. During processing, all spaces are removed.
+By default, the Lustre simulator produces values for all output variables (i.e., output-only test oracle). An optional oracle file can be specified for the Lustre simulator to produce a subset of all the variables. The oracle file contains a set of variables separated by commas. During processing, all spaces are removed.
 
 varname1,varname2,...
-
