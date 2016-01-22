@@ -26,13 +26,14 @@ public final class ReadOracle {
 			e.printStackTrace();
 		}
 
-		String allLines = "";
+		StringBuilder builder = new StringBuilder();
 
 		while (sc.hasNext()) {
-			allLines += sc.nextLine();
+			builder.append(sc.nextLine());
 		}
 		sc.close();
 
+		String allLines = builder.toString();
 		allLines = allLines.replaceAll("\\s", "");
 		String[] variables = allLines.split(",");
 

@@ -56,7 +56,7 @@ public final class ReadTestSuite {
 
 		// Read in variable names and all lines
 		String[] variables = null;
-		String allLines = "";
+		StringBuilder builder = new StringBuilder();
 
 		while (sc.hasNext()) {
 			String line = sc.nextLine().replaceAll("\\s", "");
@@ -66,7 +66,7 @@ public final class ReadTestSuite {
 			}
 			// Then values
 			else {
-				allLines += line + "\n";
+				builder.append(line + "\n");
 			}
 		}
 		sc.close();
@@ -78,6 +78,7 @@ public final class ReadTestSuite {
 		Map<String, Signal<Value>> inputVariables = new HashMap<String, Signal<Value>>();
 
 		// Split test cases by double newline
+		String allLines = builder.toString();
 		String[] testCaseArray = allLines.split("\n\n");
 
 		// Iterate all test cases
