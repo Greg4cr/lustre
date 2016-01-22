@@ -59,7 +59,7 @@ public final class WriteTrace {
 	}
 
 	// LustreMain.log(fileName + " is NOT printed.");
-
+	
 	private String traceToString(List<LustreTrace> traces, Program program) {
 		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
 
@@ -87,6 +87,7 @@ public final class WriteTrace {
 
 		// Iterate all test cases
 		while (traceIter.hasNext()) {
+			String thisTest="";
 			LustreTrace trace = traceIter.next();
 			int length = trace.getLength();
 
@@ -108,26 +109,27 @@ public final class WriteTrace {
 					}
 
 					if (value == null) {
-						output += "null";
+						thisTest += "null";
 					} else {
 						// Also Convert EnumType values from integer back to
 						// EnumValue
 						String valueStr = ValueToString.get(value, type);
-						output += valueStr;
+						thisTest += valueStr;
 					}
 
 					// Add comma if not ending
 					if (variableIter.hasNext()) {
-						output += ",";
+						thisTest += ",";
 					}
 				}
-				output += "\n";
+				thisTest += "\n";
 			}
 
 			// Add new line if not ending
 			if (traceIter.hasNext()) {
-				output += "\n";
+				thisTest += "\n";
 			}
+			output+=thisTest;
 		}
 
 		return output;
