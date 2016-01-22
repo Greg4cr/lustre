@@ -241,7 +241,12 @@ public final class LustreSimulator {
 
 		// Add values of oracle variables
 		for (String oracle : this.oracleVars) {
-			trace.addVariable(this.values.get(oracle));
+			if (this.values.containsKey(oracle)) {
+				trace.addVariable(this.values.get(oracle));
+			} else {
+				LustreMain.log("WARNING oracle variable " + oracle
+						+ " does NOT exist in the program.");
+			}
 		}
 		return trace;
 	}
