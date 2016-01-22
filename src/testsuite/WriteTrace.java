@@ -58,12 +58,10 @@ public final class WriteTrace {
 		pw.close();
 	}
 
-	// LustreMain.log(fileName + " is NOT printed.");
-	
 	private String traceToString(List<LustreTrace> traces, Program program) {
 		Map<String, Type> typeMap = ResolvedTypeTable.get(program);
 
-		String output = "";
+		StringBuilder builder = new StringBuilder();
 
 		List<String> variables = new ArrayList<String>();
 		variables.addAll(traces.get(0).getVariableNames());
@@ -74,20 +72,19 @@ public final class WriteTrace {
 		Iterator<String> variableIter = variables.iterator();
 
 		while (variableIter.hasNext()) {
-			output += variableIter.next();
+			builder.append(variableIter.next());
 			if (variableIter.hasNext()) {
-				output += ",";
+				builder.append(",");
 			}
 		}
 
-		output += "\n";
+		builder.append("\n");
 
 		// Write values
 		Iterator<LustreTrace> traceIter = traces.iterator();
 
 		// Iterate all test cases
 		while (traceIter.hasNext()) {
-			String thisTest="";
 			LustreTrace trace = traceIter.next();
 			int length = trace.getLength();
 
@@ -109,29 +106,28 @@ public final class WriteTrace {
 					}
 
 					if (value == null) {
-						thisTest += "null";
+						builder.append("null");
 					} else {
 						// Also Convert EnumType values from integer back to
 						// EnumValue
 						String valueStr = ValueToString.get(value, type);
-						thisTest += valueStr;
+						builder.append(valueStr);
 					}
 
 					// Add comma if not ending
 					if (variableIter.hasNext()) {
-						thisTest += ",";
+						builder.append(",");
 					}
 				}
-				thisTest += "\n";
+				builder.append("\n");
 			}
 
 			// Add new line if not ending
 			if (traceIter.hasNext()) {
-				thisTest += "\n";
+				builder.append("\n");
 			}
-			output+=thisTest;
 		}
 
-		return output;
+		return builder.toString();
 	}
 }
