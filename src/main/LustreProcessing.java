@@ -58,6 +58,18 @@ public final class LustreProcessing {
 			// LustreMain.log(outputFile);
 			// printToFile(outputFile, programTranslated.toString());
 		}
+	
+
+		// Aggressively un-linine a Lustre program. 
+		// Equivalent of CSE=0	
+		if (settings.noninline) {
+			programTranslated = LustreCSE.program(programTranslated, 0, true);
+
+			 String outputFile = this.nameNoExtension + ".noninlined.lus";
+			 LustreMain.log("------------Printing CSE to file");
+			 LustreMain.log(outputFile);
+			 printToFile(outputFile, programTranslated.toString());
+		}
 
 		// Process generation
 		if (settings.generation != null) {

@@ -23,6 +23,7 @@ public final class LustreArgumentParser {
 	private static final String SIMULATE = "simulate";
 	private static final String MEASURE = "measure";
 	private static final String NO_CSE = "no_cse";
+	private static final String NONINLINE = "noninline";
 
 	private final String name;
 	private final LustreSettings settings;
@@ -56,6 +57,7 @@ public final class LustreArgumentParser {
 				"measure satisfaction of obligations (complete, partial), generate a reduced test suite");
 		options.addOption(NO_CSE, false,
 				"Disable common subexpression elimination");
+		options.addOption(NONINLINE, false, "Aggressively un-inline the program (equivalent of CSE=0)");
 		return options;
 	}
 

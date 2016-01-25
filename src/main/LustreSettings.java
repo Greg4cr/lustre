@@ -16,5 +16,6 @@ public final class LustreSettings {
 	public Simulation simulation = null;
 	public Simulation measure = null;
 
+	public boolean noninline = false;
 	public boolean cse = true;
 }

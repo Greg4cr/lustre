@@ -38,6 +38,13 @@ public final class LustreCSE extends AstMapVisitor {
 				+ cse + " time(s)");
 		return new LustreCSE(program, cse).visit(program);
 	}
+	
+	// Perform an aggressive non-inlining.
+	public static Program program(Program program, int cse, boolean noninline) {
+		LustreMain.log("------------Eliminating subexpressions used more than "
+				+ cse + " time(s)");
+		return new LustreCSE(program, cse, noninline).visit(program);
+	}
 
 	private final ExprTypeVisitor exprTypeVisitor;
 	private final int cse;
@@ -55,6 +62,21 @@ public final class LustreCSE extends AstMapVisitor {
 
 	private LustreCSE(Program program, int cse) {
 		if (cse < 1) {
+			throw new IllegalArgumentException("CSE has to be positive.");
+		}
+		this.exprTypeVisitor = new ExprTypeVisitor(program);
+		this.cse = cse;
+		this.existingVars = new ArrayList<String>();
+		this.exprUse = new HashMap<String, Integer>();
+		this.exprToVarMapping = new HashMap<String, CSEExpr>();
+		this.replacedExprs = new ArrayList<CSEExpr>();
+		this.count = 0;
+	}
+	
+	/* Alternative constructor used for noninlining. In the noninlined version, 
+	 * we do not perform CSE elimination on pre expressions */
+	private LustreCSE(Program program, int cse, boolean noninline) {
+		if ((cse < 1) || (cse == 0 && !noninline)) {
 			throw new IllegalArgumentException("CSE has to be positive.");
 		}
 		this.exprTypeVisitor = new ExprTypeVisitor(program);
@@ -328,4 +350,5 @@ public final class LustreCSE extends AstMapVisitor {
 		}
 		return "CSEVar_" + count++;
 	}
+	
 }
