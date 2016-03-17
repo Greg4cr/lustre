@@ -1,0 +1,71 @@
+const TOKEN_INIT_STATE : subrange[-2,0] of int = -2;
+const TOKEN_ERROR_STATE : subrange[-2,0] of int = -1;
+const TOKEN_OUTPUT_STATE : subrange[-2,0] of int = 0;
+
+node and_node(A: bool; B: bool;
+	token_init:bool)
+returns (Out: bool);
+var
+	A_COMB_USED_BY_Out: bool;
+	A_AT_Out_NONMASKED_TRUE: bool;
+	A_AT_Out_NONMASKED_FALSE: bool;
+	omcdc_0: bool;
+	omcdc_1: bool;
+	B_COMB_USED_BY_Out: bool;
+	B_AT_Out_NONMASKED_TRUE: bool;
+	B_AT_Out_NONMASKED_FALSE: bool;
+	omcdc_2: bool;
+	omcdc_3: bool;
+	A_COMB_OBSERVED: bool;
+	B_COMB_OBSERVED: bool;
+	Out_COMB_OBSERVED: bool;
+	A_TRUE_AT_Out_AFFECTING_AT_CAPTURE: bool;
+	A_FALSE_AT_Out_AFFECTING_AT_CAPTURE: bool;
+	B_TRUE_AT_Out_AFFECTING_AT_CAPTURE: bool;
+	B_FALSE_AT_Out_AFFECTING_AT_CAPTURE: bool;
+	token: subrange[-2,0] of int;
+	token_first: subrange[-2,0] of int;
+	token_next: subrange[-2,0] of int;
+let
+
+	Out = (A and B);
+
+	/*"Used By" Equations */
+	A_COMB_USED_BY_Out = B;
+	A_AT_Out_NONMASKED_TRUE = (A and (B));
+	A_AT_Out_NONMASKED_FALSE = ((not A) and (B));
+	B_COMB_USED_BY_Out = A;
+	B_AT_Out_NONMASKED_TRUE = (B and (A));
+	B_AT_Out_NONMASKED_FALSE = ((not B) and (A));
+
+	/* comb_observed equations */
+	A_COMB_OBSERVED = (A_COMB_USED_BY_Out and Out_COMB_OBSERVED);
+	B_COMB_OBSERVED = (B_COMB_USED_BY_Out and Out_COMB_OBSERVED);
+	Out_COMB_OBSERVED = true;
+
+	/* Affecting at capture equations */
+	A_TRUE_AT_Out_AFFECTING_AT_CAPTURE = (A_AT_Out_NONMASKED_TRUE and false) -> ((A_AT_Out_NONMASKED_TRUE and false) or pre A_TRUE_AT_Out_AFFECTING_AT_CAPTURE);
+	A_FALSE_AT_Out_AFFECTING_AT_CAPTURE = (A_AT_Out_NONMASKED_FALSE and false) -> ((A_AT_Out_NONMASKED_FALSE and false) or pre A_FALSE_AT_Out_AFFECTING_AT_CAPTURE);
+	B_TRUE_AT_Out_AFFECTING_AT_CAPTURE = (B_AT_Out_NONMASKED_TRUE and false) -> ((B_AT_Out_NONMASKED_TRUE and false) or pre B_TRUE_AT_Out_AFFECTING_AT_CAPTURE);
+	B_FALSE_AT_Out_AFFECTING_AT_CAPTURE = (B_AT_Out_NONMASKED_FALSE and false) -> ((B_AT_Out_NONMASKED_FALSE and false) or pre B_FALSE_AT_Out_AFFECTING_AT_CAPTURE);
+
+	/* Token code */
+	token_first = if (token_init) then TOKEN_ERROR_STATE else TOKEN_INIT_STATE;
+	token_next =
+		if (pre(token) = TOKEN_INIT_STATE) then token_first
+		else (if (pre(token) = TOKEN_ERROR_STATE) then TOKEN_ERROR_STATE
+		else (if (pre(token) = TOKEN_OUTPUT_STATE) then TOKEN_OUTPUT_STATE
+		else TOKEN_ERROR_STATE));
+	token = token_first -> token_next;
+
+	/* Check properties */
+/* Obligations for statement Out on line 7 of the original program. */
+	omcdc_0 = not ((A_AT_Out_NONMASKED_TRUE and Out_COMB_OBSERVED) or (A_TRUE_AT_Out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_0;
+	omcdc_1 = not ((A_AT_Out_NONMASKED_FALSE and Out_COMB_OBSERVED) or (A_FALSE_AT_Out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_1;
+	omcdc_2 = not ((B_AT_Out_NONMASKED_TRUE and Out_COMB_OBSERVED) or (B_TRUE_AT_Out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_2;
+	omcdc_3 = not ((B_AT_Out_NONMASKED_FALSE and Out_COMB_OBSERVED) or (B_FALSE_AT_Out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_3;
+tel;

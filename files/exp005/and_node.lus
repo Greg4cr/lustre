@@ -1,0 +1,5 @@
+node and_node(A: bool; B: bool)
+	returns (Out: bool);
+let
+	Out = (A and B);
+tel;

@@ -1,0 +1,68 @@
+node SimpleAnd(
+  A : bool;
+  B : bool;
+  C : bool
+) returns (
+  E : bool;
+  F : bool
+);
+var
+  D : bool;
+  A_TRUE_AT_D_OMCDC_TRUE_0 : bool;
+  A_FALSE_AT_D_OMCDC_FALSE_1 : bool;
+  B_TRUE_AT_D_OMCDC_TRUE_2 : bool;
+  B_FALSE_AT_D_OMCDC_FALSE_3 : bool;
+  D_TRUE_AT_E_OMCDC_TRUE_4 : bool;
+  D_FALSE_AT_E_OMCDC_FALSE_5 : bool;
+  C_TRUE_AT_E_OMCDC_TRUE_6 : bool;
+  C_FALSE_AT_E_OMCDC_FALSE_7 : bool;
+  D_TRUE_AT_F_OMCDC_FALSE_8 : bool;
+  D_FALSE_AT_F_OMCDC_TRUE_9 : bool;
+  C_TRUE_AT_F_OMCDC_FALSE_10 : bool;
+  C_FALSE_AT_F_OMCDC_TRUE_11 : bool;
+let
+  --%MAIN;
+  D = (A or B);
+
+  E = (D and C);
+
+  F = (not (D or C));
+
+  A_TRUE_AT_D_OMCDC_TRUE_0 = (not (A and (not B)));
+
+  A_FALSE_AT_D_OMCDC_FALSE_1 = (not ((not A) and (not B)));
+
+  B_TRUE_AT_D_OMCDC_TRUE_2 = (not ((not A) and B));
+
+  B_FALSE_AT_D_OMCDC_FALSE_3 = (not ((not A) and (not B)));
+
+  D_TRUE_AT_E_OMCDC_TRUE_4 = (not (D and C));
+
+  D_FALSE_AT_E_OMCDC_FALSE_5 = (not ((not D) and C));
+
+  C_TRUE_AT_E_OMCDC_TRUE_6 = (not (D and C));
+
+  C_FALSE_AT_E_OMCDC_FALSE_7 = (not (D and (not C)));
+
+  D_TRUE_AT_F_OMCDC_FALSE_8 = (not (D and (not C)));
+
+  D_FALSE_AT_F_OMCDC_TRUE_9 = (not ((not D) and (not C)));
+
+  C_TRUE_AT_F_OMCDC_FALSE_10 = (not ((not D) and C));
+
+  C_FALSE_AT_F_OMCDC_TRUE_11 = (not ((not D) and (not C)));
+
+  --%PROPERTY A_TRUE_AT_D_OMCDC_TRUE_0;
+  --%PROPERTY A_FALSE_AT_D_OMCDC_FALSE_1;
+  --%PROPERTY B_TRUE_AT_D_OMCDC_TRUE_2;
+  --%PROPERTY B_FALSE_AT_D_OMCDC_FALSE_3;
+  --%PROPERTY D_TRUE_AT_E_OMCDC_TRUE_4;
+  --%PROPERTY D_FALSE_AT_E_OMCDC_FALSE_5;
+  --%PROPERTY C_TRUE_AT_E_OMCDC_TRUE_6;
+  --%PROPERTY C_FALSE_AT_E_OMCDC_FALSE_7;
+  --%PROPERTY D_TRUE_AT_F_OMCDC_FALSE_8;
+  --%PROPERTY D_FALSE_AT_F_OMCDC_TRUE_9;
+  --%PROPERTY C_TRUE_AT_F_OMCDC_FALSE_10;
+  --%PROPERTY C_FALSE_AT_F_OMCDC_TRUE_11;
+
+tel;

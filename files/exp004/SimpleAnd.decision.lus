@@ -1,0 +1,33 @@
+node SimpleAnd(
+  A : bool;
+  B : bool;
+  C : bool
+) returns (
+  E : bool
+);
+var
+  D : bool;
+  ArithExpr_0_TRUE_AT_D_DECISION_TRUE_0 : bool;
+  ArithExpr_0_FALSE_AT_D_DECISION_FALSE_1 : bool;
+  ArithExpr_1_TRUE_AT_E_DECISION_TRUE_2 : bool;
+  ArithExpr_1_FALSE_AT_E_DECISION_FALSE_3 : bool;
+let
+  --%MAIN;
+  D = (A or B);
+
+  E = (D and C);
+
+  ArithExpr_0_TRUE_AT_D_DECISION_TRUE_0 = (not (A or B));
+
+  ArithExpr_0_FALSE_AT_D_DECISION_FALSE_1 = (not (not (A or B)));
+
+  ArithExpr_1_TRUE_AT_E_DECISION_TRUE_2 = (not (D and C));
+
+  ArithExpr_1_FALSE_AT_E_DECISION_FALSE_3 = (not (not (D and C)));
+
+  --%PROPERTY ArithExpr_0_TRUE_AT_D_DECISION_TRUE_0;
+  --%PROPERTY ArithExpr_0_FALSE_AT_D_DECISION_FALSE_1;
+  --%PROPERTY ArithExpr_1_TRUE_AT_E_DECISION_TRUE_2;
+  --%PROPERTY ArithExpr_1_FALSE_AT_E_DECISION_FALSE_3;
+
+tel;

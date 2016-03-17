@@ -1,0 +1,16 @@
+node SimpleAnd(
+  A : bool;
+  B : bool;
+  C : bool
+) returns (
+  E : bool
+);
+var
+  D : bool;
+let
+  --%MAIN;
+  D = (A or B);
+
+  E = (D and C);
+
+tel;

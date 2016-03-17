@@ -1,0 +1,170 @@
+const TOKEN_INIT_STATE = (-2);
+const TOKEN_ERROR_STATE = (-1);
+const TOKEN_OUTPUT_STATE = 0;
+
+node SimpleAnd(
+  A : bool;
+  B : bool;
+  C : bool;
+  token_init : bool
+) returns (
+  E : bool
+);
+var
+  D : bool;
+  A_COMB_USED_BY_D : bool;
+  A_AT_D_NONMASKED_TRUE : bool;
+  A_AT_D_NONMASKED_FALSE : bool;
+  omcdc_0 : bool;
+  omcdc_1 : bool;
+  B_COMB_USED_BY_D : bool;
+  B_AT_D_NONMASKED_TRUE : bool;
+  B_AT_D_NONMASKED_FALSE : bool;
+  omcdc_2 : bool;
+  omcdc_3 : bool;
+  D_COMB_USED_BY_E : bool;
+  D_AT_E_NONMASKED_TRUE : bool;
+  D_AT_E_NONMASKED_FALSE : bool;
+  omcdc_4 : bool;
+  omcdc_5 : bool;
+  C_COMB_USED_BY_E : bool;
+  C_AT_E_NONMASKED_TRUE : bool;
+  C_AT_E_NONMASKED_FALSE : bool;
+  omcdc_6 : bool;
+  omcdc_7 : bool;
+  A_COMB_OBSERVED : bool;
+  B_COMB_OBSERVED : bool;
+  C_COMB_OBSERVED : bool;
+  D_COMB_OBSERVED : bool;
+  E_COMB_OBSERVED : bool;
+  A_TRUE_AT_D_AFFECTING_AT_CAPTURE : bool;
+  A_FALSE_AT_D_AFFECTING_AT_CAPTURE : bool;
+  B_TRUE_AT_D_AFFECTING_AT_CAPTURE : bool;
+  B_FALSE_AT_D_AFFECTING_AT_CAPTURE : bool;
+  D_TRUE_AT_E_AFFECTING_AT_CAPTURE : bool;
+  D_FALSE_AT_E_AFFECTING_AT_CAPTURE : bool;
+  C_TRUE_AT_E_AFFECTING_AT_CAPTURE : bool;
+  C_FALSE_AT_E_AFFECTING_AT_CAPTURE : bool;
+  token : subrange [-2, 0] of int;
+  token_first : subrange [-2, 0] of int;
+  token_next : subrange [-2, 0] of int;
+  token_init_TRUE_AT_token_first_BRANCH_TRUE_0 : bool;
+  token_init_FALSE_AT_token_first_BRANCH_FALSE_1 : bool;
+  ArithExpr_0_TRUE_AT_token_next_BRANCH_TRUE_2 : bool;
+  ArithExpr_0_FALSE_AT_token_next_BRANCH_FALSE_3 : bool;
+  ArithExpr_1_TRUE_AT_token_next_BRANCH_TRUE_4 : bool;
+  ArithExpr_1_FALSE_AT_token_next_BRANCH_FALSE_5 : bool;
+  ArithExpr_2_TRUE_AT_token_next_BRANCH_TRUE_6 : bool;
+  ArithExpr_2_FALSE_AT_token_next_BRANCH_FALSE_7 : bool;
+let
+  --%MAIN;
+  D = (A or B);
+
+  A_COMB_USED_BY_D = (not B);
+
+  A_AT_D_NONMASKED_TRUE = (A and (not B));
+
+  A_AT_D_NONMASKED_FALSE = ((not A) and (not B));
+
+  B_COMB_USED_BY_D = (not A);
+
+  B_AT_D_NONMASKED_TRUE = (B and (not A));
+
+  B_AT_D_NONMASKED_FALSE = ((not B) and (not A));
+
+  E = (D and C);
+
+  D_COMB_USED_BY_E = C;
+
+  D_AT_E_NONMASKED_TRUE = (D and C);
+
+  D_AT_E_NONMASKED_FALSE = ((not D) and C);
+
+  C_COMB_USED_BY_E = D;
+
+  C_AT_E_NONMASKED_TRUE = (C and D);
+
+  C_AT_E_NONMASKED_FALSE = ((not C) and D);
+
+  A_COMB_OBSERVED = (A_COMB_USED_BY_D and D_COMB_OBSERVED);
+
+  B_COMB_OBSERVED = (B_COMB_USED_BY_D and D_COMB_OBSERVED);
+
+  C_COMB_OBSERVED = (C_COMB_USED_BY_E and E_COMB_OBSERVED);
+
+  D_COMB_OBSERVED = (D_COMB_USED_BY_E and E_COMB_OBSERVED);
+
+  E_COMB_OBSERVED = true;
+
+  A_TRUE_AT_D_AFFECTING_AT_CAPTURE = ((A_AT_D_NONMASKED_TRUE and false) -> ((A_AT_D_NONMASKED_TRUE and false) or (pre A_TRUE_AT_D_AFFECTING_AT_CAPTURE)));
+
+  A_FALSE_AT_D_AFFECTING_AT_CAPTURE = ((A_AT_D_NONMASKED_FALSE and false) -> ((A_AT_D_NONMASKED_FALSE and false) or (pre A_FALSE_AT_D_AFFECTING_AT_CAPTURE)));
+
+  B_TRUE_AT_D_AFFECTING_AT_CAPTURE = ((B_AT_D_NONMASKED_TRUE and false) -> ((B_AT_D_NONMASKED_TRUE and false) or (pre B_TRUE_AT_D_AFFECTING_AT_CAPTURE)));
+
+  B_FALSE_AT_D_AFFECTING_AT_CAPTURE = ((B_AT_D_NONMASKED_FALSE and false) -> ((B_AT_D_NONMASKED_FALSE and false) or (pre B_FALSE_AT_D_AFFECTING_AT_CAPTURE)));
+
+  D_TRUE_AT_E_AFFECTING_AT_CAPTURE = ((D_AT_E_NONMASKED_TRUE and false) -> ((D_AT_E_NONMASKED_TRUE and false) or (pre D_TRUE_AT_E_AFFECTING_AT_CAPTURE)));
+
+  D_FALSE_AT_E_AFFECTING_AT_CAPTURE = ((D_AT_E_NONMASKED_FALSE and false) -> ((D_AT_E_NONMASKED_FALSE and false) or (pre D_FALSE_AT_E_AFFECTING_AT_CAPTURE)));
+
+  C_TRUE_AT_E_AFFECTING_AT_CAPTURE = ((C_AT_E_NONMASKED_TRUE and false) -> ((C_AT_E_NONMASKED_TRUE and false) or (pre C_TRUE_AT_E_AFFECTING_AT_CAPTURE)));
+
+  C_FALSE_AT_E_AFFECTING_AT_CAPTURE = ((C_AT_E_NONMASKED_FALSE and false) -> ((C_AT_E_NONMASKED_FALSE and false) or (pre C_FALSE_AT_E_AFFECTING_AT_CAPTURE)));
+
+  token_first = (if token_init then TOKEN_ERROR_STATE else TOKEN_INIT_STATE);
+
+  token_next = (if ((pre token) = TOKEN_INIT_STATE) then token_first else (if ((pre token) = TOKEN_ERROR_STATE) then TOKEN_ERROR_STATE else (if ((pre token) = TOKEN_OUTPUT_STATE) then TOKEN_OUTPUT_STATE else TOKEN_ERROR_STATE)));
+
+  token = (token_first -> token_next);
+
+  omcdc_0 = (not ((A_AT_D_NONMASKED_TRUE and D_COMB_OBSERVED) or (A_TRUE_AT_D_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_1 = (not ((A_AT_D_NONMASKED_FALSE and D_COMB_OBSERVED) or (A_FALSE_AT_D_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_2 = (not ((B_AT_D_NONMASKED_TRUE and D_COMB_OBSERVED) or (B_TRUE_AT_D_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_3 = (not ((B_AT_D_NONMASKED_FALSE and D_COMB_OBSERVED) or (B_FALSE_AT_D_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_4 = (not ((D_AT_E_NONMASKED_TRUE and E_COMB_OBSERVED) or (D_TRUE_AT_E_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_5 = (not ((D_AT_E_NONMASKED_FALSE and E_COMB_OBSERVED) or (D_FALSE_AT_E_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_6 = (not ((C_AT_E_NONMASKED_TRUE and E_COMB_OBSERVED) or (C_TRUE_AT_E_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  omcdc_7 = (not ((C_AT_E_NONMASKED_FALSE and E_COMB_OBSERVED) or (C_FALSE_AT_E_AFFECTING_AT_CAPTURE and (token = TOKEN_OUTPUT_STATE))));
+
+  token_init_TRUE_AT_token_first_BRANCH_TRUE_0 = (not token_init);
+
+  token_init_FALSE_AT_token_first_BRANCH_FALSE_1 = (not (not token_init));
+
+  ArithExpr_0_TRUE_AT_token_next_BRANCH_TRUE_2 = (not ((pre token) = TOKEN_INIT_STATE));
+
+  ArithExpr_0_FALSE_AT_token_next_BRANCH_FALSE_3 = (not (not ((pre token) = TOKEN_INIT_STATE)));
+
+  ArithExpr_1_TRUE_AT_token_next_BRANCH_TRUE_4 = (not ((not ((pre token) = TOKEN_INIT_STATE)) and ((pre token) = TOKEN_ERROR_STATE)));
+
+  ArithExpr_1_FALSE_AT_token_next_BRANCH_FALSE_5 = (not ((not ((pre token) = TOKEN_INIT_STATE)) and (not ((pre token) = TOKEN_ERROR_STATE))));
+
+  ArithExpr_2_TRUE_AT_token_next_BRANCH_TRUE_6 = (not ((not ((pre token) = TOKEN_INIT_STATE)) and ((not ((pre token) = TOKEN_ERROR_STATE)) and ((pre token) = TOKEN_OUTPUT_STATE))));
+
+  ArithExpr_2_FALSE_AT_token_next_BRANCH_FALSE_7 = (not ((not ((pre token) = TOKEN_INIT_STATE)) and ((not ((pre token) = TOKEN_ERROR_STATE)) and (not ((pre token) = TOKEN_OUTPUT_STATE)))));
+
+  --%PROPERTY omcdc_0;
+  --%PROPERTY omcdc_1;
+  --%PROPERTY omcdc_2;
+  --%PROPERTY omcdc_3;
+  --%PROPERTY omcdc_4;
+  --%PROPERTY omcdc_5;
+  --%PROPERTY omcdc_6;
+  --%PROPERTY omcdc_7;
+  --%PROPERTY token_init_TRUE_AT_token_first_BRANCH_TRUE_0;
+  --%PROPERTY token_init_FALSE_AT_token_first_BRANCH_FALSE_1;
+  --%PROPERTY ArithExpr_0_TRUE_AT_token_next_BRANCH_TRUE_2;
+  --%PROPERTY ArithExpr_0_FALSE_AT_token_next_BRANCH_FALSE_3;
+  --%PROPERTY ArithExpr_1_TRUE_AT_token_next_BRANCH_TRUE_4;
+  --%PROPERTY ArithExpr_1_FALSE_AT_token_next_BRANCH_FALSE_5;
+  --%PROPERTY ArithExpr_2_TRUE_AT_token_next_BRANCH_TRUE_6;
+  --%PROPERTY ArithExpr_2_FALSE_AT_token_next_BRANCH_FALSE_7;
+
+tel;

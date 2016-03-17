@@ -1,0 +1,29 @@
+node and_node(
+  A : bool;
+  B : bool
+) returns (
+  Out : bool
+);
+var
+  A_TRUE_AT_Out_MCDC_TRUE_0 : bool;
+  A_FALSE_AT_Out_MCDC_FALSE_1 : bool;
+  B_TRUE_AT_Out_MCDC_TRUE_2 : bool;
+  B_FALSE_AT_Out_MCDC_FALSE_3 : bool;
+let
+  --%MAIN;
+  Out = (A and B);
+
+  A_TRUE_AT_Out_MCDC_TRUE_0 = (not (A and B));
+
+  A_FALSE_AT_Out_MCDC_FALSE_1 = (not ((not A) and B));
+
+  B_TRUE_AT_Out_MCDC_TRUE_2 = (not (A and B));
+
+  B_FALSE_AT_Out_MCDC_FALSE_3 = (not (A and (not B)));
+
+  --%PROPERTY A_TRUE_AT_Out_MCDC_TRUE_0;
+  --%PROPERTY A_FALSE_AT_Out_MCDC_FALSE_1;
+  --%PROPERTY B_TRUE_AT_Out_MCDC_TRUE_2;
+  --%PROPERTY B_FALSE_AT_Out_MCDC_FALSE_3;
+
+tel;
