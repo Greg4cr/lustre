@@ -33,15 +33,15 @@ public class TokenAction {
 	
 	// token generator assistants
 	// sequential trees (one token to one tree / root)
-	HashMap<Node, HashMap<VarDecl, ObservedTree>> sequentialTrees;
+	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
-	HashMap<String, List<String>> tokenDependency = new HashMap<String, List<String>>();
+	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
 	// token to tree node (root), Map<Token, Node>
 	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
 	// tree node (root) to token, Map<Node, Token>
 	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
 	
-	public TokenAction(HashMap<Node, HashMap<VarDecl, ObservedTree>> seqTrees) {
+	public TokenAction(HashMap<VarDecl, ObservedTree> seqTrees) {
 		this.sequentialTrees = seqTrees;
 		drawMaps();
 	}
@@ -88,7 +88,7 @@ public class TokenAction {
 		for (IdExpr sourceToken : tokens) {
 			String sourceNode = tokenToNode.get(sourceToken);
 //			System.out.println("building transition equation for " + sourceToken.id + " :: " + sourceNode);
-			for (String targetNode : tokenDependency.get(sourceNode)) {
+			for (String targetNode : rootToLeavesMap.get(sourceNode)) {
 //				System.out.println(sourceNode + " :: " + targetNode);
 				id = sourceNode + seq + targetNode;
 				errTrans = new IfThenElseExpr(new BinaryExpr(
@@ -117,27 +117,23 @@ public class TokenAction {
 	
 	// build token-to-node, node-to-token, tokennode-dependency maps
 	private void drawMaps() {
-		for (Node node : sequentialTrees.keySet()) {
-			HashMap<VarDecl, ObservedTree> trees = sequentialTrees.get(node);
-			tokens = new IdExpr[trees.size()];
-			count = 0;
-			
+//		HashMap<VarDecl, ObservedTree> trees = sequentialTrees;
+		tokens = new IdExpr[sequentialTrees.size()];
+		count = 0;
+		
 //			System.out.println("============= drawing maps =============");
-			for (VarDecl tree : trees.keySet()) {
-				tokens[count] = new IdExpr(prefix + (count + 1));
-				tokenToNode.put(tokens[count], tree.id);
-				nodeToToken.put(tree.id, tokens[count]);
-				count++;
-				
-				ObservedTreeNode root = trees.get(tree).getroot();
-				tokenDependency.put(tree.id, root.getAllLeaves());
-				
+		for (VarDecl tree : sequentialTrees.keySet()) {
+			tokens[count] = new IdExpr(prefix + (count + 1));
+			tokenToNode.put(tokens[count], tree.id);
+			nodeToToken.put(tree.id, tokens[count]);
+			
+			ObservedTreeNode root = sequentialTrees.get(tree).getroot();
+			rootToLeavesMap.put(tree.id, root.getAllLeaves());
+			
 //				System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
 //				System.out.println(count + " node-to-token: " + tree.id + " - " + nodeToToken.get(tree.id));
-//				System.out.println(count + " dependency: " + tree.id + " >>> " + tokenDependency.get(tree.id));
-			}
-			
-			break; // assume only one node for one input
+//				System.out.println(count + " dependency: " + tree.id + " >>> " + rootToLeavesMap.get(tree.id));
+			count++;
 		}
 	}
 }

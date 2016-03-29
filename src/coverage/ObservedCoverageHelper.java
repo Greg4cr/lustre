@@ -25,38 +25,15 @@ import main.LustreMain;
  *  - And any necessary dependencies.
  */
 public class ObservedCoverageHelper {
-	private List<Node> nodes;
-	private HashMap<Node, List<VarDecl>> outputsTable = new HashMap<Node, List<VarDecl>>();
+	private Node node;
 	private List<VarDecl> idList = new ArrayList<VarDecl>();
 	private boolean isSeqRoot;
-	private HashMap<String, VarDecl> idsOfNode = new HashMap<String, VarDecl>();
-	private HashMap<IdExpr, Expr> exprTable = new HashMap<IdExpr, Expr>();
 	
-	public ObservedCoverageHelper(List<Node> nodes) {
-		setNodes(nodes);
-		this.nodes = nodes;
-		populateOutputTable(this.nodes);
+	public ObservedCoverageHelper(Node node) {
+		this.node = node;
+		idList = populateIdList();
 	}
-	
-	/*
-	 * Build referring trees
-	 */
-	public HashMap<Node, HashMap<VarDecl, ObservedTree>> buildRefTreesForInput() {
-//		HashMap<Node, List<VarDecl>> outputTable = getOutputTable(nodes);
-		HashMap<Node, HashMap<VarDecl, ObservedTree>> trees = new HashMap<Node, HashMap<VarDecl, ObservedTree>>();
-		HashMap<VarDecl, ObservedTree> treesOfNode = new HashMap<VarDecl, ObservedTree>();
-		// build reference trees, node by node
-		for (Node node : this.nodes) {
-			LustreMain.log(">>> Building reference trees for " + node.id);
-			
-			treesOfNode = buildRefTreesForNode(node);
-//			LustreMain.log(">>> Done!!! Building reference trees for " + node.id);
-			trees.put(node, treesOfNode);
-//			LustreMain.log(trees.toString() + "\n\n");
-		}
-		return trees;
-	}
-	
+		
 	/*
 	 * Build referring trees for given node, one tree per output.
 	 * Example: A is an output variable, and A = (B and C); B = (C or D);
@@ -67,48 +44,37 @@ public class ObservedCoverageHelper {
 	 *				/ \
 	 *             C   D
 	 */
-	public HashMap<VarDecl, ObservedTree> buildRefTreesForNode(Node node) {
-		List<VarDecl> roots = getRootList(node);
-		this.idList = populateIdList(node);
-		idsOfNode = getIds(node);
-		Map<String, Expr> expressions = getStrExprTable(node);
+	public HashMap<VarDecl, ObservedTree> buildRefTrees() {
+		List<VarDecl> roots = node.outputs;
+//		idList = populateIdList();
+		Map<String, Expr> expressions = getStrExprTable();
 		HashMap<VarDecl, ObservedTree> subTrees = new HashMap<VarDecl, ObservedTree>();
 		System.out.println("All ids in node \"" + node.id + "\":\n" + idList.toString() + "\n");
+		
 		// create one tree per output
-		for (VarDecl r : roots) {
-			ObservedTreeNode treeRoot = new ObservedTreeNode(r.id);
+		for (VarDecl root : roots) {
+			ObservedTreeNode treeRoot = new ObservedTreeNode(root.id);
 			buildTreeRecursively(treeRoot, expressions, true);
-			subTrees.put(r, new ObservedTree(treeRoot));
+			subTrees.put(root, new ObservedTree(treeRoot));
 		}
 		return subTrees;
 	}
-
-	// build sequential trees
-	public HashMap<Node, HashMap<VarDecl, ObservedTree>> buildSeqTreesForInput() {
-		HashMap<Node, HashMap<VarDecl, ObservedTree>> trees = new HashMap<Node, HashMap<VarDecl, ObservedTree>>();
-		HashMap<VarDecl, ObservedTree> treesOfNode = new HashMap<VarDecl, ObservedTree>();
-		
-		// build reference trees, node by node
-		for (Node node : this.nodes) {
-//			LustreMain.log(">>> Building sequential trees for " + node.id);
-			idList = populateIdList(node);
-			treesOfNode = buildSeqTreesForNode(node);
-			trees.put(node, treesOfNode);
-		}
-		return trees;		
+	
+	public int getTokenNumber() {
+		return getSeqTreeRoots(getStrExprTable()).size();
 	}
 	
-	public HashMap<VarDecl, ObservedTree> buildSeqTreesForNode(Node node) {
-		HashMap<VarDecl, ObservedTree> seqTrees = new HashMap<VarDecl, ObservedTree>();
-		HashMap<String, Expr> expressions = getStrExprTable(this.nodes.get(0));
-		HashMap<String, VarDecl> ids = getIds(node);
+	public HashMap<VarDecl, ObservedTree> buildSeqTrees() {
+		HashMap<VarDecl, ObservedTree> seqTrees = new HashMap<>();
+		HashMap<String, Expr> expressions = getStrExprTable();
+		HashMap<String, VarDecl> idMap = getIds();
 		List<String> roots = getSeqTreeRoots(expressions);
 		ObservedTreeNode treeNode;
 		
 		for (String root : roots) {
 			isSeqRoot = true;
 			treeNode = buildTreeRecursively(new ObservedTreeNode(root), expressions, false);
-			seqTrees.put(ids.get(root), new ObservedTree(treeNode));
+			seqTrees.put(idMap.get(root), new ObservedTree(treeNode));
 		}
 		
 		return seqTrees;
@@ -120,9 +86,7 @@ public class ObservedCoverageHelper {
 	 */
 	private ObservedTreeNode buildTreeRecursively(ObservedTreeNode root, Map<String, Expr> exprs, 
 			boolean isBuildingRef) {
-		ObservedTreeNode rootNode = new ObservedTreeNode(root.data);
 		List<String> ids = getStrIds();
-//		HashMap<String, VarDecl> ids = this.getIds(node);
 		ArrayList<String> childList = new ArrayList<String>();
 		
 		if (isBuildingRef) {
@@ -148,7 +112,7 @@ public class ObservedCoverageHelper {
 		}
 		
 //		LustreMain.log(">>>>>> Building tree for " + root.data);
-//		LustreMain.log(">>>>>> Expression = " + exprs.get(root.data));
+//		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
 		if (exprs.get(root.data).toString().indexOf(" ") > 0) {
 			String[] items = exprs.get(root.data).toString().replaceAll("[(){}]", " ").split(" ");
 			for (String item : items) {
@@ -167,7 +131,6 @@ public class ObservedCoverageHelper {
 			childList.add(exprs.get(root.data).toString().replaceAll("[ (){}]", ""));
 		}
 		
-//		System.out.println("Child List: " + childList.toString());
 		// add children to current root
 		for (int i = 0; i < childList.size(); i++) {
 			ObservedTreeNode node = new ObservedTreeNode(childList.get(i).toString());
@@ -185,30 +148,11 @@ public class ObservedCoverageHelper {
 							+ " children: "+ root.getChildren().toString());
 		return root;
 	}
-	
-	private void setNodes(List<Node> nodes) {
-		if (nodes == null || nodes.size() == 0) {
-			throw new IllegalArgumentException("Null or empty node list!");
-		}
-		this.nodes = nodes;
-	}
-	
-	private List<VarDecl> getRootList(Node node) {
-		return this.outputsTable.get(node);
-	}
-	
-	private void populateOutputTable(List<Node> nodes) {
-		for (Node node : nodes) {
-			// get the output list, node by node
-			List<VarDecl> outputs = node.outputs;
-			this.outputsTable.put(node, outputs);
-		}
-	}
-	
+			
 	/*
 	 * return all variables (inputs, outputs, and locals) given a node 
 	 */
-	private List<VarDecl> populateIdList(Node node) {
+	private List<VarDecl> populateIdList() {
 		List<VarDecl> varList = new ArrayList<VarDecl>();
 		for (VarDecl output : node.outputs) {
 			varList.add(output);
@@ -222,23 +166,23 @@ public class ObservedCoverageHelper {
 		return varList;
 	}
 	
-	public HashMap<String, VarDecl> getIds(Node node) {
-		HashMap<String, VarDecl> idList = new HashMap<String, VarDecl>();
+	public HashMap<String, VarDecl> getIds() {
+		HashMap<String, VarDecl> idMap = new HashMap<String, VarDecl>();
 		for (VarDecl output : node.outputs) {
-			idList.put(output.id, output);
+			idMap.put(output.id, output);
 		}
 		for (VarDecl input : node.inputs) {
-			idList.put(input.id, input);
+			idMap.put(input.id, input);
 		}
 		for (VarDecl local : node.locals) {
-			idList.put(local.id, local);
+			idMap.put(local.id, local);
 		}
-		return idList;
+		return idMap;
 	}
 	
 	private List<String> getStrIds() {
 		List<String> strIdList = new ArrayList<String>();
-		for (VarDecl id : this.idList) {
+		for (VarDecl id : idList) {
 			strIdList.add(id.id);
 		}
 		return strIdList;
@@ -262,8 +206,8 @@ public class ObservedCoverageHelper {
 	/*
 	 * re-organize expressions of given node with hashtable
 	 */
-	private HashMap<String, Expr> getStrExprTable(Node node) {
-		HashMap<String, Expr> exprTable = new HashMap<String, Expr>();
+	private HashMap<String, Expr> getStrExprTable() {
+		HashMap<String, Expr> exprTable = new HashMap<>();
 		List<Equation> equations = node.equations;
 		
 		/*

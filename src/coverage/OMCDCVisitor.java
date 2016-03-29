@@ -20,7 +20,7 @@ import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 
-public class OMCDCVisitor extends CoverageVisitor {
+public class OMCDCVisitor extends ConditionVisitor {
 	List<Node> nodes;
 	ObservedCoverageHelper obHelper;
 	MCDCVisitor mcdcVisitor;
@@ -30,25 +30,35 @@ public class OMCDCVisitor extends CoverageVisitor {
 	IdExpr parent;
 	HashMap<String, VarDecl> idList;
 	List<String> properties = new ArrayList<String>();
-	int count = 0;
 	
 	public OMCDCVisitor(ExprTypeVisitor exprTypeVisitor, List<Node> nodes) {
 		super(exprTypeVisitor);
 		this.nodes = nodes;
-		this.obHelper = new ObservedCoverageHelper(nodes);
+		this.obHelper = new ObservedCoverageHelper(nodes.get(0));
 	}
 	
 	// main entrance to get OMCDC obligations
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		obligations.addAll(getMCDCObligation(exprTypeVisitor));
-		obligations.addAll(generateCombObervedExpr());
-		obligations.addAll(generateDelayDependencyExpr());
+		obligations.addAll(getCombObervedObligations());
+		obligations.addAll(getSeqUsedByObligations());
+		obligations.addAll(getTokenActions());
+		obligations.addAll(getAffectAtCaptureObligations());
 		
-		obligations.addAll(generateTokenActions());
+		/* ****************************
+		 * generate omcdc obligations *
+		 * ****************************
+		 */
+		
+		
 		return obligations;
 	}
 	
+	public int getTokenRange() {
+		return obHelper.getTokenNumber();
+	}
+
 	@Override
 	public List<Obligation> visit(BinaryExpr expr) {
 		List<Obligation> obligations = new ArrayList<Obligation>();
@@ -60,7 +70,6 @@ public class OMCDCVisitor extends CoverageVisitor {
 		
 		// and, or
 		if (expr.op.equals(BinaryOp.AND)) {
-			//TODO: does not function! need to fix.
 			for (Obligation leftOb : leftObs) {
 				leftOb.obligation = expr.right;
 			}
@@ -69,7 +78,6 @@ public class OMCDCVisitor extends CoverageVisitor {
 			}
 			
 		} else if (expr.op.equals(BinaryOp.OR)) {
-			//TODO: does not function! need to fix.
 			for (Obligation leftOb : leftObs) {
 				leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
 			}
@@ -110,7 +118,6 @@ public class OMCDCVisitor extends CoverageVisitor {
 		// a => b
 		// !a or b
 		else if (expr.op.equals(BinaryOp.IMPLIES)) {
-			//TODO: does not function! need to fix.
 			for (Obligation leftOb : leftObs) {
 				leftOb.obligation = expr.right;
 			}
@@ -232,8 +239,7 @@ public class OMCDCVisitor extends CoverageVisitor {
 				property = ob.condition + "_"
 						+ (ob.polarity ? "TRUE" : "FALSE") + "_AT_"
 						+ id + "_MCDC_"
-						+ (ob.expressionPolarity ? "TRUE" : "FALSE")
-						+ "_" + (count++);
+						+ (ob.expressionPolarity ? "TRUE" : "FALSE");
 				properties.add(property);
 				Obligation currentOb = new Obligation(new IdExpr(property), false, ob.obligation);
 				obligations.add(currentOb);
@@ -244,24 +250,30 @@ public class OMCDCVisitor extends CoverageVisitor {
 	}
 	
 	// generate COMB_OBSERVED expressions
-	private List<Obligation> generateCombObervedExpr() {
+	private List<Obligation> getCombObervedObligations() {
 		CombObservedEquation combObsEquation = new CombObservedEquation();
-		return combObsEquation.generate(obHelper.buildRefTreesForInput());
+//		return combObsEquation.generate(obHelper.buildRefTreesForInput());
+		return combObsEquation.generate(obHelper.buildRefTrees());
 		
 	}
 	// generate SEQ_USED_BY expressions
-	private List<Obligation> generateDelayDependencyExpr() {
+	private List<Obligation> getSeqUsedByObligations() {
 		SequentialEquation delayDepdnEquation = new SequentialEquation();
-		return delayDepdnEquation.generate(obHelper.buildSeqTreesForInput());
+		return delayDepdnEquation.generate(obHelper.buildSeqTrees());
 	}
 	
 	// generate TOKEN Actions
-	private List<Obligation> generateTokenActions() {
-		TokenAction tokenAction = new TokenAction(obHelper.buildSeqTreesForInput());
+	private List<Obligation> getTokenActions() {
+		TokenAction tokenAction = new TokenAction(obHelper.buildSeqTrees());
 		return tokenAction.generate();
 	}
 	
 	//TODO: generate affecting_at_capture expressions
+	private List<Obligation> getAffectAtCaptureObligations() {
+		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(obHelper.buildSeqTrees(),
+												obHelper.buildRefTrees());
+		return affect.generate();
+	}
 	
 	//TODO: generate obligations
 }

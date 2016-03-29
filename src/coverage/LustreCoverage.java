@@ -6,6 +6,7 @@ import enums.Coverage;
 import enums.Polarity;
 import main.LustreMain;
 import types.ExprTypeVisitor;
+import jkind.lustre.BoolExpr;
 import jkind.lustre.Constant;
 import jkind.lustre.Equation;
 import jkind.lustre.IdExpr;
@@ -13,6 +14,8 @@ import jkind.lustre.IntExpr;
 import jkind.lustre.NamedType;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
+import jkind.lustre.Type;
+import jkind.lustre.TypeDef;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
@@ -20,6 +23,8 @@ import jkind.lustre.builders.NodeBuilder;
 import jkind.lustre.builders.ProgramBuilder;
 
 public final class LustreCoverage {
+	int upperbound = 0;
+	
 	// By default, use polarity ALL
 	public static Program program(Program program, Coverage coverage) {
 		return program(program, coverage, Polarity.ALL);
@@ -56,8 +61,23 @@ public final class LustreCoverage {
 		builder.addConstants(this.program.constants)
 				.addTypes(this.program.types).setMain(this.program.main);
 		
+
+		
 		for (Node node : this.program.nodes) {
 			builder.addNode(this.generate(node));
+		}
+		
+
+		if (coverage.equals(Coverage.OMCDC)) {
+			// add more constants
+			Type type = new NamedType("subrange[-2," + upperbound + "] of int");
+			Constant constDemo = new Constant("testing", NamedType.BOOL, new BoolExpr(true));
+			builder.addConstant(new Constant("TOKEN_INIT_STATE", type, new IntExpr(-2)));
+			builder.addConstant(new Constant("TOKEN_ERROR_STATE", type, new IntExpr(-1)));
+			builder.addConstant(new Constant("TOKEN_OUTPUT_STATE", type, new IntExpr(-0)));
+			builder.addConstant(constDemo);
+			
+			System.out.println(constDemo.id + ", " + constDemo.type.toString() + ", " + constDemo.expr.toString());
 		}
 
 		LustreMain.log("Number of Obligations: " + count);
@@ -159,13 +179,27 @@ public final class LustreCoverage {
 			
 			List<Obligation> obligations = ((OMCDCVisitor) coverageVisitor).generate();
 			count += obligations.size();
-			builder.addInput(new VarDecl("token_nondet", new NamedType("subrange[1,4] of int")));
-			builder.addInput(new VarDecl("token_init", NamedType.BOOL));
+			upperbound = ((OMCDCVisitor) coverageVisitor).getTokenRange();
+			StringBuilder subrange = new StringBuilder();
+			subrange.append("subrange");
+			
+			if (upperbound > 0) {
+				// add local token definition if there is any
+				subrange.append("[").append("1,").append(upperbound).append("]");
+				builder.addInput(new VarDecl("token_nondet", new NamedType(subrange.toString() + " of int")));
+				builder.addInput(new VarDecl("token_init", NamedType.BOOL));
+				subrange.delete(subrange.indexOf("["), subrange.length());
+			}
+			subrange.append("[").append("-2,").append(upperbound).append("]");
 			
 			for (Obligation obligation : obligations) {
 				property = obligation.condition;
 				builder.addEquation(new Equation(new IdExpr(property), obligation.obligation));
-				builder.addLocal(new VarDecl(property, NamedType.BOOL));
+				if (property.contains("token_")) {
+					builder.addLocal(new VarDecl(property, new NamedType(subrange.toString() + " of int")));
+				} else if (!property.contains("token")){
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
+				}
 				builder.addProperty(property);
 			}
 			

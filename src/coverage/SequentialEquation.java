@@ -13,19 +13,14 @@ import jkind.lustre.VarDecl;
 
 public class SequentialEquation {
 	
-	public List<Obligation> generate(HashMap<Node, HashMap<VarDecl, ObservedTree>> sequantialTrees) {
+	public List<Obligation> generate(HashMap<VarDecl, ObservedTree> sequantialTrees) {
 		List<Obligation> obligations = new ArrayList<Obligation>();
-		HashMap<VarDecl, ObservedTree> seqTreesOfNode;
 		ObservedTree tree;
 		
-		for (Node node : sequantialTrees.keySet()) {
-			// generate obligation equations node by node
-			seqTreesOfNode = sequantialTrees.get(node);
-			for (VarDecl root: seqTreesOfNode.keySet()) {
-				System.out.println("Generate delay dependency epxressions for [" + root + "]...");
-				tree = seqTreesOfNode.get(root);
-				obligations.addAll(gerenateExprForTree(tree));
-			}
+		for (VarDecl root: sequantialTrees.keySet()) {
+			System.out.println("Generate delay dependency epxressions for [" + root + "]...");
+			tree = sequantialTrees.get(root);
+			obligations.addAll(gerenateExprForTree(tree));
 		}
 		return obligations;
 	}
