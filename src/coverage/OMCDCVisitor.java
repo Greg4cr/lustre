@@ -14,6 +14,7 @@ import jkind.lustre.Equation;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
+import jkind.lustre.IntExpr;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.UnaryExpr;
@@ -40,17 +41,13 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// main entrance to get OMCDC obligations
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
-		obligations.addAll(getMCDCObligation(exprTypeVisitor));
+		
+//		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
 		obligations.addAll(getCombObervedObligations());
-		obligations.addAll(getSeqUsedByObligations());
-		obligations.addAll(getTokenActions());
-		obligations.addAll(getAffectAtCaptureObligations());
-		
-		/* ****************************
-		 * generate omcdc obligations *
-		 * ****************************
-		 */
-		
+//		obligations.addAll(getSeqUsedByObligations());
+//		obligations.addAll(getTokenActions());	// done
+//		obligations.addAll(getAffectAtCaptureObligations());
+//		obligations.addAll(getObligations());
 		
 		return obligations;
 	}
@@ -66,41 +63,81 @@ public class OMCDCVisitor extends ConditionVisitor {
 		List<Obligation> leftObs = expr.left.accept(this);
 		List<Obligation> rightObs = expr.right.accept(this);
 		
-//		System.out.println("for expression: " + expr.toString());
+		System.out.println("for expression: " + expr.toString());
+		System.out.println("expr.left :: " + expr.left + "; expr.right :: " + expr.right);
+		System.out.println("class of left :: " + expr.left.getClass() + "; class of right :: " + expr.right.getClass());
+		System.out.println("leftObs :: " + leftObs + "; rightObs :: " + rightObs);
 		
-		// and, or
+		// and
+		// for one opr not be masked, the other one must be true
 		if (expr.op.equals(BinaryOp.AND)) {
 			for (Obligation leftOb : leftObs) {
-				leftOb.obligation = expr.right;
+				if (expr.left instanceof IdExpr ||
+						(expr.left instanceof UnaryExpr &&
+							((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+					leftOb.obligation = expr.right;
+				} else {
+					leftOb.obligation = new BinaryExpr(leftOb.obligation,
+							BinaryOp.AND, expr.right);
+				}
 			}
 			for (Obligation rightOb : rightObs) {
-				rightOb.obligation = expr.left;
+				if (expr.right instanceof IdExpr ||
+						(expr.right instanceof UnaryExpr &&
+							((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
+					rightOb.obligation = expr.left;
+				} else {
+					rightOb.obligation = new BinaryExpr(expr.left, BinaryOp.AND,
+							rightOb.obligation);
+				}
 			}
 			
-		} else if (expr.op.equals(BinaryOp.OR)) {
+		}
+		// or
+		// for one opr not be masked, the other one must be false
+		else if (expr.op.equals(BinaryOp.OR)) {
 			for (Obligation leftOb : leftObs) {
-				leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
+				if (expr.left instanceof IdExpr ||
+						(expr.left instanceof UnaryExpr &&
+								((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+					leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
+				} else {
+					leftOb.obligation = new BinaryExpr(leftOb.obligation,
+							BinaryOp.AND, new UnaryExpr(UnaryOp.NOT, expr.right));
+				}
 			}
 			for (Obligation rightOb : rightObs) {
-				rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
+				if (expr.right instanceof IdExpr ||
+						(expr.right instanceof UnaryExpr &&
+								((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
+					rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
+				} else {
+					rightOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT,
+							expr.left), BinaryOp.AND, rightOb.obligation);
+				}
 			}
 		} 
 		
-		// >, >=, <, <=, ==, !=
+		// >, >=, <, <=
 		// +, -, *, /, div, %
+		// ==, <>
+		// opr is never masked
 		else if (expr.op.equals(BinaryOp.GREATER)
 				|| expr.op.equals(BinaryOp.GREATEREQUAL)
 				|| expr.op.equals(BinaryOp.LESS)
 				|| expr.op.equals(BinaryOp.LESSEQUAL)
-				|| expr.op.equals(BinaryOp.EQUAL)
-				|| expr.op.equals(BinaryOp.NOTEQUAL)
 				|| expr.op.equals(BinaryOp.PLUS)
 				|| expr.op.equals(BinaryOp.MINUS)
 				|| expr.op.equals(BinaryOp.MULTIPLY)
 				|| expr.op.equals(BinaryOp.DIVIDE)
 				|| expr.op.equals(BinaryOp.INT_DIVIDE)
-				|| expr.op.equals(BinaryOp.MODULUS)) {
-			
+				|| expr.op.equals(BinaryOp.MODULUS)
+				// Equation of (bool_A = bool_B) has been translated into AND & OR equation
+				// The EQUAL equations we meet here must be the kind of (int_A = num) or (num = int_B)
+				// And the expression itself is a boolean expression and thus a condition
+				// Similar to <>
+				|| expr.op.equals(BinaryOp.EQUAL)
+				|| expr.op.equals(BinaryOp.NOTEQUAL)) {
 			if (expr.left instanceof IdExpr) {
 				obligations.add(new Obligation(expr.left, true, new BoolExpr(true)));
 			}
@@ -108,21 +145,19 @@ public class OMCDCVisitor extends ConditionVisitor {
 			if (expr.right instanceof IdExpr) {
 				obligations.add(new Obligation(expr.right, true, new BoolExpr(true)));
 			}
-			
+			// nesting expressions
 			if (!(expr.left instanceof IdExpr || expr.right instanceof IdExpr)) {
 				obligations.add(new Obligation(expr, true, new BoolExpr(true)));
 			}
-			
-		} 
+		}
 		
 		// a => b
-		// !a or b
+		// it can be treated as an OR expression (!a or b)
 		else if (expr.op.equals(BinaryOp.IMPLIES)) {
 			for (Obligation leftOb : leftObs) {
-				leftOb.obligation = expr.right;
+				leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
 			}
 			for (Obligation rightOb : rightObs) {
-
 				rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
 			}				
 		}
@@ -131,26 +166,20 @@ public class OMCDCVisitor extends ConditionVisitor {
 		else if (expr.op.equals(BinaryOp.ARROW)) {
 			Expr currentObligation;
 			Expr left;
+			if (expr.left instanceof BoolExpr 
+					|| expr.left instanceof IdExpr) {
+				left = expr.left;
+			} else {
+				left = new BoolExpr(false);
+			}
 			
 			if (expr.right instanceof IdExpr) {
 				// a -> b
-				if (expr.left instanceof BoolExpr 
-						|| expr.left instanceof IdExpr) {
-					left = expr.left;
-				} else {
-					left = new BoolExpr(false);
-				}
 				currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
 						new BoolExpr(true));
 				obligations.add(new Obligation(expr.right, true, currentObligation));
 			} else if (expr.right instanceof UnaryExpr) {
-				if (expr.left instanceof BoolExpr
-						|| expr.left instanceof IdExpr) {
-					left = expr.left;
-				} else {
-					left = new BoolExpr(false);
-				}
-				
+								
 				if (((UnaryExpr) expr.right).op.equals(UnaryOp.NOT)) {
 					// a -> (not b)
 					currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
@@ -165,17 +194,10 @@ public class OMCDCVisitor extends ConditionVisitor {
 				}
 			} else {
 				// a -> (expression)
-				if (expr.left instanceof BoolExpr
-						|| expr.left instanceof IdExpr) {
-					left = expr.left;
-				} else {
-					left = new BoolExpr(false);
-				}
-				
 				currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
 						new BoolExpr(true));
 				obligations.add(new Obligation(expr, true, currentObligation));
-			}
+			}				
 		}
 		
 		// xor
@@ -196,21 +218,58 @@ public class OMCDCVisitor extends ConditionVisitor {
 		obligations.addAll(expr.cond.accept(this));
 		List<Obligation> thenObs = expr.thenExpr.accept(this);
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
-		List<Obligation> condObs = expr.cond.accept(this);
 		
 		for (Obligation thenOb : thenObs) {
+			System.out.println("thenOb >>>>> " + thenOb.toString());
 			thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND, thenOb.obligation);
 		}
 		
 		for (Obligation elseOb : elseObs) {
+			System.out.println("elseOb >>>>> " + elseOb.toString());
 			elseOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT, expr.cond),
 					BinaryOp.AND, elseOb.obligation);
 		}
 		
-		for (Obligation condOb : condObs) {
-		}
 		obligations.addAll(thenObs);
 		obligations.addAll(elseObs);
+		
+		return obligations;
+	}
+	
+	@Override
+	public List<Obligation> visit(UnaryExpr expr) {
+		List<Obligation> obligations = new ArrayList<Obligation>();
+		List<Obligation> unaryObs = expr.expr.accept(this);
+
+		System.out.println("unary.expr :: " + unaryObs.toString());
+		
+		if (expr.expr instanceof IdExpr) {
+			for (Obligation unaryOb : unaryObs) {
+				if (expr.op.equals(UnaryOp.NOT)) {
+					unaryOb.obligation = expr;
+				}
+				else if (expr.op.equals(UnaryOp.PRE)) {
+					unaryOb.obligation = new BoolExpr(false);
+				} else {
+					
+				}
+			}
+		} else {
+			unaryObs.addAll(super.visit(expr));
+		}
+		
+		// NEGATIVE
+
+		obligations.addAll(unaryObs);
+		
+		return obligations;
+	}
+	
+	@Override
+	public List<Obligation> visit(IdExpr expr) {
+		List<Obligation> obligations = new ArrayList<Obligation>();
+		
+		obligations.add(new Obligation(expr, true, expr));
 		
 		return obligations;
 	}
@@ -250,10 +309,10 @@ public class OMCDCVisitor extends ConditionVisitor {
 	}
 	
 	// generate COMB_OBSERVED expressions
+	// FIXME: false equations are missed
 	private List<Obligation> getCombObervedObligations() {
 		CombObservedEquation combObsEquation = new CombObservedEquation();
-//		return combObsEquation.generate(obHelper.buildRefTreesForInput());
-		return combObsEquation.generate(obHelper.buildRefTrees());
+		return combObsEquation.generate(obHelper.buildRefTrees(), obHelper.getIdList());
 		
 	}
 	// generate SEQ_USED_BY expressions
@@ -264,16 +323,34 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	// generate TOKEN Actions
 	private List<Obligation> getTokenActions() {
-		TokenAction tokenAction = new TokenAction(obHelper.buildSeqTrees());
-		return tokenAction.generate();
+		HashMap<VarDecl, ObservedTree> trees = obHelper.buildSeqTrees();
+		if (trees.size() > 0) {
+			TokenAction tokenAction = new TokenAction(trees);
+			tokenAction.setInIdList(obHelper.getInStrList());
+			return tokenAction.generate();
+		}
+		return new ArrayList<Obligation>();
 	}
 	
-	//TODO: generate affecting_at_capture expressions
+	// generate affecting_at_capture expressions
 	private List<Obligation> getAffectAtCaptureObligations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(obHelper.buildSeqTrees(),
 												obHelper.buildRefTrees());
 		return affect.generate();
 	}
 	
-	//TODO: generate obligations
+	// generate omcdc obligations for each expression
+	private List<Obligation> getObligations() {
+		OMCDCObligation obligation = new OMCDCObligation(obHelper.buildSeqTrees(),
+											obHelper.buildRefTrees());
+		return obligation.generate();
+//		EquationObligations equationVisitor = new EquationObligations(exprTypeVisitor);
+//		List<Obligation> obligations = new ArrayList<Obligation>();
+//		
+//		for (Equation equation : nodes.get(0).equations) {
+//			List<Obligation> obs = equation.expr.accept(equationVisitor);
+//			obligations.addAll(obs);
+//		}
+//		return obligations;
+	}
 }

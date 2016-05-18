@@ -3,16 +3,30 @@ package coverage;
 import java.util.ArrayList;
 import java.util.List;
 
+import jkind.lustre.Type;
+import jkind.lustre.VarDecl;
+
 public class ObservedTreeNode {
     public String data;
-    public String type;
+    public Type type;
     public ObservedTreeNode parent;
-    public List<ObservedTreeNode> children;
- 
-    public ObservedTreeNode(String data) {
-        setData(data);
+    private List<ObservedTreeNode> children;
+    private int occurrence;
+    
+    public ObservedTreeNode(String data, Type type) {
+    	setName(data);
+    	setType(type);
+    	setOccurrence(1);
     }
+    
+	public int getOccurrence() {
+		return occurrence;
+	}
 
+	public void setOccurrence(int occurrence) {
+		this.occurrence = occurrence;
+	}
+	
     public List<ObservedTreeNode> getChildren() {
         if (this.children == null) {
             return new ArrayList<ObservedTreeNode>();
@@ -38,34 +52,75 @@ public class ObservedTreeNode {
         child.parent = this;
         this.children.add(child);
     }
- 
-    public String getData() {
-        return this.data;
-    }
- 
-    public void setData(String data) {
+
+    public void setName(String data) {
         this.data = data;
     }
     
+    public void setType(Type type) {
+    	this.type = type;
+    }
+    
+    public Type getType() {
+    	return this.type;
+    }
+    
+    public ObservedTreeNode getParent() {
+    	return this.parent;
+    }
+    
+//    // return all leaf nodes of specific node
+//    public List<String> getAllLeaves() {
+//    	List<String> leaves = new ArrayList<String>();
+//    	if (this.children == null) {
+//            leaves.add(this.data);
+//        } else {
+//            for (ObservedTreeNode child : this.children) {
+//                leaves.addAll(child.getAllLeaves());
+//            }
+//        }
+//    	
+//    	return leaves;
+//    }
+    
     // return all leaf nodes of specific node
-    public List<String> getAllLeaves() {
-    	List<String> leaves = new ArrayList<String>();
+    public List<ObservedTreeNode> getAllLeafNodes() {
+    	List<ObservedTreeNode> leaves = new ArrayList<>();
     	if (this.children == null) {
-            leaves.add(this.data);
-        } else {
-            for (ObservedTreeNode child : this.children) {
-                leaves.addAll(child.getAllLeaves());
-            }
-        }
+    		leaves.add(this);
+    	} else {
+    		for (ObservedTreeNode child : this.children) {
+    			leaves.addAll(child.getAllLeafNodes());
+    		}
+    	}
     	
     	return leaves;
     }
     
+    public List<ObservedTreeNode> convertToList() {
+    	List<ObservedTreeNode> list = new ArrayList<>();
+    	convertToList(this, list);
+    	return list;
+    }
+    
+    private void convertToList(ObservedTreeNode root, List<ObservedTreeNode> list) {
+    	if (root == null) {
+    		return;
+    	}
+    	list.add(root);
+    	if (root.children != null) {
+	    	for (ObservedTreeNode child : root.children) {
+	    		convertToList(child, list);
+	    	}
+    	}
+    }
+    
+    // return paths from current node to leaf nodes
     public void getPaths(List<List<ObservedTreeNode>> paths) {
     	this.getPaths(this, paths, new ArrayList<ObservedTreeNode>());
     }
     
-    // return paths from root to each leaf node
+    // return paths from given node to each leaf node in the subtree
     private void getPaths(ObservedTreeNode root, List<List<ObservedTreeNode>> paths,
     							List<ObservedTreeNode> path) {
     	if (root == null) {
@@ -76,7 +131,7 @@ public class ObservedTreeNode {
 			// remove siblings of parent node
 			path.remove(path.size() - 1);
 		}
-		// append the node to the path right after its parent
+		// append the node to the list next to its parent
 		path.add(root);
     	
     	if (root.children == null) {
@@ -91,6 +146,12 @@ public class ObservedTreeNode {
     
     @Override
     public String toString() {
-    	return this.data;
+    	StringBuilder node = new StringBuilder();
+    	
+    	node.append("(").append(this.data).append(", ");
+    	node.append(this.type.toString()).append(", ");
+    	node.append(this.occurrence).append(")");
+    	
+    	return node.toString();
     }
 }

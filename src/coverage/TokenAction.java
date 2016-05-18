@@ -1,6 +1,7 @@
 package coverage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class TokenAction {
 	final IdExpr TOKEN_ERROR_STATE = new IdExpr("TOKEN_ERROR_STATE");
 	final IdExpr TOKEN_OUTPUT_STATE = new IdExpr("TOKEN_OUTPUT_STATE");
 	
+	List<String> inList = new ArrayList<>();
 	// dynamic tokens
 	String prefix = "TOKEN_D";
 	IdExpr[] tokens;
@@ -35,11 +37,14 @@ public class TokenAction {
 	// sequential trees (one token to one tree / root)
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
-	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
+//	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
+	HashMap<ObservedTreeNode, List<ObservedTreeNode>> rootToLeavesMap = new HashMap<>();
 	// token to tree node (root), Map<Token, Node>
-	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
+//	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
+	HashMap<IdExpr, ObservedTreeNode> tokenToNode = new HashMap<>();
 	// tree node (root) to token, Map<Node, Token>
-	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
+//	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
+	HashMap<ObservedTreeNode, IdExpr> nodeToToken = new HashMap<>();
 	
 	public TokenAction(HashMap<VarDecl, ObservedTree> seqTrees) {
 		this.sequentialTrees = seqTrees;
@@ -86,21 +91,34 @@ public class TokenAction {
 		int i = 0;
 		
 		for (IdExpr sourceToken : tokens) {
-			String sourceNode = tokenToNode.get(sourceToken);
-//			System.out.println("building transition equation for " + sourceToken.id + " :: " + sourceNode);
-			for (String targetNode : rootToLeavesMap.get(sourceNode)) {
-//				System.out.println(sourceNode + " :: " + targetNode);
-				id = sourceNode + seq + targetNode;
-				errTrans = new IfThenElseExpr(new BinaryExpr(
-						new BinaryExpr(token_nondet, BinaryOp.EQUAL, nodeToToken.get(targetNode)),
-						BinaryOp.AND, new IdExpr(id)), nodeToToken.get(targetNode),
-						TOKEN_ERROR_STATE);
+			IdExpr targetToken = null;
+			ObservedTreeNode sourceNode = tokenToNode.get(sourceToken);
+			System.out.println("building transition equation for " + sourceToken.id + " :: " + sourceNode);
+			for (ObservedTreeNode targetNode : rootToLeavesMap.get(sourceNode)) {
+				System.out.println("create transition ::: (" + sourceNode +") --> (" 
+											+ targetNode + ")");
+
+				for (IdExpr tokenId : tokenToNode.keySet()) {
+					if (tokenToNode.get(tokenId).data.equals(targetNode.data)) {
+						targetToken = tokenId;
+						break;
+					}
+				}
 				
-				id = sourceNode + observed;
-				outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, errTrans);
-//				System.out.println(outputTrans[i]);
+				if (targetToken != null) {
+					id = sourceNode.data + seq + targetNode.data;
+
+					errTrans = new IfThenElseExpr(new BinaryExpr(
+										new BinaryExpr(token_nondet, BinaryOp.EQUAL, targetToken),
+										BinaryOp.AND, new IdExpr(id)), targetToken,
+										TOKEN_ERROR_STATE);
+					
+					id = sourceNode.data + observed;
+					outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, errTrans);
+				}
+				System.out.println(outputTrans[i]);
 			}
-			i++;
+				i++;
 		}
 		
 		// combine expressions (nesting)
@@ -124,16 +142,21 @@ public class TokenAction {
 //			System.out.println("============= drawing maps =============");
 		for (VarDecl tree : sequentialTrees.keySet()) {
 			tokens[count] = new IdExpr(prefix + (count + 1));
-			tokenToNode.put(tokens[count], tree.id);
-			nodeToToken.put(tree.id, tokens[count]);
+			ObservedTreeNode node = sequentialTrees.get(tree).root;
+			tokenToNode.put(tokens[count], node);
+			nodeToToken.put(node, tokens[count]);
 			
-			ObservedTreeNode root = sequentialTrees.get(tree).getroot();
-			rootToLeavesMap.put(tree.id, root.getAllLeaves());
+			ObservedTreeNode root = sequentialTrees.get(tree).root;
+			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
-//				System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
-//				System.out.println(count + " node-to-token: " + tree.id + " - " + nodeToToken.get(tree.id));
-//				System.out.println(count + " dependency: " + tree.id + " >>> " + rootToLeavesMap.get(tree.id));
+			System.out.println(count + " token-to-node: [" + tokens[count] + "] - " + tokenToNode.get(tokens[count]));
+			System.out.println(count + " node-to-token: [" + node + "] - " + nodeToToken.get(node));
+			System.out.println(count + " dependency: [" + node + "] >>> " + rootToLeavesMap.get(node));
 			count++;
 		}
+	}
+	
+	public void setInIdList(List<String> inputs) {
+		inList = inputs;
 	}
 }

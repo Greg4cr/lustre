@@ -32,7 +32,8 @@ public class AffectAtCaptureEquation {
 	int count;
 	
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
-	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
+//	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
+	HashMap<ObservedTreeNode, List<ObservedTreeNode>> rootToLeavesMap = new HashMap<>();
 	// token to tree node (root), Map<Token, Node>
 	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
 	// tree node (root) to token, Map<Node, Token>
@@ -74,7 +75,7 @@ public class AffectAtCaptureEquation {
 			boolean isInLoop = isInLoop(root, leaf, paths);
 			if (isInLoop) {
 				// found a loop (hiding in two trees)
-				// generate obligations for loops
+				// generate obligations for the loop
 				for (int j = 1; j < path.size() - 1; j++) {
 					node = path.get(j);
 					
@@ -141,7 +142,7 @@ public class AffectAtCaptureEquation {
 		List<List<ObservedTreeNode>> paths = drawPaths(combUsedByTrees, TYPE_COMB);
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
-		String node, father;
+		String node = "", father;
 		IdExpr[] lhs = new IdExpr[2];
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
@@ -151,7 +152,11 @@ public class AffectAtCaptureEquation {
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
 			for (int j = path.size() - 1; j > 0; j--) {
-				node = path.get(j).data;
+				if ("int".equals(path.get(j).type.toString())) {
+					node = "ArithExpr_1";
+				} else {
+					node = path.get(j).data;
+				}
 				father = path.get(j - 1).data;
 				
 				lhs[0] = new IdExpr(node + t + at + father + affect);
@@ -166,12 +171,31 @@ public class AffectAtCaptureEquation {
 					obligation = new Obligation(lhs[k], true, 
 										new BinaryExpr(premise, BinaryOp.ARROW, 
 												new BinaryExpr(conclusion1, BinaryOp.OR, conclusion2)));
-					obligations.add(obligation);
+//					System.out.println("contains " + obligation + "? " + isInList(obligations, obligation));
+					if (!isInList(obligations, obligation)) {
+						obligations.add(obligation);
+					}
 				}
 			}
 		}
 		
 		return obligations;
+	}
+	
+	private <T> boolean isInList(List<T> list, Object obj) {
+		boolean inList = false;
+		if (list == null) {
+			return inList;
+		}
+		
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).toString().equals(obj.toString())) {
+				inList = true;
+				break;
+			}
+		}
+		
+		return inList;
 	}
 	
 	private List<Obligation> generateForSeqTrees() {
@@ -224,7 +248,7 @@ public class AffectAtCaptureEquation {
 		List<List<ObservedTreeNode>> paths = new ArrayList<>();
 		
 		for (VarDecl node : trees.keySet()) {
-			ObservedTreeNode root = trees.get(node).getroot();
+			ObservedTreeNode root = trees.get(node).root;
 			root.getPaths(paths);
 		}
 		
@@ -238,10 +262,10 @@ public class AffectAtCaptureEquation {
 			}
 		}
 		
-		System.out.println("Number of paths: " + paths.size());
-		for (int i = 0; i < paths.size(); i++) {
-			System.out.println(paths.get(i) + ", " + paths.get(i).size());
-		}
+//		System.out.println("Number of paths: " + paths.size());
+//		for (int i = 0; i < paths.size(); i++) {
+//			System.out.println(paths.get(i) + ", " + paths.get(i).size());
+//		}
 		
 		return paths;
 	}
@@ -257,8 +281,9 @@ public class AffectAtCaptureEquation {
 			tokenToNode.put(tokens[count], treeRoot.id);
 			nodeToToken.put(treeRoot.id, tokens[count]);
 			
-			ObservedTreeNode root = sequentialTrees.get(treeRoot).getroot();
-			rootToLeavesMap.put(treeRoot.id, root.getAllLeaves());
+			ObservedTreeNode root = sequentialTrees.get(treeRoot).root;
+//			rootToLeavesMap.put(treeRoot.id, root.getAllLeaves());
+			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
 //				System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
 //				System.out.println(count + " node-to-token: " + tree.id + " - " + nodeToToken.get(tree.id));

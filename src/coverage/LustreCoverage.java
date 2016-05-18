@@ -61,23 +61,20 @@ public final class LustreCoverage {
 		builder.addConstants(this.program.constants)
 				.addTypes(this.program.types).setMain(this.program.main);
 		
-
-		
 		for (Node node : this.program.nodes) {
 			builder.addNode(this.generate(node));
 		}
-		
 
 		if (coverage.equals(Coverage.OMCDC)) {
-			// add more constants
+			// add more constants for observed coverage
 			Type type = new NamedType("subrange[-2," + upperbound + "] of int");
-			Constant constDemo = new Constant("testing", NamedType.BOOL, new BoolExpr(true));
 			builder.addConstant(new Constant("TOKEN_INIT_STATE", type, new IntExpr(-2)));
 			builder.addConstant(new Constant("TOKEN_ERROR_STATE", type, new IntExpr(-1)));
 			builder.addConstant(new Constant("TOKEN_OUTPUT_STATE", type, new IntExpr(-0)));
-			builder.addConstant(constDemo);
 			
-			System.out.println(constDemo.id + ", " + constDemo.type.toString() + ", " + constDemo.expr.toString());
+			for (int i = 1; i < upperbound + 1; i++) {
+				builder.addConstant(new Constant("TOKEN_D" + i, type, new IntExpr(i)));
+			}
 		}
 
 		LustreMain.log("Number of Obligations: " + count);
@@ -190,18 +187,23 @@ public final class LustreCoverage {
 				builder.addInput(new VarDecl("token_init", NamedType.BOOL));
 				subrange.delete(subrange.indexOf("["), subrange.length());
 			}
-			subrange.append("[").append("-2,").append(upperbound).append("]");
+			subrange.append("[").append("-2,").append(upperbound).append("] of int");
 			
 			for (Obligation obligation : obligations) {
 				property = obligation.condition;
 				builder.addEquation(new Equation(new IdExpr(property), obligation.obligation));
 				if (property.contains("token_")) {
-					builder.addLocal(new VarDecl(property, new NamedType(subrange.toString() + " of int")));
+					builder.addLocal(new VarDecl(property, new NamedType(subrange.toString())));
 				} else if (!property.contains("token")){
 					builder.addLocal(new VarDecl(property, NamedType.BOOL));
 				}
 				builder.addProperty(property);
 			}
+			
+			// token, token_first, and token_next should be added in all cases.
+			builder.addLocal(new VarDecl("token", new NamedType(subrange.toString())));
+			builder.addLocal(new VarDecl("token_first", new NamedType(subrange.toString())));
+			builder.addLocal(new VarDecl("token_next", new NamedType(subrange.toString())));
 			
 		}
 		
