@@ -12,7 +12,8 @@ import jkind.lustre.VarDecl;
 
 public class CombObservedEquation {
 	List<VarDecl> idList;
-
+	List<VarDecl> singleNodeList;
+	
 	public List<Obligation> generate(HashMap<VarDecl, ObservedTree> referenceTrees,
 											List<VarDecl> idList) {
 		List<Obligation> obligations = new ArrayList<>();
@@ -21,16 +22,44 @@ public class CombObservedEquation {
 		for (VarDecl root: referenceTrees.keySet()) {
 //			System.out.println("Generate comb observed expressions for [" + root + "]...");
 			tree = referenceTrees.get(root);
+//			this.idList = idList;
+			this.singleNodeList = getSingleNodeList(tree, idList);
 //			System.out.println("single node tree? " + tree.root.getChildren().isEmpty());
 			if (tree.root.getChildren().isEmpty()) {
 				// for single-node tree
-				this.idList = idList;
 				obligations.addAll(generateExprForSingleNodeTree(tree));
 			} else {
+				// for nodes in reference trees
 				obligations.addAll(gerenateExprForTree(tree));
+				
+				// for single nodes
+				obligations.addAll(generateExprForSingleNodeTree(tree));
 			}
 		}
 		return obligations;
+	}
+	
+	private List<VarDecl> getSingleNodeList(ObservedTree referenceTree,
+										List<VarDecl> idList) {
+		List<ObservedTreeNode> nodes = referenceTree.convertToList();
+		List<String> treeNodeList = new ArrayList<>();
+		List<VarDecl> singleNodeList = new ArrayList<>();
+		
+		for (ObservedTreeNode node : nodes) {
+			treeNodeList.add(node.data);
+		}
+		
+		for (VarDecl id : idList) {
+			if (!treeNodeList.contains(id.id)) {
+				singleNodeList.add(id);
+			}
+		}
+
+//		System.out.println("####### all ids: " + idList.toString());
+//		System.out.println("####### nodes in tree: " + treeNodeList.toString());
+//		System.out.println("####### single nodes: " + singleNodeList.toString());
+		
+		return singleNodeList;
 	}
 	
 	private List<Obligation> generateExprForSingleNodeTree(ObservedTree tree) {
@@ -39,7 +68,7 @@ public class CombObservedEquation {
 		IdExpr lhs;
 		
 		Obligation obligation;
-		for (VarDecl id : idList) {
+		for (VarDecl id : singleNodeList) {
 			lhs = new IdExpr(id.id + combObs);
 			if (id.id.equals(tree.root.data)) {
 				obligation  = new Obligation(lhs, false, new BoolExpr(true));
@@ -56,6 +85,7 @@ public class CombObservedEquation {
 		String combObs = "_COMB_OBSERVED";
 		IdExpr lhs;
 		lhs = new IdExpr(tree.root.data + combObs);
+		// COMB_OBSERVED obligation for root
 		Obligation obligation = new Obligation(lhs, false, new BoolExpr(true));
 //		System.out.println(obligation.condition + " = " + obligation);
 		obligationForTree.add(obligation);
@@ -63,6 +93,7 @@ public class CombObservedEquation {
 		for (ObservedTreeNode node : tree.root.getChildren()) {
 			obligationForTree.addAll(genereateExprForNode(node));
 		}
+		
 		return obligationForTree;
 	}
 	
