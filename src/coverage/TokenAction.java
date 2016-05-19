@@ -32,6 +32,7 @@ public class TokenAction {
 	String prefix = "TOKEN_D";
 	IdExpr[] tokens;
 	int count;
+	boolean hasDynamicTokens = false;
 	
 	// token generator assistants
 	// sequential trees (one token to one tree / root)
@@ -55,7 +56,7 @@ public class TokenAction {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		Obligation currentOb;
 		Expr preInitExpr, preErrExpr, preFinalExpr;
-		Expr transitionExpr;
+		Expr transitionExpr = null;
 		
 		// initialization
 		currentOb = new Obligation(token_first, true, 
@@ -63,9 +64,15 @@ public class TokenAction {
 		obligations.add(currentOb);
 		
 		// transitions between dynamic tokens
-		transitionExpr = transitions();
-		preFinalExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
-											BinaryOp.EQUAL, TOKEN_OUTPUT_STATE), TOKEN_OUTPUT_STATE, transitionExpr);
+		if (hasDynamicTokens) {
+			transitionExpr = transitions();
+			preFinalExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
+					BinaryOp.EQUAL, TOKEN_OUTPUT_STATE), TOKEN_OUTPUT_STATE, transitionExpr);
+		} else {
+			preFinalExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
+					BinaryOp.EQUAL, TOKEN_OUTPUT_STATE), TOKEN_OUTPUT_STATE, TOKEN_ERROR_STATE);
+		}
+		
 		preErrExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
 											BinaryOp.EQUAL, TOKEN_ERROR_STATE), TOKEN_ERROR_STATE, preFinalExpr);
 		preInitExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
@@ -79,6 +86,10 @@ public class TokenAction {
 		obligations.add(currentOb);
 		
 		return obligations;
+	}
+	
+	public void setHasDynamic(boolean hasDynamicTokens) {
+		this.hasDynamicTokens = hasDynamicTokens;
 	}
 	
 	private Expr transitions() {
