@@ -43,11 +43,11 @@ public class OMCDCVisitor extends ConditionVisitor {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		
 //		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
-//		obligations.addAll(getCombObervedObligations());  // done
+		obligations.addAll(getCombObervedObligations());  // done
 //		obligations.addAll(getSeqUsedByObligations());
-		obligations.addAll(getTokenActions());	// done
+//		obligations.addAll(getTokenActions());	// done
 //		obligations.addAll(getAffectAtCaptureObligations());
-		obligations.addAll(getObligations());
+//		obligations.addAll(getObligations());
 		
 		return obligations;
 	}
@@ -312,7 +312,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// FIXME: false equations are missed
 	private List<Obligation> getCombObervedObligations() {
 		CombObservedEquation combObsEquation = new CombObservedEquation();
-		return combObsEquation.generate(obHelper.buildRefTrees(), obHelper.getIdList());
+		HashMap<VarDecl, ObservedTree> referenceTrees = obHelper.buildRefTrees();
+		combObsEquation.setSingleNodeList(obHelper.getSingleNodeList(referenceTrees));
+		return combObsEquation.generate(referenceTrees, obHelper.getIdList());
 		
 	}
 	// generate SEQ_USED_BY expressions

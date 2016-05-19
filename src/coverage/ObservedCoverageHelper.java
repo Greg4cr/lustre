@@ -201,6 +201,35 @@ public class ObservedCoverageHelper {
 		return strIdList;
 	}
 	
+	// return single nodes that are not in any reference trees
+	public List<VarDecl> getSingleNodeList(HashMap<VarDecl, ObservedTree> referenceTrees) {
+		List<ObservedTreeNode> nodes = new ArrayList<>();
+		List<String> treeNodeList = new ArrayList<>();
+		List<VarDecl> singleNodeList = new ArrayList<>();
+		List<VarDecl> idList = getIdList();
+		
+		for (VarDecl root : referenceTrees.keySet()) {
+			ObservedTree referenceTree = referenceTrees.get(root);
+			nodes.addAll(referenceTree.convertToList());
+		}
+				
+		for (ObservedTreeNode node : nodes) {
+			treeNodeList.add(node.data);
+		}
+		
+		for (VarDecl id : idList) {
+			if (!treeNodeList.contains(id.id)) {
+				singleNodeList.add(id);
+			}
+		}
+
+		//System.out.println("####### all ids: " + idList.toString());
+		//System.out.println("####### nodes in tree: " + treeNodeList.toString());
+		//System.out.println("####### single nodes: " + singleNodeList.toString());
+		
+		return singleNodeList;
+	}	
+	
 	/*
 	 * Search for all roots of delay dependency trees in given node
 	 */

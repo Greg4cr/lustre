@@ -11,7 +11,6 @@ import jkind.lustre.IdExpr;
 import jkind.lustre.VarDecl;
 
 public class CombObservedEquation {
-	List<VarDecl> idList;
 	List<VarDecl> singleNodeList;
 	
 	public List<Obligation> generate(HashMap<VarDecl, ObservedTree> referenceTrees,
@@ -22,8 +21,7 @@ public class CombObservedEquation {
 		for (VarDecl root: referenceTrees.keySet()) {
 //			System.out.println("Generate comb observed expressions for [" + root + "]...");
 			tree = referenceTrees.get(root);
-//			this.idList = idList;
-			this.singleNodeList = getSingleNodeList(tree, idList);
+//			this.singleNodeList = getSingleNodeList(tree, idList);
 //			System.out.println("single node tree? " + tree.root.getChildren().isEmpty());
 			if (tree.root.getChildren().isEmpty()) {
 				// for single-node tree
@@ -39,29 +37,10 @@ public class CombObservedEquation {
 		return obligations;
 	}
 	
-	private List<VarDecl> getSingleNodeList(ObservedTree referenceTree,
-										List<VarDecl> idList) {
-		List<ObservedTreeNode> nodes = referenceTree.convertToList();
-		List<String> treeNodeList = new ArrayList<>();
-		List<VarDecl> singleNodeList = new ArrayList<>();
-		
-		for (ObservedTreeNode node : nodes) {
-			treeNodeList.add(node.data);
-		}
-		
-		for (VarDecl id : idList) {
-			if (!treeNodeList.contains(id.id)) {
-				singleNodeList.add(id);
-			}
-		}
-
-//		System.out.println("####### all ids: " + idList.toString());
-//		System.out.println("####### nodes in tree: " + treeNodeList.toString());
-//		System.out.println("####### single nodes: " + singleNodeList.toString());
-		
-		return singleNodeList;
+	public void setSingleNodeList(List<VarDecl> singleNodeList) {
+		this.singleNodeList = singleNodeList;
 	}
-	
+
 	private List<Obligation> generateExprForSingleNodeTree(ObservedTree tree) {
 		List<Obligation> obligations = new ArrayList<>();
 		String combObs = "_COMB_OBSERVED";
