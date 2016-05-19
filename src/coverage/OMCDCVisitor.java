@@ -43,11 +43,11 @@ public class OMCDCVisitor extends ConditionVisitor {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		
 //		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
-		obligations.addAll(getCombObervedObligations());
+//		obligations.addAll(getCombObervedObligations());  // done
 //		obligations.addAll(getSeqUsedByObligations());
-//		obligations.addAll(getTokenActions());	// done
+		obligations.addAll(getTokenActions());	// done
 //		obligations.addAll(getAffectAtCaptureObligations());
-//		obligations.addAll(getObligations());
+		obligations.addAll(getObligations());
 		
 		return obligations;
 	}
@@ -324,12 +324,15 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// generate TOKEN Actions
 	private List<Obligation> getTokenActions() {
 		HashMap<VarDecl, ObservedTree> trees = obHelper.buildSeqTrees();
+		TokenAction tokenAction = new TokenAction(trees);
+		tokenAction.setInIdList(obHelper.getInStrList());
+		
 		if (trees.size() > 0) {
-			TokenAction tokenAction = new TokenAction(trees);
-			tokenAction.setInIdList(obHelper.getInStrList());
-			return tokenAction.generate();
+			tokenAction.setHasDynamic(true);
+		} else {
+			tokenAction.setHasDynamic(false);
 		}
-		return new ArrayList<Obligation>();
+		return tokenAction.generate();
 	}
 	
 	// generate affecting_at_capture expressions
