@@ -54,10 +54,10 @@ public class SequentialEquation {
 		Obligation obligation;
 		String seqUsedBy = "_SEQ_USED_BY_";
 		String combUsedBy = "_COMB_USED_BY_";
-//		System.out.println(node.data + "'s parent is " + node.getParent().data);
+//		System.out.println(node.data + "'s parent is " + node.parent.data);
 		lhs = new IdExpr(node.data + seqUsedBy + root.data);
-		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.getParent().data);
-		IdExpr opr2 = new IdExpr(node.getParent().data + seqUsedBy + root.data);
+		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.parent.data);
+		IdExpr opr2 = new IdExpr(node.parent.data + seqUsedBy + root.data);
 		BinaryExpr expr = new BinaryExpr(opr1, BinaryOp.AND, opr2);
 		obligation = new Obligation(lhs, false, expr);
 		obligations.add(obligation);

@@ -21,10 +21,12 @@ public class ObservedCoverageHelper {
 	private Node node;
 	private List<VarDecl> idList = new ArrayList<VarDecl>();
 	private boolean isSeqRoot;
+	private boolean isPre = false;
+	private List<VarDecl> singleNodeList = new ArrayList<VarDecl>();
 	
 	public ObservedCoverageHelper(Node node) {
 		this.node = node;
-		idList = getIdList();
+		this.idList = getIdList();
 	}
 	
 	public List<String> getInStrList() {
@@ -92,6 +94,7 @@ public class ObservedCoverageHelper {
 		List<String> strIds = getStrIds();
 		HashMap<String, VarDecl> ids = getIds();
 		HashMap<String, Integer> children = new HashMap<>();
+		HashMap<String, Boolean> preNode = new HashMap<>();
 		
 		if (isBuildingRef) {
 			// build reference tree
@@ -119,17 +122,24 @@ public class ObservedCoverageHelper {
 		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
 		if (exprs.get(root.data).toString().indexOf(" ") > 0) {
 			String[] items = exprs.get(root.data).toString().replaceAll("[(){}]", " ").split(" ");
-			for (String item : items) {
+			for (String item : items) {				
 				item = item.trim();
+								
 				if (item.isEmpty()) {
 					continue;
 				} else if (!strIds.contains(item)) {
+					if (item.equals(UnaryOp.PRE.toString())) {
+						isPre = true;
+					}
 					continue;
 				} else if (children.containsKey(item)) {
 					children.put(item, children.get(item) + 1);
+					isPre = false;
 					continue;
 				} else {
 					children.put(item, 1);
+					preNode.put(item, isPre);
+					isPre = false;
 				}
 			}
 		} else {
@@ -146,6 +156,7 @@ public class ObservedCoverageHelper {
 		for (String child : children.keySet()) {
 			ObservedTreeNode newTreeNode = new ObservedTreeNode(child, ids.get(child).type);
 			newTreeNode.setOccurrence(children.get(child));
+			newTreeNode.setIsPre(preNode.get(child));
 			root.addChild(newTreeNode);
 			System.out.println("xxxxxxxx new node: " + newTreeNode);
 			if (exprs.keySet().contains(newTreeNode.data)) {
@@ -201,12 +212,58 @@ public class ObservedCoverageHelper {
 		return strIdList;
 	}
 	
+	public HashMap<VarDecl, ObservedTreeNode> getSingleNodeTrees() {
+		HashMap<VarDecl, ObservedTreeNode> trees = new HashMap<>();
+		ObservedTreeNode root = null;
+		HashMap<String, Integer> children = new HashMap<>();
+		HashMap<String, VarDecl> ids = getIds();
+		HashMap<String, Expr> expressions = getStrExprTable();
+		List<String> strIds = getStrIds();
+		
+		for (VarDecl node : this.singleNodeList) {
+			Expr expr = expressions.get(node.id);
+			root = new ObservedTreeNode(node.id, ids.get(node.id).type);
+			
+			if (expr.toString().indexOf(" ") > 0) {
+				String[] items = expr.toString().replaceAll("[(){}]", " ").split(" ");
+				for (String item : items) {
+					item = item.trim();
+					if (item.isEmpty()) {
+						continue;
+					} else if (!strIds.contains(item)) {
+						continue;
+					} else if (children.containsKey(item)) {
+						children.put(item, children.get(item) + 1);
+					} else {
+						children.put(item, 1);
+					}
+				}
+			} else {
+				String item = expr.toString().replaceAll("[ (){}]", "");
+				if (strIds.contains(item) && !children.containsKey(item)) {
+					children.put(item, 1);
+				}
+			}
+			
+			// add nodes to the tree
+			for (String child : children.keySet()) {
+				ObservedTreeNode newTreeNode = new ObservedTreeNode(child, ids.get(child).type);
+				root.addChild(newTreeNode);
+			}
+			
+			trees.put(node, root);
+		}
+				
+		return trees;
+	}
+	
 	// return single nodes that are not in any reference trees
 	public List<VarDecl> getSingleNodeList(HashMap<VarDecl, ObservedTree> referenceTrees) {
 		List<ObservedTreeNode> nodes = new ArrayList<>();
 		List<String> treeNodeList = new ArrayList<>();
-		List<VarDecl> singleNodeList = new ArrayList<>();
+//		List<VarDecl> singleNodeList = new ArrayList<>();
 		List<VarDecl> idList = getIdList();
+		List<VarDecl> inputList = node.inputs;
 		
 		for (VarDecl root : referenceTrees.keySet()) {
 			ObservedTree referenceTree = referenceTrees.get(root);
@@ -218,16 +275,16 @@ public class ObservedCoverageHelper {
 		}
 		
 		for (VarDecl id : idList) {
-			if (!treeNodeList.contains(id.id)) {
-				singleNodeList.add(id);
+			if (!treeNodeList.contains(id.id) && !inputList.contains(id)) {
+				this.singleNodeList.add(id);
 			}
 		}
 
-		//System.out.println("####### all ids: " + idList.toString());
-		//System.out.println("####### nodes in tree: " + treeNodeList.toString());
-		//System.out.println("####### single nodes: " + singleNodeList.toString());
+		System.out.println("####### all ids: " + idList.toString());
+		System.out.println("####### nodes in tree: " + treeNodeList.toString());
+		System.out.println("####### single nodes: " + singleNodeList.toString());
 		
-		return singleNodeList;
+		return this.singleNodeList;
 	}	
 	
 	/*

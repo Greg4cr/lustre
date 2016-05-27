@@ -19,6 +19,9 @@ import jkind.lustre.VarDecl;
 public class AffectAtCaptureEquation {
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	HashMap<VarDecl, ObservedTree> combUsedByTrees;
+	List<VarDecl> idList;
+	List<VarDecl> singleNodeList;
+	HashMap<VarDecl, ObservedTreeNode> singleNodeTrees = new HashMap<>();
 	
 	List<List<String>> leavesToRoots = new ArrayList<>();
 	List<List<String>> rootToLeaves = new ArrayList<>();
@@ -50,6 +53,7 @@ public class AffectAtCaptureEquation {
 		List<Obligation> obligations = new ArrayList<>();
 		obligations.addAll(generateForSeqTrees());
 		obligations.addAll(genergateForCombTrees());
+		obligations.addAll(generateForSingleNodeTrees());
 		obligations.addAll(generateForLoops());
 		return obligations;
 	}
@@ -106,6 +110,18 @@ public class AffectAtCaptureEquation {
 		return obligations;
 	}
 	
+	public void setSingleNodeList(List<VarDecl> singleNodeList) {
+		if (singleNodeList == null || singleNodeList.isEmpty()) {
+			this.singleNodeList = new ArrayList<VarDecl>();
+		} else {
+			this.singleNodeList = singleNodeList;
+		}
+	}
+	
+	public void setSingleNodeTrees(HashMap<VarDecl, ObservedTreeNode> trees) {
+		this.singleNodeTrees = trees;
+	}
+	
 	private boolean isInLoop(ObservedTreeNode root, ObservedTreeNode leaf,
 							List<List<ObservedTreeNode>> paths) {
 		Set<String> selfLoopNode = getSelfLoopRoots(paths);
@@ -136,7 +152,63 @@ public class AffectAtCaptureEquation {
 		}
 		return selfLoopRoots;
 	}
+	
+	private List<Obligation> generateForSingleNodeTrees() {
+		List<Obligation> obligations = new ArrayList<>();
+		String affect = "_AFFECTING_AT_CAPTURE";
+		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
+		String node = "", father;
+		IdExpr[] lhs = new IdExpr[2];
+		IdExpr[] nonMasked = new IdExpr[2];
+		Expr premise, conclusion1, conclusion2;
+		Obligation obligation;
 		
+		if (this.singleNodeTrees.keySet() == null) {
+			return obligations;
+		}
+		
+		for (VarDecl exprId : this.singleNodeTrees.keySet()) {
+			ObservedTreeNode root = this.singleNodeTrees.get(exprId);
+			List<ObservedTreeNode> children = root.getChildren();
+			for (ObservedTreeNode child : children) {
+				if ("int".equals(child.type.toString())) {
+					node = "ArithExpr";
+				} else {
+					node = child.data;
+				}
+				
+				father = root.data;
+				int occ = child.getOccurrence();
+				
+				for (int i = 0; i < occ; i++) {
+					if (occ > 1) {
+						node += "_" + i;
+					}
+					lhs[0] = new IdExpr(node + t + at + father + affect);
+					lhs[1] = new IdExpr(node + f + at + father + affect);
+					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
+					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
+					for (int k = 0; k < lhs.length; k++) {
+						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+						conclusion1 = premise;
+						conclusion2 = new UnaryExpr(UnaryOp.PRE, lhs[k]);
+						
+						obligation = new Obligation(lhs[k], true, 
+											new BinaryExpr(premise, BinaryOp.ARROW, 
+													new BinaryExpr(conclusion1, BinaryOp.OR, conclusion2)));
+//						System.out.println("contains " + obligation + "? " + isInList(obligations, obligation));
+						if (!isInList(obligations, obligation)) {
+							obligations.add(obligation);
+						}
+					}
+				}
+								
+			}
+		}
+		
+		return obligations;
+	}
+	
 	private List<Obligation> genergateForCombTrees() {
 		List<Obligation> obligations = new ArrayList<>();
 		List<List<ObservedTreeNode>> paths = drawPaths(combUsedByTrees, TYPE_COMB);
@@ -147,7 +219,6 @@ public class AffectAtCaptureEquation {
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
 		Obligation obligation;
-		
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
@@ -244,7 +315,10 @@ public class AffectAtCaptureEquation {
 		return obligations;
 	}
 	
-	private List<List<ObservedTreeNode>> drawPaths(HashMap<VarDecl, ObservedTree> trees, String type) {
+	// FIXME: don't remove the last element in paths unless it's a (pre (node)).
+	// requires extra info to determine whether an element is in form of "pre node".
+	private List<List<ObservedTreeNode>> drawPaths(HashMap<VarDecl, ObservedTree> trees, 
+													String type) {
 		List<List<ObservedTreeNode>> paths = new ArrayList<>();
 		
 		for (VarDecl node : trees.keySet()) {
@@ -255,17 +329,32 @@ public class AffectAtCaptureEquation {
 		if (type.equals(TYPE_COMB)) {
 			for (int i = 0; i < paths.size(); i++) {
 				int len = paths.get(i).size();
-				paths.get(i).remove(len - 1);
+				
+				ObservedTreeNode leaf = paths.get(i).get(len -1);
+//				System.out.println("####### " + leaf.toString());
+				
+				/*paths.get(i).remove(len - 1);
 				if (i > 0 && (paths.get(i).equals(paths.get(i - 1)))) {
 					paths.remove(i);
+				}*/
+				
+				// try to fix the problem
+				if (leaf.isPre) {
+					// remove leaf in a path only if it's in form of "pre leaf"
+					paths.get(i).remove(len - 1);
+					if (i > 0 && (paths.get(i).equals(paths.get(i - 1)))) {
+						paths.remove(i);
+					}
+				} else {
+					continue;
 				}
 			}
 		}
 		
-//		System.out.println("Number of paths: " + paths.size());
-//		for (int i = 0; i < paths.size(); i++) {
-//			System.out.println(paths.get(i) + ", " + paths.get(i).size());
-//		}
+		System.out.println("Number of paths: " + paths.size());
+		for (int i = 0; i < paths.size(); i++) {
+			System.out.println(paths.get(i) + ", " + paths.get(i).size());
+		}
 		
 		return paths;
 	}
@@ -275,7 +364,7 @@ public class AffectAtCaptureEquation {
 		tokens = new IdExpr[sequentialTrees.size()];
 		count = 0;
 		
-//			System.out.println("============= drawing maps =============");
+//		System.out.println("============= drawing maps =============");
 		for (VarDecl treeRoot : sequentialTrees.keySet()) {
 			tokens[count] = new IdExpr(prefix + (count + 1));
 			tokenToNode.put(tokens[count], treeRoot.id);
@@ -285,9 +374,9 @@ public class AffectAtCaptureEquation {
 //			rootToLeavesMap.put(treeRoot.id, root.getAllLeaves());
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
-//				System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
-//				System.out.println(count + " node-to-token: " + tree.id + " - " + nodeToToken.get(tree.id));
-//				System.out.println(count + " dependency: " + tree.id + " >>> " + rootToLeavesMap.get(tree.id));
+//			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
+//			System.out.println(count + " node-to-token: " + tree.id + " - " + nodeToToken.get(tree.id));
+//			System.out.println(count + " dependency: " + tree.id + " >>> " + rootToLeavesMap.get(tree.id));
 			count++;
 		}
 	}

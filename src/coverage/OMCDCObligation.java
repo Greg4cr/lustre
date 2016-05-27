@@ -49,7 +49,7 @@ public class OMCDCObligation {
 				node = path.get(j);
 				parent = path.get(j - 1);
 				
-				if (!("int".equals(node.getType().toString()))) {
+				if (!("int".equals(node.type.toString()))) {
 					nonMaskedExpr[0] = new IdExpr(node.data + t + at + parent.data + cov + t);
 					nonMaskedExpr[1] = new IdExpr(node.data + f + at + parent.data + cov + f);
 					affectExpr[0] = new IdExpr(node.data + t + at + parent.data + affect);

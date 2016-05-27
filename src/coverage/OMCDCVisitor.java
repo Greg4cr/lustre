@@ -43,7 +43,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		
 //		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
-		obligations.addAll(getCombObervedObligations());  // done
+//		obligations.addAll(getCombObervedObligations());  // done
 //		obligations.addAll(getSeqUsedByObligations());
 //		obligations.addAll(getTokenActions());	// done
 //		obligations.addAll(getAffectAtCaptureObligations());
@@ -77,6 +77,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 							((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
 					leftOb.obligation = expr.right;
 				} else {
+					// nesting
 					leftOb.obligation = new BinaryExpr(leftOb.obligation,
 							BinaryOp.AND, expr.right);
 				}
@@ -87,6 +88,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 							((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					rightOb.obligation = expr.left;
 				} else {
+					// nesting
 					rightOb.obligation = new BinaryExpr(expr.left, BinaryOp.AND,
 							rightOb.obligation);
 				}
@@ -132,22 +134,17 @@ public class OMCDCVisitor extends ConditionVisitor {
 				|| expr.op.equals(BinaryOp.DIVIDE)
 				|| expr.op.equals(BinaryOp.INT_DIVIDE)
 				|| expr.op.equals(BinaryOp.MODULUS)
-				// Equation of (bool_A = bool_B) has been translated into AND & OR equation
-				// The EQUAL equations we meet here must be the kind of (int_A = num) or (num = int_B)
+				// Equation of (bool_A = bool_B) has been translated into AND/OR equation
+				// The EQUAL equations we meet here must be in forms of (int_A = num) or (num = int_B)
 				// And the expression itself is a boolean expression and thus a condition
 				// Similar to <>
 				|| expr.op.equals(BinaryOp.EQUAL)
 				|| expr.op.equals(BinaryOp.NOTEQUAL)) {
-			if (expr.left instanceof IdExpr) {
-				obligations.add(new Obligation(expr.left, true, new BoolExpr(true)));
+			for (Obligation leftOb : leftObs) {
+				leftOb.obligation = new BoolExpr(true);
 			}
-			
-			if (expr.right instanceof IdExpr) {
-				obligations.add(new Obligation(expr.right, true, new BoolExpr(true)));
-			}
-			// nesting expressions
-			if (!(expr.left instanceof IdExpr || expr.right instanceof IdExpr)) {
-				obligations.add(new Obligation(expr, true, new BoolExpr(true)));
+			for (Obligation rightOb : rightObs) {
+				rightOb.obligation = new BoolExpr(true);
 			}
 		}
 		
@@ -155,10 +152,25 @@ public class OMCDCVisitor extends ConditionVisitor {
 		// it can be treated as an OR expression (!a or b)
 		else if (expr.op.equals(BinaryOp.IMPLIES)) {
 			for (Obligation leftOb : leftObs) {
-				leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
+				if (expr.left instanceof IdExpr ||
+						(expr.left instanceof UnaryExpr &&
+								((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+					leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
+				} else {
+					leftOb.obligation = new BinaryExpr(leftOb.obligation,
+							BinaryOp.AND, new UnaryExpr(UnaryOp.NOT, expr.right));
+				}
 			}
+			
 			for (Obligation rightOb : rightObs) {
-				rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
+				if (expr.right instanceof IdExpr ||
+						(expr.right instanceof UnaryExpr &&
+								((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
+					rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
+				} else {
+					rightOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT,
+							expr.left), BinaryOp.AND, rightOb.obligation);
+				}
 			}				
 		}
 		
@@ -250,7 +262,8 @@ public class OMCDCVisitor extends ConditionVisitor {
 				}
 				else if (expr.op.equals(UnaryOp.PRE)) {
 					unaryOb.obligation = new BoolExpr(false);
-				} else {
+				}
+				else { // NEGATIVE
 					
 				}
 			}
@@ -258,8 +271,6 @@ public class OMCDCVisitor extends ConditionVisitor {
 			unaryObs.addAll(super.visit(expr));
 		}
 		
-		// NEGATIVE
-
 		obligations.addAll(unaryObs);
 		
 		return obligations;
@@ -309,7 +320,6 @@ public class OMCDCVisitor extends ConditionVisitor {
 	}
 	
 	// generate COMB_OBSERVED expressions
-	// FIXME: false equations are missed
 	private List<Obligation> getCombObervedObligations() {
 		CombObservedEquation combObsEquation = new CombObservedEquation();
 		HashMap<VarDecl, ObservedTree> referenceTrees = obHelper.buildRefTrees();
@@ -339,8 +349,11 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	// generate affecting_at_capture expressions
 	private List<Obligation> getAffectAtCaptureObligations() {
+		HashMap<VarDecl, ObservedTree> referenceTrees = obHelper.buildRefTrees();
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(obHelper.buildSeqTrees(),
-												obHelper.buildRefTrees());
+												referenceTrees);
+		affect.setSingleNodeList(obHelper.getSingleNodeList(referenceTrees));
+		affect.setSingleNodeTrees(obHelper.getSingleNodeTrees());
 		return affect.generate();
 	}
 	

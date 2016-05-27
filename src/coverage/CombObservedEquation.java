@@ -87,8 +87,8 @@ public class CombObservedEquation {
 		String combObs = "_COMB_OBSERVED";
 		String combUsedBy = "_COMB_USED_BY_";
 		lhs = new IdExpr(node.data + combObs);
-		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.getParent().data);
-		IdExpr opr2 = new IdExpr(node.getParent().data + combObs);
+		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.parent.data);
+		IdExpr opr2 = new IdExpr(node.parent.data + combObs);
 		BinaryExpr expr = new BinaryExpr(opr1, BinaryOp.AND, opr2);
 		obligation = new Obligation(lhs, false, expr);
 		obligationOfNode.add(obligation);

@@ -9,6 +9,7 @@ import jkind.lustre.VarDecl;
 public class ObservedTreeNode {
     public String data;
     public Type type;
+    public boolean isPre;
     public ObservedTreeNode parent;
     private List<ObservedTreeNode> children;
     private int occurrence;
@@ -16,6 +17,14 @@ public class ObservedTreeNode {
     public ObservedTreeNode(String data, Type type) {
     	setName(data);
     	setType(type);
+    	setIsPre(false);
+    	setOccurrence(1);
+    }
+    
+    public ObservedTreeNode(String data, Type type, boolean isPre) {
+    	setName(data);
+    	setType(type);
+    	setIsPre(isPre);
     	setOccurrence(1);
     }
     
@@ -61,12 +70,16 @@ public class ObservedTreeNode {
     	this.type = type;
     }
     
-    public Type getType() {
+    /*public Type getType() {
     	return this.type;
     }
     
     public ObservedTreeNode getParent() {
     	return this.parent;
+    }*/
+    
+    public void setIsPre(boolean isPre) {
+    	this.isPre = isPre;
     }
     
 //    // return all leaf nodes of specific node
@@ -148,9 +161,12 @@ public class ObservedTreeNode {
     public String toString() {
     	StringBuilder node = new StringBuilder();
     	
-    	node.append("(").append(this.data).append(", ");
+    	node.append("(");
+    	node.append(this.data).append(", ");
     	node.append(this.type.toString()).append(", ");
-    	node.append(this.occurrence).append(")");
+    	node.append(this.occurrence).append(", ");
+    	node.append(this.isPre);
+    	node.append(")");
     	
     	return node.toString();
     }
