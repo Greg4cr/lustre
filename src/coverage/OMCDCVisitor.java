@@ -174,9 +174,38 @@ public class OMCDCVisitor extends ConditionVisitor {
 			}				
 		}
 		
-		// a -> b
+		// expr_a -> expr_b
 		else if (expr.op.equals(BinaryOp.ARROW)) {
-			Expr currentObligation;
+			for (Obligation leftOb : leftObs) {
+				if (expr.left instanceof IdExpr ||
+						expr.left instanceof BoolExpr ||
+						expr.left instanceof UnaryExpr) {
+					leftOb.obligation = expr.left;
+				} else {
+					leftOb.obligation = new BoolExpr(false);
+				}
+			}
+			
+			for (Obligation rightOb : rightObs) {
+				if (expr.right instanceof IdExpr) {
+					if (expr.left instanceof IntExpr) {
+						rightOb.obligation = new BinaryExpr(new BoolExpr(false),
+								BinaryOp.ARROW, new BoolExpr(true));
+					} else {
+						rightOb.obligation = new BinaryExpr(expr.left,
+								BinaryOp.ARROW, new BoolExpr(true));
+					}
+				} else if (expr.right instanceof UnaryExpr &&
+						((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)){
+					rightOb.obligation = new BinaryExpr(expr.left, BinaryOp.ARROW, 
+							new BoolExpr(true));
+				} else if (expr.right instanceof UnaryExpr &&
+						((UnaryExpr)expr.right).op.equals(UnaryOp.PRE)) {
+					rightOb.obligation = new BoolExpr(false);
+				}
+			}
+			
+			/*Expr currentObligation;
 			Expr left;
 			if (expr.left instanceof BoolExpr 
 					|| expr.left instanceof IdExpr) {
@@ -209,7 +238,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 				currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
 						new BoolExpr(true));
 				obligations.add(new Obligation(expr, true, currentObligation));
-			}				
+			}	*/			
 		}
 		
 		// xor
