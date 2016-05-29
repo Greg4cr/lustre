@@ -176,28 +176,53 @@ public class OMCDCVisitor extends ConditionVisitor {
 		
 		// expr_a -> expr_b
 		else if (expr.op.equals(BinaryOp.ARROW)) {
+			System.out.println("ARROW:\t" + expr.toString());
+			
+			// prepare for ((not (...)) -> ...)
+			if (expr.left instanceof UnaryExpr &&
+					(((UnaryExpr)expr.left).op.equals(UnaryOp.NOT)) &&
+					((UnaryExpr)expr.left).expr instanceof BinaryExpr) {
+				BinaryExpr subexpr = ((BinaryExpr)((UnaryExpr)expr.left).expr);
+				leftObs = this.visit(subexpr);
+			}
+			
+			// prepare for (... -> (not (...)))
+			if (expr.right instanceof UnaryExpr &&
+					(((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)) &&
+							((UnaryExpr)expr.right).expr instanceof BinaryExpr) {
+				BinaryExpr subexpr = ((BinaryExpr)((UnaryExpr)expr.right).expr);
+				rightObs = this.visit(subexpr);
+			}
+			
 			for (Obligation leftOb : leftObs) {
-				if (expr.left instanceof IdExpr ||
-						expr.left instanceof BoolExpr ||
-						expr.left instanceof UnaryExpr) {
-					leftOb.obligation = new BinaryExpr(new BoolExpr(true),
-							BinaryOp.ARROW, new BoolExpr(false));
-				} else {
-					leftOb.obligation = new BoolExpr(false);
-				}
+				leftOb.obligation = new BinaryExpr(new BoolExpr(true),
+						BinaryOp.ARROW, new BoolExpr(false));
 			}
 			
 			for (Obligation rightOb : rightObs) {
 				if (expr.right instanceof IdExpr) {
+					// ... -> A
 					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
 							BinaryOp.ARROW, new BoolExpr(true));
 				} else if (expr.right instanceof UnaryExpr &&
-						((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)){
+						((UnaryExpr)expr.right).op.equals(UnaryOp.NOT) &&
+						((UnaryExpr)expr.right).expr instanceof IdExpr){
+					// ... -> (not A)
 					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
 							BinaryOp.ARROW, new BoolExpr(true));
 				} else if (expr.right instanceof UnaryExpr &&
 						((UnaryExpr)expr.right).op.equals(UnaryOp.PRE)) {
+					// ... -> (pre A)
+					// ... -> (pre ...)
 					rightOb.obligation = new BoolExpr(false);
+				} else {
+					// expr.right is an instance of BinaryExpr
+					// A = (not (C and D) -> (not (E or F)));
+					// A = (C or D -> (E and F));
+					// NOTE: not (...) has been processed
+					// at the beginning of this scenario (... -> ...)
+					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
+							BinaryOp.ARROW, rightOb.obligation);
 				}
 			}
 		}
