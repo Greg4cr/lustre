@@ -180,7 +180,8 @@ public class OMCDCVisitor extends ConditionVisitor {
 				if (expr.left instanceof IdExpr ||
 						expr.left instanceof BoolExpr ||
 						expr.left instanceof UnaryExpr) {
-					leftOb.obligation = expr.left;
+					leftOb.obligation = new BinaryExpr(new BoolExpr(false),
+							BinaryOp.ARROW, new BoolExpr(true));
 				} else {
 					leftOb.obligation = new BoolExpr(false);
 				}
@@ -188,57 +189,17 @@ public class OMCDCVisitor extends ConditionVisitor {
 			
 			for (Obligation rightOb : rightObs) {
 				if (expr.right instanceof IdExpr) {
-					if (expr.left instanceof IntExpr) {
-						rightOb.obligation = new BinaryExpr(new BoolExpr(false),
-								BinaryOp.ARROW, new BoolExpr(true));
-					} else {
-						rightOb.obligation = new BinaryExpr(expr.left,
-								BinaryOp.ARROW, new BoolExpr(true));
-					}
+					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
+							BinaryOp.ARROW, new BoolExpr(true));
 				} else if (expr.right instanceof UnaryExpr &&
 						((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)){
-					rightOb.obligation = new BinaryExpr(expr.left, BinaryOp.ARROW, 
-							new BoolExpr(true));
+					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
+							BinaryOp.ARROW, new BoolExpr(true));
 				} else if (expr.right instanceof UnaryExpr &&
 						((UnaryExpr)expr.right).op.equals(UnaryOp.PRE)) {
 					rightOb.obligation = new BoolExpr(false);
 				}
 			}
-			
-			/*Expr currentObligation;
-			Expr left;
-			if (expr.left instanceof BoolExpr 
-					|| expr.left instanceof IdExpr) {
-				left = expr.left;
-			} else {
-				left = new BoolExpr(false);
-			}
-			
-			if (expr.right instanceof IdExpr) {
-				// a -> b
-				currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
-						new BoolExpr(true));
-				obligations.add(new Obligation(expr.right, true, currentObligation));
-			} else if (expr.right instanceof UnaryExpr) {
-								
-				if (((UnaryExpr) expr.right).op.equals(UnaryOp.NOT)) {
-					// a -> (not b)
-					currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
-							new BoolExpr(true));
-					obligations.add(new Obligation(((UnaryExpr) expr.right).expr,
-							true, currentObligation));
-				} else if (((UnaryExpr) expr.right).op.equals(UnaryOp.PRE)) {
-					// a -> (pre b)
-					currentObligation = new BoolExpr(false);
-					obligations.add(new Obligation(((UnaryExpr) expr.right).expr,
-							true, currentObligation));
-				}
-			} else {
-				// a -> (expression)
-				currentObligation = new BinaryExpr(left, BinaryOp.ARROW, 
-						new BoolExpr(true));
-				obligations.add(new Obligation(expr, true, currentObligation));
-			}	*/			
 		}
 		
 		// xor
@@ -284,24 +245,19 @@ public class OMCDCVisitor extends ConditionVisitor {
 
 		System.out.println("unary.expr :: " + unaryObs.toString());
 		
-		if (expr.expr instanceof IdExpr) {
-			for (Obligation unaryOb : unaryObs) {
-				if (expr.op.equals(UnaryOp.NOT)) {
-					unaryOb.obligation = expr;
-				}
-				else if (expr.op.equals(UnaryOp.PRE)) {
-					unaryOb.obligation = new BoolExpr(false);
-				}
-				else { // NEGATIVE
-					
-				}
+		for (Obligation unaryOb : unaryObs) {
+			if (expr.op.equals(UnaryOp.NOT)) {
+				unaryOb.obligation = expr;
 			}
-		} else {
-			unaryObs.addAll(super.visit(expr));
+			else if (expr.op.equals(UnaryOp.PRE)) {
+				unaryOb.obligation = new BoolExpr(false);
+			}
+			else { // NEGATIVE
+				
+			}
 		}
 		
 		obligations.addAll(unaryObs);
-		
 		return obligations;
 	}
 	
