@@ -180,8 +180,8 @@ public class OMCDCVisitor extends ConditionVisitor {
 				if (expr.left instanceof IdExpr ||
 						expr.left instanceof BoolExpr ||
 						expr.left instanceof UnaryExpr) {
-					leftOb.obligation = new BinaryExpr(new BoolExpr(false),
-							BinaryOp.ARROW, new BoolExpr(true));
+					leftOb.obligation = new BinaryExpr(new BoolExpr(true),
+							BinaryOp.ARROW, new BoolExpr(false));
 				} else {
 					leftOb.obligation = new BoolExpr(false);
 				}
@@ -264,7 +264,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 	@Override
 	public List<Obligation> visit(IdExpr expr) {
 		List<Obligation> obligations = new ArrayList<Obligation>();
-		
+		//FIXME: for expr of "a = b" (bool or int)
+		// the obligation should be "b_comb_used_by_a = true";
+		// but currently it's "b_comb_used_by_a = b";
 		obligations.add(new Obligation(expr, true, expr));
 		
 		return obligations;
