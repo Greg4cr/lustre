@@ -144,8 +144,15 @@ public class ObservedCoverageHelper {
 			}
 		} else {
 			String item = exprs.get(root.data).toString().replaceAll("[ (){}]", "");
-			if (strIds.contains(item) && !children.containsKey(item)) {
-				children.put(item, 1);
+			if (strIds.contains(item)) {
+				if (!children.containsKey(item)) {
+					children.put(item, 1);
+					preNode.put(item, false);
+				} else {
+					children.put(item, children.get(item) + 1);
+					preNode.put(item, false);
+				}
+				isPre = false;
 			}
 		}
 		
