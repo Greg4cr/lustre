@@ -29,6 +29,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	String addition = "_COMB_USED_BY_";
 	String property = "";
 	IdExpr parent;
+	boolean isDef = false;
 	HashMap<String, VarDecl> idList;
 	List<String> properties = new ArrayList<String>();
 	
@@ -54,6 +55,10 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	public int getTokenRange() {
 		return obHelper.getTokenNumber();
+	}
+	
+	public void setIsDef(boolean isDef) {
+		this.isDef = isDef;
 	}
 
 	@Override
@@ -194,6 +199,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 				rightObs = this.visit(subexpr);
 			}
 			
+			// generate obligations
 			for (Obligation leftOb : leftObs) {
 				leftOb.obligation = new BinaryExpr(new BoolExpr(true),
 						BinaryOp.ARROW, new BoolExpr(false));
@@ -271,14 +277,18 @@ public class OMCDCVisitor extends ConditionVisitor {
 		System.out.println("unary.expr :: " + unaryObs.toString());
 		
 		for (Obligation unaryOb : unaryObs) {
-			if (expr.op.equals(UnaryOp.NOT)) {
-				unaryOb.obligation = expr;
-			}
-			else if (expr.op.equals(UnaryOp.PRE)) {
-				unaryOb.obligation = new BoolExpr(false);
-			}
-			else { // NEGATIVE
-				
+			if (isDef) {
+				unaryOb.obligation = new BoolExpr(true);
+			} else {
+				/*if (expr.op.equals(UnaryOp.NOT)) {
+					unaryOb.obligation = expr;
+				}
+				else*/ if (expr.op.equals(UnaryOp.PRE)) {
+					unaryOb.obligation = new BoolExpr(false);
+				}
+				else { // NEGATIVE, NOT
+					
+				}
 			}
 		}
 		
@@ -292,7 +302,13 @@ public class OMCDCVisitor extends ConditionVisitor {
 		//FIXME: for expr of "a = b" (bool or int)
 		// the obligation should be "b_comb_used_by_a = true";
 		// but currently it's "b_comb_used_by_a = b";
-		obligations.add(new Obligation(expr, true, expr));
+		if (isDef) {
+			obligations.add(new Obligation(expr, true, new BoolExpr(true)));
+		} else {
+			obligations.add(new Obligation(expr, true, expr));
+		}
+		
+		
 		
 		return obligations;
 	}
