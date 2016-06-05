@@ -41,7 +41,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	// main entrance to get OMCDC obligations
 	public List<Obligation> generate() {
-		List<Obligation> obligations = new ArrayList<Obligation>();
+		List<Obligation> obligations = new ArrayList<>();
 		
 //		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
 //		obligations.addAll(getCombObervedObligations());  // done
@@ -63,7 +63,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 
 	@Override
 	public List<Obligation> visit(BinaryExpr expr) {
-		List<Obligation> obligations = new ArrayList<Obligation>();
+		List<Obligation> obligations = new ArrayList<>();
 		
 		List<Obligation> leftObs = expr.left.accept(this);
 		List<Obligation> rightObs = expr.right.accept(this);
@@ -77,9 +77,11 @@ public class OMCDCVisitor extends ConditionVisitor {
 		// for one opr not be masked, the other one must be true
 		if (expr.op.equals(BinaryOp.AND)) {
 			for (Obligation leftOb : leftObs) {
-				if (expr.left instanceof IdExpr ||
-						(expr.left instanceof UnaryExpr &&
-							((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+				if (expr.left instanceof IdExpr 
+						|| (expr.left instanceof UnaryExpr 
+								&& ((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+					// A and subexpr, or
+					// (not A) and subexpr
 					leftOb.obligation = expr.right;
 				} else {
 					// nesting
@@ -88,9 +90,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 				}
 			}
 			for (Obligation rightOb : rightObs) {
-				if (expr.right instanceof IdExpr ||
-						(expr.right instanceof UnaryExpr &&
-							((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
+				if (expr.right instanceof IdExpr 
+						|| (expr.right instanceof UnaryExpr 
+								&& ((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					rightOb.obligation = expr.left;
 				} else {
 					// nesting
@@ -104,9 +106,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 		// for one opr not be masked, the other one must be false
 		else if (expr.op.equals(BinaryOp.OR)) {
 			for (Obligation leftOb : leftObs) {
-				if (expr.left instanceof IdExpr ||
-						(expr.left instanceof UnaryExpr &&
-								((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+				if (expr.left instanceof IdExpr
+						|| (expr.left instanceof UnaryExpr
+								&& ((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
 					leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
 				} else {
 					leftOb.obligation = new BinaryExpr(leftOb.obligation,
@@ -114,9 +116,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 				}
 			}
 			for (Obligation rightOb : rightObs) {
-				if (expr.right instanceof IdExpr ||
-						(expr.right instanceof UnaryExpr &&
-								((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
+				if (expr.right instanceof IdExpr
+						|| (expr.right instanceof UnaryExpr
+								&& ((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
 				} else {
 					rightOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT,
@@ -157,9 +159,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 		// it can be treated as an OR expression (!a or b)
 		else if (expr.op.equals(BinaryOp.IMPLIES)) {
 			for (Obligation leftOb : leftObs) {
-				if (expr.left instanceof IdExpr ||
-						(expr.left instanceof UnaryExpr &&
-								((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
+				if (expr.left instanceof IdExpr
+						|| (expr.left instanceof UnaryExpr
+								&& ((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
 					leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
 				} else {
 					leftOb.obligation = new BinaryExpr(leftOb.obligation,
@@ -168,9 +170,9 @@ public class OMCDCVisitor extends ConditionVisitor {
 			}
 			
 			for (Obligation rightOb : rightObs) {
-				if (expr.right instanceof IdExpr ||
-						(expr.right instanceof UnaryExpr &&
-								((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
+				if (expr.right instanceof IdExpr
+						|| (expr.right instanceof UnaryExpr
+								&& ((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
 				} else {
 					rightOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT,
@@ -184,17 +186,17 @@ public class OMCDCVisitor extends ConditionVisitor {
 			System.out.println("ARROW:\t" + expr.toString());
 			
 			// prepare for ((not (...)) -> ...)
-			if (expr.left instanceof UnaryExpr &&
-					(((UnaryExpr)expr.left).op.equals(UnaryOp.NOT)) &&
-					((UnaryExpr)expr.left).expr instanceof BinaryExpr) {
+			if (expr.left instanceof UnaryExpr
+					&& (((UnaryExpr)expr.left).op.equals(UnaryOp.NOT))
+					&& ((UnaryExpr)expr.left).expr instanceof BinaryExpr) {
 				BinaryExpr subexpr = ((BinaryExpr)((UnaryExpr)expr.left).expr);
 				leftObs = this.visit(subexpr);
 			}
 			
 			// prepare for (... -> (not (...)))
-			if (expr.right instanceof UnaryExpr &&
-					(((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)) &&
-							((UnaryExpr)expr.right).expr instanceof BinaryExpr) {
+			if (expr.right instanceof UnaryExpr
+					&& (((UnaryExpr)expr.right).op.equals(UnaryOp.NOT))
+					&& ((UnaryExpr)expr.right).expr instanceof BinaryExpr) {
 				BinaryExpr subexpr = ((BinaryExpr)((UnaryExpr)expr.right).expr);
 				rightObs = this.visit(subexpr);
 			}
@@ -210,14 +212,14 @@ public class OMCDCVisitor extends ConditionVisitor {
 					// ... -> A
 					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
 							BinaryOp.ARROW, new BoolExpr(true));
-				} else if (expr.right instanceof UnaryExpr &&
-						((UnaryExpr)expr.right).op.equals(UnaryOp.NOT) &&
-						((UnaryExpr)expr.right).expr instanceof IdExpr){
+				} else if (expr.right instanceof UnaryExpr
+						&& ((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)
+						&& ((UnaryExpr)expr.right).expr instanceof IdExpr) {
 					// ... -> (not A)
 					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
 							BinaryOp.ARROW, new BoolExpr(true));
-				} else if (expr.right instanceof UnaryExpr &&
-						((UnaryExpr)expr.right).op.equals(UnaryOp.PRE)) {
+				} else if (expr.right instanceof UnaryExpr
+						&& ((UnaryExpr)expr.right).op.equals(UnaryOp.PRE)) {
 					// ... -> (pre A)
 					// ... -> (pre ...)
 					rightOb.obligation = new BoolExpr(false);
@@ -247,8 +249,22 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(IfThenElseExpr expr) {
-		List<Obligation> obligations = new ArrayList<Obligation>();
+		List<Obligation> obligations = new ArrayList<>();
+		
+		if (expr.cond instanceof IdExpr
+				|| (expr.cond instanceof UnaryExpr
+						&& ((UnaryExpr)expr.cond).expr instanceof IdExpr)) {
+			// if (A) else subexpr, or if (not A) else subexpr
+			setIsDef(true);
+		} else {
+			setIsDef(false);
+		}
+		
 		obligations.addAll(expr.cond.accept(this));
+		
+		// reset flag
+//		setIsDef(false);
+		
 		List<Obligation> thenObs = expr.thenExpr.accept(this);
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
@@ -271,7 +287,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(UnaryExpr expr) {
-		List<Obligation> obligations = new ArrayList<Obligation>();
+		List<Obligation> obligations = new ArrayList<>();
 		List<Obligation> unaryObs = expr.expr.accept(this);
 
 		System.out.println("unary.expr :: " + unaryObs.toString());
@@ -280,14 +296,11 @@ public class OMCDCVisitor extends ConditionVisitor {
 			if (isDef) {
 				unaryOb.obligation = new BoolExpr(true);
 			} else {
-				/*if (expr.op.equals(UnaryOp.NOT)) {
-					unaryOb.obligation = expr;
-				}
-				else*/ if (expr.op.equals(UnaryOp.PRE)) {
+				if (expr.op.equals(UnaryOp.PRE)) {
 					unaryOb.obligation = new BoolExpr(false);
 				}
-				else { // NEGATIVE, NOT
-					
+				else { // NOT
+					// keep original value
 				}
 			}
 		}
@@ -298,17 +311,14 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(IdExpr expr) {
-		List<Obligation> obligations = new ArrayList<Obligation>();
-		//FIXME: for expr of "a = b" (bool or int)
-		// the obligation should be "b_comb_used_by_a = true";
-		// but currently it's "b_comb_used_by_a = b";
+		List<Obligation> obligations = new ArrayList<>();
+		
 		if (isDef) {
+			// definition, A = B or A = not B
 			obligations.add(new Obligation(expr, true, new BoolExpr(true)));
 		} else {
 			obligations.add(new Obligation(expr, true, expr));
 		}
-		
-		
 		
 		return obligations;
 	}
@@ -316,7 +326,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// get MCDC obligations (without prefix NOTs), using original APIs
 	private List<Obligation> getMCDCObligation(ExprTypeVisitor exprTypeVisitor) {
 		mcdcVisitor = new MCDCVisitor(exprTypeVisitor);
-		List<Obligation> obligations = new ArrayList<Obligation>();
+		List<Obligation> obligations = new ArrayList<>();
 		for (Equation equation : nodes.get(0).equations) {
 			List<Obligation> obs = equation.expr.accept(mcdcVisitor);
 			String id = null;
@@ -391,7 +401,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 											obHelper.buildRefTrees());
 		return obligation.generate();
 //		EquationObligations equationVisitor = new EquationObligations(exprTypeVisitor);
-//		List<Obligation> obligations = new ArrayList<Obligation>();
+//		List<Obligation> obligations = new ArrayList<>();
 //		
 //		for (Equation equation : nodes.get(0).equations) {
 //			List<Obligation> obs = equation.expr.accept(equationVisitor);
