@@ -262,9 +262,6 @@ public class OMCDCVisitor extends ConditionVisitor {
 		
 		obligations.addAll(expr.cond.accept(this));
 		
-		// reset flag
-//		setIsDef(false);
-		
 		List<Obligation> thenObs = expr.thenExpr.accept(this);
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
