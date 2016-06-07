@@ -35,7 +35,6 @@ public class AffectAtCaptureEquation {
 	int count;
 	
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
-//	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
 	HashMap<ObservedTreeNode, List<ObservedTreeNode>> rootToLeavesMap = new HashMap<>();
 	// token to tree node (root), Map<Token, Node>
 	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
@@ -296,12 +295,16 @@ public class AffectAtCaptureEquation {
 			nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 			
 			for (int k = 0; k < lhs.length; k++) {
-				seqUsed = new IdExpr(father + seq + root);
 				rToken = nodeToToken.get(root);
 				
-				premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
-									new BinaryExpr(seqUsed, BinaryOp.AND, 
-											new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
+				if (path.size() <= 2) {
+					premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+				} else {
+					seqUsed = new IdExpr(father + seq + root);
+					premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
+										new BinaryExpr(seqUsed, BinaryOp.AND, 
+												new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
+				}
 				conclusion1 = premise;
 				conclusion2 = new UnaryExpr(UnaryOp.PRE, lhs[k]);
 				
@@ -315,8 +318,6 @@ public class AffectAtCaptureEquation {
 		return obligations;
 	}
 	
-	// FIXME: don't remove the last element in paths unless it's a (pre (node)).
-	// requires extra info to determine whether an element is in form of "pre node".
 	private List<List<ObservedTreeNode>> drawPaths(HashMap<VarDecl, ObservedTree> trees, 
 													String type) {
 		List<List<ObservedTreeNode>> paths = new ArrayList<>();
@@ -331,14 +332,6 @@ public class AffectAtCaptureEquation {
 				int len = paths.get(i).size();
 				
 				ObservedTreeNode leaf = paths.get(i).get(len -1);
-//				System.out.println("####### " + leaf.toString());
-				
-				/*paths.get(i).remove(len - 1);
-				if (i > 0 && (paths.get(i).equals(paths.get(i - 1)))) {
-					paths.remove(i);
-				}*/
-				
-				// try to fix the problem
 				if (leaf.isPre) {
 					// remove leaf in a path only if it's in form of "pre leaf"
 					paths.get(i).remove(len - 1);
