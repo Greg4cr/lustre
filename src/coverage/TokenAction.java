@@ -126,6 +126,9 @@ public class TokenAction {
 					
 					id = sourceNode.data + observed;
 					outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, errTrans);
+				} else {
+					id = sourceNode.data + observed;
+					outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, TOKEN_ERROR_STATE);
 				}
 				System.out.println(outputTrans[i]);
 			}
