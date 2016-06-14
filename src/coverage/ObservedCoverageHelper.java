@@ -23,6 +23,7 @@ public class ObservedCoverageHelper {
 	private boolean isSeqRoot;
 	private boolean isPre = false;
 	private List<VarDecl> singleNodeList = new ArrayList<VarDecl>();
+	private HashMap<String, List<String>> delayMap = new HashMap<>();
 	
 	public ObservedCoverageHelper(Node node) {
 		this.node = node;
@@ -36,7 +37,11 @@ public class ObservedCoverageHelper {
 		}
 		return inList;
 	}
-		
+	
+	public void setDelayMap(HashMap<String, List<String>> delayMap) {
+		this.delayMap = delayMap;
+	}
+	
 	/*
 	 * Build referring trees for given node, one tree per output.
 	 * Example: A is an output variable, and A = (B and C); B = (C or D);
@@ -49,7 +54,6 @@ public class ObservedCoverageHelper {
 	 */
 	public HashMap<VarDecl, ObservedTree> buildRefTrees() {
 		List<VarDecl> roots = node.outputs;
-//		idList = populateIdList();
 		
 		Map<String, Expr> expressions = getStrExprTable();
 		HashMap<VarDecl, ObservedTree> subTrees = new HashMap<VarDecl, ObservedTree>();
@@ -58,45 +62,50 @@ public class ObservedCoverageHelper {
 		// create one tree per output
 		for (VarDecl root : roots) {
 			ObservedTreeNode treeRoot = new ObservedTreeNode(root.id, root.type);
-			buildTreeRecursively(treeRoot, expressions, true);
+			buildTreeRecursively(treeRoot, expressions, true, 0);
 			subTrees.put(root, new ObservedTree(treeRoot));
 		}
 		return subTrees;
 	}
 	
 	public int getTokenNumber() {
-		return getSeqTreeRoots(getStrExprTable()).size();
+		return (delayMap.keySet().size());
+//		return getSeqTreeRoots(getStrExprTable()).size();
 	}
 	
 	public HashMap<VarDecl, ObservedTree> buildSeqTrees() {
 		HashMap<VarDecl, ObservedTree> seqTrees = new HashMap<>();
 		HashMap<String, Expr> expressions = getStrExprTable();
 		HashMap<String, VarDecl> idMap = getIds();
-		List<String> roots = getSeqTreeRoots(expressions);
+//		List<String> roots = getSeqTreeRoots(expressions);
 		ObservedTreeNode treeNode;
 		
-		for (String root : roots) {
+		for (String root : delayMap.keySet()) {
 			isSeqRoot = true;
-			treeNode = buildTreeRecursively(new ObservedTreeNode(root, idMap.get(root).type), expressions, false);
+			treeNode = buildTreeRecursively(new ObservedTreeNode(root, idMap.get(root).type), 
+											expressions, false, 0);
 			seqTrees.put(idMap.get(root), new ObservedTree(treeNode));
 		}
 		
 		return seqTrees;
 	}
 	
-	
 	/*
 	 * Recursively build a subtree given a root.
 	 */
 	private ObservedTreeNode buildTreeRecursively(ObservedTreeNode root, 
 												Map<String, Expr> exprs, 
-												boolean isBuildingRef) {
+												boolean buildRefTree,
+												int seqMode) {
 		List<String> strIds = getStrIds();
 		HashMap<String, VarDecl> ids = getIds();
 		HashMap<String, Integer> children = new HashMap<>();
 		HashMap<String, Boolean> preNode = new HashMap<>();
 		
-		if (isBuildingRef) {
+		LustreMain.log(">>>>>> Building tree for " + root);
+		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
+		
+		if (buildRefTree) {
 			// build reference tree
 			if (!exprs.keySet().contains(root.data)) {
 				throw new IllegalArgumentException("!!! No corresponding expression!!! >>> " + root.data);
@@ -107,52 +116,66 @@ public class ObservedCoverageHelper {
 			// build sequential tree
 			if (!exprs.keySet().contains(root.data)) {
 				throw new IllegalArgumentException("!!! No corresponding expression!!! >>> " + root.data);
-			} else if (exprs.get(root.data).toString().contains(UnaryOp.PRE.toString() + " ")) {
-				if (isSeqRoot) {
-					// if it's root, build the tree
-					isSeqRoot = false;
-				} else {
-					// otherwise, stop building sub-tree
+			} else {
+				if (seqMode >= 2) {
+					// stop building tree
 					return null;
+				} else if (seqMode == 0) {
+					// build first-level
+					List<String> firstLevel = delayMap.get(root.data);
+					System.out.println(firstLevel);
+					for (int i = 0; i < firstLevel.size(); i++) {
+						if (firstLevel.get(i).equals(root.data)) {
+							// delayed by itself
+							seqMode = 1;
+						}
+						children.put(firstLevel.get(i), 1);
+						preNode.put(firstLevel.get(i), true);
+					}
+				} else { // seqMode == 1
+					buildRefTree = true;
 				}
 			}
 		}
 		
-		LustreMain.log(">>>>>> Building tree for " + root);
-		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
-		if (exprs.get(root.data).toString().indexOf(" ") > 0) {
-			String[] items = exprs.get(root.data).toString().replaceAll("[(){}]", " ").split(" ");
-			for (String item : items) {				
-				item = item.trim();
-								
-				if (item.isEmpty()) {
-					continue;
-				} else if (!strIds.contains(item)) {
-					if (item.equals(UnaryOp.PRE.toString())) {
-						isPre = true;
-					}
-					continue;
-				} else if (children.containsKey(item)) {
-					children.put(item, children.get(item) + 1);
-					isPre = false;
-					continue;
-				} else {
-					children.put(item, 1);
-					preNode.put(item, isPre);
-					isPre = false;
-				}
-			}
+		if (!buildRefTree && seqMode == 0) {
+			// delayed by other variables
+			buildRefTree = true;
 		} else {
-			String item = exprs.get(root.data).toString().replaceAll("[ (){}]", "");
-			if (strIds.contains(item)) {
-				if (!children.containsKey(item)) {
-					children.put(item, 1);
-					preNode.put(item, false);
-				} else {
-					children.put(item, children.get(item) + 1);
-					preNode.put(item, false);
+			if (exprs.get(root.data).toString().indexOf(" ") > 0) {
+				String[] items = exprs.get(root.data).toString().replaceAll("[(){}]", " ").split(" ");
+				for (String item : items) {				
+					item = item.trim();
+									
+					if (item.isEmpty()) {
+						continue;
+					} else if (!strIds.contains(item)) {
+						if (item.equals(UnaryOp.PRE.toString())) {
+							isPre = true;
+						}
+						continue;
+					} else if (children.containsKey(item)) {
+						children.put(item, children.get(item) + 1);
+						isPre = false;
+						continue;
+					} else {
+						children.put(item, 1);
+						preNode.put(item, isPre);
+						isPre = false;
+					}
 				}
-				isPre = false;
+			} else {
+				String item = exprs.get(root.data).toString().replaceAll("[ (){}]", "");
+				if (strIds.contains(item)) {
+					if (!children.containsKey(item)) {
+						children.put(item, 1);
+						preNode.put(item, false);
+					} else {
+						children.put(item, children.get(item) + 1);
+						preNode.put(item, false);
+					}
+					isPre = false;
+				}
 			}
 		}
 		
@@ -166,10 +189,11 @@ public class ObservedCoverageHelper {
 			newTreeNode.setIsPre(preNode.get(child));
 			root.addChild(newTreeNode);
 			System.out.println("xxxxxxxx new node: " + newTreeNode);
-			if (exprs.keySet().contains(newTreeNode.data)) {
+			System.out.println(exprs.get(child));
+			if (exprs.keySet().contains(child)) {
 				// build the tree recursively if next node is 
 				// on the left-hand-side of some expressions
-				buildTreeRecursively(newTreeNode, exprs, isBuildingRef);
+				buildTreeRecursively(newTreeNode, exprs, buildRefTree, seqMode);
 			} else {
 				// skip over nodes that do not depend on others.
 				continue;
@@ -179,7 +203,7 @@ public class ObservedCoverageHelper {
 							+ " children: "+ root.getChildren().toString());
 		return root;
 	}
-			
+	
 	/*
 	 * return all variables (inputs, outputs, and locals) given a node 
 	 */
@@ -297,7 +321,7 @@ public class ObservedCoverageHelper {
 	/*
 	 * Search for all roots of delay dependency trees in given node
 	 */
-	private List<String> getSeqTreeRoots(HashMap<String, Expr> exprTable) {
+	/*private List<String> getSeqTreeRoots(HashMap<String, Expr> exprTable) {
 		List<String> rootStr = new ArrayList<String>();
 		
 		for (String lhs : exprTable.keySet()) {
@@ -307,7 +331,7 @@ public class ObservedCoverageHelper {
 		}
 		
 		return rootStr;
-	}
+	}*/
 	
 	
 	

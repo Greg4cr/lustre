@@ -1,14 +1,13 @@
 package coverage;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import enums.Coverage;
 import enums.Polarity;
 import main.LustreMain;
 import types.ExprTypeVisitor;
-import jkind.lustre.BinaryExpr;
-import jkind.lustre.BinaryOp;
-import jkind.lustre.BoolExpr;
 import jkind.lustre.Constant;
 import jkind.lustre.Equation;
 import jkind.lustre.IdExpr;
@@ -17,7 +16,6 @@ import jkind.lustre.NamedType;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
 import jkind.lustre.Type;
-import jkind.lustre.TypeDef;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
@@ -26,6 +24,7 @@ import jkind.lustre.builders.ProgramBuilder;
 
 public final class LustreCoverage {
 	int upperbound = 0;
+	HashMap<String, List<String>> delayMap = new HashMap<>();
 	
 	// By default, use polarity ALL
 	public static Program program(Program program, Coverage coverage) {
@@ -122,8 +121,7 @@ public final class LustreCoverage {
 		// non-observed & comb_used_by obligations
 		for (Equation equation : node.equations) {
 			String id = null;
-			
-			System.out.println("dealing on equation:\n\t" + equation.toString());
+//			System.out.println("dealing with equation:\n\t" + equation.toString());
 			
 			if (equation.lhs.isEmpty()) {
 				id = "EMPTY";
@@ -137,6 +135,7 @@ public final class LustreCoverage {
 			}
 			
 			if (coverage == coverage.OMCDC) {
+				// A = B; or A = (not B);
 				if (equation.expr instanceof IdExpr
 						|| ((equation.expr instanceof UnaryExpr)
 								&& ((UnaryExpr)equation.expr).expr instanceof IdExpr)) {
@@ -148,7 +147,19 @@ public final class LustreCoverage {
 			
 			List<Obligation> obligations = equation.expr
 					.accept(coverageVisitor);
-
+			
+			if (coverage == coverage.OMCDC) {
+				// popular delay maps for observed coverage
+				List<String> delayedItems = new ArrayList<>(); 
+				delayedItems.addAll(((OMCDCVisitor)coverageVisitor).getDelayList());
+				
+				if (delayedItems != null && !delayedItems.isEmpty()) {
+					delayMap.put(id, delayedItems);
+					System.out.println("<" + id + ">\t" + delayMap.get(id));
+					((OMCDCVisitor)coverageVisitor).resetDelayList();
+				}
+			}
+			
 			for (Obligation obligation : obligations) {
 				// Skip if the expression's polarity is different from what
 				// we need
@@ -164,8 +175,10 @@ public final class LustreCoverage {
 				String property = "";
 				if (coverage == coverage.OMCDC) {
 					// name pattern for observed coverage. Meng
-					property = obligation.condition + "_COMB_USED_BY_" + id + "_" + (count++);
-					builder.addEquation(new Equation(new IdExpr(property), obligation.obligation));
+					property = obligation.condition + "_COMB_USED_BY_" + id;// + "_" + (count++);
+					count++;
+					builder.addEquation(new Equation(new IdExpr(property), 
+								obligation.obligation));
 				} else {
 					// keep the rest in original pattern.
 					property = obligation.condition + "_"
@@ -187,8 +200,16 @@ public final class LustreCoverage {
 			// obligations for observed coverage only. Meng
 			String property = "";
 			
+			System.out.println("******** Delays *******");
+			for (String key : delayMap.keySet()) {
+				System.out.println("\"" + key + "\" " + delayMap.get(key));
+			}
+			
+			// set delay mapping
+			((OMCDCVisitor)coverageVisitor).setDelayMap(delayMap);
+			
 			List<Obligation> obligations = ((OMCDCVisitor) coverageVisitor).generate();
-//			count += obligations.size();
+			count += obligations.size();
 			upperbound = ((OMCDCVisitor) coverageVisitor).getTokenRange();
 			StringBuilder subrange = new StringBuilder();
 			subrange.append("subrange");
@@ -203,7 +224,7 @@ public final class LustreCoverage {
 			subrange.append("[").append("-2,").append(upperbound).append("] of int");
 			
 			for (Obligation obligation : obligations) {
-				property = obligation.condition + "_" + (count++);
+				property = obligation.condition;// + "_" + (count++);
 				builder.addEquation(new Equation(new IdExpr(property), obligation.obligation));
 				if (property.contains("token_")) {
 					builder.addLocal(new VarDecl(property, new NamedType(subrange.toString())));

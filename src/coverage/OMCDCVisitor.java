@@ -33,6 +33,14 @@ public class OMCDCVisitor extends ConditionVisitor {
 	HashMap<String, VarDecl> idList;
 	List<String> properties = new ArrayList<String>();
 	
+	// variables for delays
+	Boolean isDelay = false;
+	Boolean assignToDelay = false;
+	List<String> impactedByDelay = new ArrayList<>();
+	HashMap<String, Integer> timesSeen = new HashMap<>();
+	// root vs. first-level nodes
+	HashMap<String, List<String>> delayMap = new HashMap<>();
+	
 	public OMCDCVisitor(ExprTypeVisitor exprTypeVisitor, List<Node> nodes) {
 		super(exprTypeVisitor);
 		this.nodes = nodes;
@@ -45,7 +53,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 		
 //		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
 //		obligations.addAll(getCombObervedObligations());  // done
-//		obligations.addAll(getSeqUsedByObligations());
+		obligations.addAll(getSeqUsedByObligations());
 //		obligations.addAll(getTokenActions());	// done
 //		obligations.addAll(getAffectAtCaptureObligations());
 //		obligations.addAll(getObligations());
@@ -60,6 +68,18 @@ public class OMCDCVisitor extends ConditionVisitor {
 	public void setIsDef(boolean isDef) {
 		this.isDef = isDef;
 	}
+	
+	public void resetDelayList() {
+		this.impactedByDelay.clear();
+	}
+	
+	public List<String> getDelayList() {
+		return this.impactedByDelay;
+	}
+	
+	public void setDelayMap(HashMap<String, List<String>> delayMap) {
+		this.delayMap = delayMap;
+	}
 
 	@Override
 	public List<Obligation> visit(BinaryExpr expr) {
@@ -68,10 +88,10 @@ public class OMCDCVisitor extends ConditionVisitor {
 		List<Obligation> leftObs = expr.left.accept(this);
 		List<Obligation> rightObs = expr.right.accept(this);
 		
-		System.out.println("for expression: " + expr.toString());
-		System.out.println("expr.left :: " + expr.left + "; expr.right :: " + expr.right);
-		System.out.println("class of left :: " + expr.left.getClass() + "; class of right :: " + expr.right.getClass());
-		System.out.println("leftObs :: " + leftObs + "; rightObs :: " + rightObs);
+//		System.out.println("for expression: " + expr.toString());
+//		System.out.println("expr.left :: " + expr.left + "; expr.right :: " + expr.right);
+//		System.out.println("class of left :: " + expr.left.getClass() + "; class of right :: " + expr.right.getClass());
+//		System.out.println("leftObs :: " + leftObs + "; rightObs :: " + rightObs);
 		
 		// and
 		// for one opr not be masked, the other one must be true
@@ -183,7 +203,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 		
 		// expr_a -> expr_b
 		else if (expr.op.equals(BinaryOp.ARROW)) {
-			System.out.println("ARROW:\t" + expr.toString());
+//			System.out.println("ARROW:\t" + expr.toString());
 			
 			// prepare for ((not (...)) -> ...)
 			if (expr.left instanceof UnaryExpr
@@ -259,19 +279,19 @@ public class OMCDCVisitor extends ConditionVisitor {
 		} else {
 			setIsDef(false);
 		}
-		
 		obligations.addAll(expr.cond.accept(this));
+		setIsDef(false);
 		
 		List<Obligation> thenObs = expr.thenExpr.accept(this);
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
 		for (Obligation thenOb : thenObs) {
-			System.out.println("thenOb >>>>> " + thenOb.toString());
+//			System.out.println("thenOb >>>>> " + thenOb.toString());
 			thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND, thenOb.obligation);
 		}
 		
 		for (Obligation elseOb : elseObs) {
-			System.out.println("elseOb >>>>> " + elseOb.toString());
+//			System.out.println("elseOb >>>>> " + elseOb.toString());
 			elseOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT, expr.cond),
 					BinaryOp.AND, elseOb.obligation);
 		}
@@ -286,8 +306,8 @@ public class OMCDCVisitor extends ConditionVisitor {
 	public List<Obligation> visit(UnaryExpr expr) {
 		List<Obligation> obligations = new ArrayList<>();
 		List<Obligation> unaryObs = expr.expr.accept(this);
-
-		System.out.println("unary.expr :: " + unaryObs.toString());
+		
+//		System.out.println("unary.expr :: " + unaryObs.toString());
 		
 		for (Obligation unaryOb : unaryObs) {
 			if (isDef) {
@@ -295,6 +315,8 @@ public class OMCDCVisitor extends ConditionVisitor {
 			} else {
 				if (expr.op.equals(UnaryOp.PRE)) {
 					unaryOb.obligation = new BoolExpr(false);
+					System.out.println("add " + expr.expr.toString());
+					impactedByDelay.add(expr.expr.toString());
 				}
 				else { // NOT
 					// keep original value
@@ -364,6 +386,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	}
 	// generate SEQ_USED_BY expressions
 	private List<Obligation> getSeqUsedByObligations() {
+		obHelper.setDelayMap(delayMap);
 		SequentialEquation delayDepdnEquation = new SequentialEquation();
 		return delayDepdnEquation.generate(obHelper.buildSeqTrees());
 	}
