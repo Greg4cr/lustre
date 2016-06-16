@@ -81,11 +81,11 @@ public class SequentialEquation {
 			exprsMap.put(lhs, expr);
 		}
 		
-		if (node.getChildren() != null) {
+//		if (node.getChildren() != null) {
 			for (ObservedTreeNode child : node.getChildren()) {
 				generateObligation(exprsMap, child, root);
 			}
-		}
+//		}
 	}
 
 }

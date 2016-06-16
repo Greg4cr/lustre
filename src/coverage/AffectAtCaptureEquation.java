@@ -11,12 +11,13 @@ import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
-import jkind.lustre.Node;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 
 public class AffectAtCaptureEquation {
+	HashMap<String, Expr> map = new HashMap<>();
+	
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	HashMap<VarDecl, ObservedTree> combUsedByTrees;
 	List<VarDecl> idList;
@@ -50,31 +51,41 @@ public class AffectAtCaptureEquation {
 	
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
-		obligations.addAll(generateForSeqTrees());
-		obligations.addAll(genergateForCombTrees());
-		obligations.addAll(generateForSingleNodeTrees());
-		obligations.addAll(generateForLoops());
+		generateForSeqTrees(map);
+		generateForCombTrees(map);
+		generateForSingleNodes(map);
+		generateForLoops(map);
+		obligations.addAll(getObligations(map));
 		return obligations;
 	}
 	
-	private List<Obligation> generateForLoops() {
+	private List<Obligation> getObligations(HashMap<String, Expr> map) {
 		List<Obligation> obligations = new ArrayList<>();
+		for (String lhs : map.keySet()) {
+			Obligation obligation = new Obligation(new IdExpr(lhs), true, map.get(lhs));
+			obligations.add(obligation);
+		}
+		
+		return obligations;
+	}
+	
+	private void generateForLoops(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(sequentialTrees, TYPE_SEQ);
 		IdExpr token = new IdExpr("token");
 		String seq = "_SEQ_USED_BY_";
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
+		String t = "_TRUE", f = "_FALSE", at ="_AT_", c = "_MCDC";
 		ObservedTreeNode node, leaf, root;
 		IdExpr seqUsed, rToken;
-		IdExpr[] lhs = new IdExpr[2];
+		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
-		Obligation obligation;
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
 			root = path.get(0);
 			leaf = path.get(path.size() - 1);
+			
 			boolean isInLoop = isInLoop(root, leaf, paths);
 			if (isInLoop) {
 				// found a loop (hiding in two trees)
@@ -82,8 +93,8 @@ public class AffectAtCaptureEquation {
 				for (int j = 1; j < path.size() - 1; j++) {
 					node = path.get(j);
 					
-					lhs[0] = new IdExpr(node.data + t + at + root.data + affect);
-					lhs[1] = new IdExpr(node.data + f + at + root.data + affect);
+					lhs[0] = node.data + t + at + root.data + affect;
+					lhs[1] = node.data + f + at + root.data + affect;
 					nonMasked[0] = new IdExpr(node.data + t + at + root.data + c + t);
 					nonMasked[1] = new IdExpr(node.data + f + at + root.data + c + f);
 					for (int k = 0; k < lhs.length; k++) {
@@ -94,19 +105,25 @@ public class AffectAtCaptureEquation {
 											new BinaryExpr(seqUsed, BinaryOp.AND, 
 													new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
 						conclusion1 = premise;
-						conclusion2 = new UnaryExpr(UnaryOp.PRE, lhs[k]);
+						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
 						
-						obligation = new Obligation(lhs[k], true, 
-											new BinaryExpr(premise, BinaryOp.ARROW, 
-													new BinaryExpr(conclusion1, BinaryOp.OR, conclusion2)));
-						obligations.add(obligation);
+						
+						Expr expr = new BinaryExpr(premise, 
+													BinaryOp.ARROW, 
+													new BinaryExpr(conclusion1, 
+																	BinaryOp.OR, 
+																	conclusion2));
+						if (!map.containsKey(lhs[k])) {
+							map.put(lhs[k], expr);
+						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs));
+							map.put(lhs[k], expr);
+						}
 					}
 				}
-				
 			}
+			
 		}
-		
-		return obligations;
 	}
 	
 	public void setSingleNodeList(List<VarDecl> singleNodeList) {
@@ -152,18 +169,16 @@ public class AffectAtCaptureEquation {
 		return selfLoopRoots;
 	}
 	
-	private List<Obligation> generateForSingleNodeTrees() {
-		List<Obligation> obligations = new ArrayList<>();
+	private void generateForSingleNodes(HashMap<String, Expr> map) {
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
 		String node = "", father;
-		IdExpr[] lhs = new IdExpr[2];
+		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
-		Obligation obligation;
 		
 		if (this.singleNodeTrees.keySet() == null) {
-			return obligations;
+			return;
 		}
 		
 		for (VarDecl exprId : this.singleNodeTrees.keySet()) {
@@ -183,41 +198,38 @@ public class AffectAtCaptureEquation {
 					if (occ > 1) {
 						node += "_" + i;
 					}
-					lhs[0] = new IdExpr(node + t + at + father + affect);
-					lhs[1] = new IdExpr(node + f + at + father + affect);
+					lhs[0] = node + t + at + father + affect;
+					lhs[1] = node + f + at + father + affect;
 					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
 					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 					for (int k = 0; k < lhs.length; k++) {
 						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
 						conclusion1 = premise;
-						conclusion2 = new UnaryExpr(UnaryOp.PRE, lhs[k]);
+						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
 						
-						obligation = new Obligation(lhs[k], true, 
-											new BinaryExpr(premise, BinaryOp.ARROW, 
-													new BinaryExpr(conclusion1, BinaryOp.OR, conclusion2)));
-//						System.out.println("contains " + obligation + "? " + isInList(obligations, obligation));
-						if (!isInList(obligations, obligation)) {
-							obligations.add(obligation);
+						Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
+													new BinaryExpr(conclusion1, 
+															BinaryOp.OR, conclusion2));
+						if (!map.containsKey(lhs[k])) {
+							map.put(lhs[k], expr);
+						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
+							map.put(lhs[k], expr);
 						}
 					}
 				}
-								
 			}
 		}
-		
-		return obligations;
 	}
 	
-	private List<Obligation> genergateForCombTrees() {
-		List<Obligation> obligations = new ArrayList<>();
+	private void generateForCombTrees(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(combUsedByTrees, TYPE_COMB);
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
 		String node = "", father;
-		IdExpr[] lhs = new IdExpr[2];
+		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
-		Obligation obligation;
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
@@ -229,30 +241,31 @@ public class AffectAtCaptureEquation {
 				}
 				father = path.get(j - 1).data;
 				
-				lhs[0] = new IdExpr(node + t + at + father + affect);
-				lhs[1] = new IdExpr(node + f + at + father + affect);
+				lhs[0] = node + t + at + father + affect;
+				lhs[1] = node + f + at + father + affect;
 				nonMasked[0] = new IdExpr(node + t + at + father + c + t);
 				nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 				for (int k = 0; k < lhs.length; k++) {
-					premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+					premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
+											new BoolExpr(false));
 					conclusion1 = premise;
-					conclusion2 = new UnaryExpr(UnaryOp.PRE, lhs[k]);
+					conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
 					
-					obligation = new Obligation(lhs[k], true, 
-										new BinaryExpr(premise, BinaryOp.ARROW, 
-												new BinaryExpr(conclusion1, BinaryOp.OR, conclusion2)));
-//					System.out.println("contains " + obligation + "? " + isInList(obligations, obligation));
-					if (!isInList(obligations, obligation)) {
-						obligations.add(obligation);
+					Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
+												new BinaryExpr(conclusion1, 
+														BinaryOp.OR, conclusion2));
+					if (!map.containsKey(lhs[k])) {
+						map.put(lhs[k], expr);
+					} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+						expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
+						map.put(lhs[k], expr);
 					}
 				}
 			}
 		}
-		
-		return obligations;
 	}
 	
-	private <T> boolean isInList(List<T> list, Object obj) {
+	/*private <T> boolean isInList(List<T> list, Object obj) {
 		boolean inList = false;
 		if (list == null) {
 			return inList;
@@ -266,10 +279,9 @@ public class AffectAtCaptureEquation {
 		}
 		
 		return inList;
-	}
+	}*/
 	
-	private List<Obligation> generateForSeqTrees() {
-		List<Obligation> obligations = new ArrayList<>();
+	private void generateForSeqTrees(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(sequentialTrees, TYPE_SEQ);
 		IdExpr token = new IdExpr("token");
 		String seq = "_SEQ_USED_BY_";
@@ -277,10 +289,9 @@ public class AffectAtCaptureEquation {
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
 		String node, father, root;
 		IdExpr seqUsed, rToken;
-		IdExpr[] lhs = new IdExpr[2];
+		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
-		Obligation obligation;
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
@@ -289,10 +300,12 @@ public class AffectAtCaptureEquation {
 			father = path.get(index - 1).data;
 			root = path.get(0).data;
 			
-			lhs[0] = new IdExpr(node + t + at + father + affect);
-			lhs[1] = new IdExpr(node + f + at + father + affect);
+			lhs[0] = node + t + at + father + affect;
+			lhs[1] = node + f + at + father + affect;
 			nonMasked[0] = new IdExpr(node + t + at + father + c + t);
 			nonMasked[1] = new IdExpr(node + f + at + father + c + f);
+			
+			System.out.println("::: path :::\n\t" + path);
 			
 			for (int k = 0; k < lhs.length; k++) {
 				rToken = nodeToToken.get(root);
@@ -305,17 +318,21 @@ public class AffectAtCaptureEquation {
 										new BinaryExpr(seqUsed, BinaryOp.AND, 
 												new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
 				}
-				conclusion1 = premise;
-				conclusion2 = new UnaryExpr(UnaryOp.PRE, lhs[k]);
 				
-				obligation = new Obligation(lhs[k], true, 
-									new BinaryExpr(premise, BinaryOp.ARROW, 
-											new BinaryExpr(conclusion1, BinaryOp.OR, conclusion2)));
-				obligations.add(obligation);
+				conclusion1 = premise;
+				conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+				
+				Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
+											new BinaryExpr(conclusion1, 
+													BinaryOp.OR, conclusion2));
+				if (!map.containsKey(lhs[k])) {
+					map.put(lhs[k], expr);
+				} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+					expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs));
+					map.put(lhs[k], expr);
+				}
 			}
 		}
-		
-		return obligations;
 	}
 	
 	private List<List<ObservedTreeNode>> drawPaths(HashMap<VarDecl, ObservedTree> trees, 
@@ -344,10 +361,11 @@ public class AffectAtCaptureEquation {
 			}
 		}
 		
-		System.out.println("Number of paths: " + paths.size());
+		/*System.out.println("Number of paths: " + paths.size());
+		
 		for (int i = 0; i < paths.size(); i++) {
 			System.out.println(paths.get(i) + ", " + paths.get(i).size());
-		}
+		}*/
 		
 		return paths;
 	}
