@@ -7,32 +7,46 @@ import java.util.List;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.VarDecl;
 
 public class CombObservedEquation {
 	List<VarDecl> singleNodeList;
+	HashMap<String, Expr> map = new HashMap<>();
 	
 	public List<Obligation> generate(HashMap<VarDecl, ObservedTree> referenceTrees,
 											List<VarDecl> idList) {
 		List<Obligation> obligations = new ArrayList<>();
 		ObservedTree tree;
 		
-		for (VarDecl root: referenceTrees.keySet()) {
+		for (VarDecl rootVar: referenceTrees.keySet()) {
 //			System.out.println("Generate comb observed expressions for [" + root + "]...");
-			tree = referenceTrees.get(root);
-//			this.singleNodeList = getSingleNodeList(tree, idList);
+			tree = referenceTrees.get(rootVar);
 //			System.out.println("single node tree? " + tree.root.getChildren().isEmpty());
 			if (tree.root.getChildren().isEmpty()) {
 				// for single-node tree
-				obligations.addAll(generateExprForSingleNodeTree(tree));
+				genereateForSingleNodes(map, tree.root);
 			} else {
 				// for nodes in reference trees
-				obligations.addAll(gerenateExprForTree(tree));
+				generateForTree(map, tree.root);
 				
 				// for single nodes
-				obligations.addAll(generateExprForSingleNodeTree(tree));
+				genereateForSingleNodes(map, tree.root);
 			}
+		}
+		obligations.addAll(getObligations(map));
+		
+		return obligations;
+	}
+	
+	private List<Obligation> getObligations(HashMap<String, Expr> map) {
+		List<Obligation> obligations = new ArrayList<>();
+		
+		for (String lhs : map.keySet()) {
+			Obligation obligation = new Obligation(new IdExpr(lhs), true,
+											map.get(lhs));
+			obligations.add(obligation);
 		}
 		return obligations;
 	}
@@ -41,64 +55,55 @@ public class CombObservedEquation {
 		this.singleNodeList = singleNodeList;
 	}
 
-	private List<Obligation> generateExprForSingleNodeTree(ObservedTree tree) {
-		List<Obligation> obligations = new ArrayList<>();
+	private void genereateForSingleNodes(HashMap<String, Expr> map,
+										ObservedTreeNode root) {
 		String combObs = "_COMB_OBSERVED";
-		IdExpr lhs;
+		String lhs;
 		
-		Obligation obligation;
 		for (VarDecl id : singleNodeList) {
-			lhs = new IdExpr(id.id + combObs);
-			if (id.id.equals(tree.root.data)) {
-				obligation  = new Obligation(lhs, false, new BoolExpr(true));
+			lhs = id.id + combObs;
+
+			if (id.id.equals(root.data)) {
+				map.put(lhs, new BoolExpr(true));
 			} else {
-				obligation = new Obligation(lhs, false, new BoolExpr(false));
+				map.put(lhs, new BoolExpr(false));
 			}
-			obligations.add(obligation);
 		}
-		return obligations;
 	}
 	
-	private List<Obligation> gerenateExprForTree(ObservedTree tree) {
-		List<Obligation> obligationForTree = new ArrayList<Obligation>();
+	private void generateForTree(HashMap<String, Expr> map, ObservedTreeNode root) {
 		String combObs = "_COMB_OBSERVED";
-		IdExpr lhs;
-		lhs = new IdExpr(tree.root.data + combObs);
-		// COMB_OBSERVED obligation for root
-		Obligation obligation = new Obligation(lhs, false, new BoolExpr(true));
-//		System.out.println(obligation.condition + " = " + obligation);
-		obligationForTree.add(obligation);
+		String lhs = root.data + combObs;
+		// COMB_OBSERVED for root
+		map.put(lhs, new BoolExpr(true));
 		
-		for (ObservedTreeNode node : tree.root.getChildren()) {
-			obligationForTree.addAll(genereateExprForNode(node));
+		for (ObservedTreeNode node : root.getChildren()) {
+			generateForNode(map, node);
 		}
-		
-		return obligationForTree;
 	}
 	
-	private List<Obligation> genereateExprForNode(ObservedTreeNode node) {
-		List<Obligation> obligationOfNode = new ArrayList<Obligation>();
+	private void generateForNode(HashMap<String, Expr> map, ObservedTreeNode node) {
 		if (node == null) {
-			return null;
+			return;
 		}
 		
-		IdExpr lhs;
-		Obligation obligation;
+		String lhs;
 		String combObs = "_COMB_OBSERVED";
 		String combUsedBy = "_COMB_USED_BY_";
-		lhs = new IdExpr(node.data + combObs);
+		lhs = node.data + combObs;
 		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.parent.data);
 		IdExpr opr2 = new IdExpr(node.parent.data + combObs);
 		BinaryExpr expr = new BinaryExpr(opr1, BinaryOp.AND, opr2);
-		obligation = new Obligation(lhs, false, expr);
-		obligationOfNode.add(obligation);
-//		System.out.println(obligation.condition + " = " + obligation);
 		
-		if (node.getChildren() != null) {
-			for (ObservedTreeNode child : node.getChildren()) {
-				obligationOfNode.addAll(genereateExprForNode(child));
-			}
+		if (!map.containsKey(lhs)) {
+			map.put(lhs, expr);
+		} else if (!map.get(lhs).toString().contains(expr.toString())) {
+			expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs));
+			map.put(lhs, expr);
 		}
-		return obligationOfNode;
+		
+		for (ObservedTreeNode child : node.getChildren()) {
+			generateForNode(map, child);
+		}
 	}
 }
