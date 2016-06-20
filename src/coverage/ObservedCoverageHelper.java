@@ -70,14 +70,12 @@ public class ObservedCoverageHelper {
 	
 	public int getTokenNumber() {
 		return (delayMap.keySet().size());
-//		return getSeqTreeRoots(getStrExprTable()).size();
 	}
 	
 	public HashMap<VarDecl, ObservedTree> buildSeqTrees() {
 		HashMap<VarDecl, ObservedTree> seqTrees = new HashMap<>();
 		HashMap<String, Expr> expressions = getStrExprTable();
 		HashMap<String, VarDecl> idMap = getIds();
-//		List<String> roots = getSeqTreeRoots(expressions);
 		ObservedTreeNode treeNode;
 		
 		for (String root : delayMap.keySet()) {
@@ -120,27 +118,25 @@ public class ObservedCoverageHelper {
 				if (seqMode >= 2) {
 					// stop building tree
 					return null;
+				} else if (seqMode == 1 
+						&& exprs.get(root.data).toString().contains(UnaryOp.PRE.toString() + " ")) {
+					seqMode = 2;
 				} else if (seqMode == 0) {
 					// build first-level
-					List<String> firstLevel = delayMap.get(root.data);
-					System.out.println(firstLevel);
-					for (int i = 0; i < firstLevel.size(); i++) {
-						if (firstLevel.get(i).equals(root.data)) {
-							// delayed by itself
-							seqMode = 1;
-						}
-						children.put(firstLevel.get(i), 1);
-						preNode.put(firstLevel.get(i), true);
+					List<String> delays = delayMap.get(root.data);
+					System.out.println(delays);
+					for (int i = 0; i < delays.size(); i++) {
+						children.put(delays.get(i), 1);
+						preNode.put(delays.get(i), true);
 					}
-				} else { // seqMode == 1
-					buildRefTree = true;
 				}
 			}
 		}
 		
 		if (!buildRefTree && seqMode == 0) {
-			// delayed by other variables
-			buildRefTree = true;
+			// first-level of sequential tree has been added
+			// stop adding more children
+			seqMode = 1;
 		} else {
 			if (exprs.get(root.data).toString().indexOf(" ") > 0) {
 				String[] items = exprs.get(root.data).toString().replaceAll("[(){}]", " ").split(" ");
@@ -155,10 +151,16 @@ public class ObservedCoverageHelper {
 						}
 						continue;
 					} else if (children.containsKey(item)) {
+						if (isPre && item.equals(root.data)) {
+							continue;
+						}
 						children.put(item, children.get(item) + 1);
 						isPre = false;
-						continue;
+//						continue;
 					} else {
+						if (isPre && item.equals(root.data)) {
+							continue;
+						}
 						children.put(item, 1);
 						preNode.put(item, isPre);
 						isPre = false;
