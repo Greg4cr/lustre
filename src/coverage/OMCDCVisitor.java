@@ -22,7 +22,7 @@ import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 
 public class OMCDCVisitor extends ConditionVisitor {
-	List<Node> nodes;
+	Node node;
 	ObservedCoverageHelper obHelper;
 	MCDCVisitor mcdcVisitor;
 	
@@ -41,21 +41,30 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// root vs. first-level nodes
 	HashMap<String, List<String>> delayMap = new HashMap<>();
 	
-	public OMCDCVisitor(ExprTypeVisitor exprTypeVisitor, List<Node> nodes) {
+	// delay dependency tree and reference dependency tree
+	HashMap<VarDecl, ObservedTree> delayDependencyTrees = new HashMap<>();
+	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
+		
+	public OMCDCVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
 		super(exprTypeVisitor);
-		this.nodes = nodes;
-		this.obHelper = new ObservedCoverageHelper(nodes.get(0));
+		this.node = node;
+		this.obHelper = new ObservedCoverageHelper(node);
 	}
 	
 	// main entrance to get OMCDC obligations
 	public List<Obligation> generate() {
+		obHelper.setDelayMap(delayMap);
+		delayDependencyTrees = obHelper.buildSeqTrees();
+		refDependencyTrees = obHelper.buildRefTrees();
+		
 		List<Obligation> obligations = new ArrayList<>();
 		
 //		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
 //		obligations.addAll(getCombObervedObligations());  // done
-		obligations.addAll(getSeqUsedByObligations());
+//		obligations.addAll(getSeqUsedByObligations());
 //		obligations.addAll(getTokenActions());	// done
-//		obligations.addAll(getAffectAtCaptureObligations());
+//		// FIXME
+		obligations.addAll(getAffectAtCaptureObligations()); // bugs to fix
 //		obligations.addAll(getObligations());
 		
 		return obligations;
@@ -346,7 +355,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	private List<Obligation> getMCDCObligation(ExprTypeVisitor exprTypeVisitor) {
 		mcdcVisitor = new MCDCVisitor(exprTypeVisitor);
 		List<Obligation> obligations = new ArrayList<>();
-		for (Equation equation : nodes.get(0).equations) {
+		for (Equation equation : node.equations) {
 			List<Obligation> obs = equation.expr.accept(mcdcVisitor);
 			String id = null;
 
@@ -379,25 +388,22 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// generate COMB_OBSERVED expressions
 	private List<Obligation> getCombObervedObligations() {
 		CombObservedEquation combObsEquation = new CombObservedEquation();
-		HashMap<VarDecl, ObservedTree> referenceTrees = obHelper.buildRefTrees();
-		combObsEquation.setSingleNodeList(obHelper.getSingleNodeList(referenceTrees));
-		return combObsEquation.generate(referenceTrees, obHelper.getIdList());
+		combObsEquation.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
+		return combObsEquation.generate(refDependencyTrees, obHelper.getIdList());
 		
 	}
 	// generate SEQ_USED_BY expressions
 	private List<Obligation> getSeqUsedByObligations() {
-		obHelper.setDelayMap(delayMap);
 		SequentialEquation delayDepdnEquation = new SequentialEquation();
-		return delayDepdnEquation.generate(obHelper.buildSeqTrees());
+		return delayDepdnEquation.generate(delayDependencyTrees);
 	}
 	
 	// generate TOKEN Actions
 	private List<Obligation> getTokenActions() {
-		HashMap<VarDecl, ObservedTree> trees = obHelper.buildSeqTrees();
-		TokenAction tokenAction = new TokenAction(trees);
+		TokenAction tokenAction = new TokenAction(delayDependencyTrees);
 		tokenAction.setInIdList(obHelper.getInStrList());
 		
-		if (trees.size() > 0) {
+		if (delayDependencyTrees.size() > 0) {
 			tokenAction.setHasDynamic(true);
 		} else {
 			tokenAction.setHasDynamic(false);
@@ -407,26 +413,17 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	// generate affecting_at_capture expressions
 	private List<Obligation> getAffectAtCaptureObligations() {
-		HashMap<VarDecl, ObservedTree> referenceTrees = obHelper.buildRefTrees();
-		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(obHelper.buildSeqTrees(),
-												referenceTrees);
-		affect.setSingleNodeList(obHelper.getSingleNodeList(referenceTrees));
+		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayDependencyTrees,
+				refDependencyTrees);
+		affect.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
 		affect.setSingleNodeTrees(obHelper.getSingleNodeTrees());
 		return affect.generate();
 	}
 	
 	// generate omcdc obligations for each expression
 	private List<Obligation> getObligations() {
-		OMCDCObligation obligation = new OMCDCObligation(obHelper.buildSeqTrees(),
-											obHelper.buildRefTrees());
+		OMCDCObligation obligation = new OMCDCObligation(delayDependencyTrees,
+				refDependencyTrees);
 		return obligation.generate();
-//		EquationObligations equationVisitor = new EquationObligations(exprTypeVisitor);
-//		List<Obligation> obligations = new ArrayList<>();
-//		
-//		for (Equation equation : nodes.get(0).equations) {
-//			List<Obligation> obs = equation.expr.accept(equationVisitor);
-//			obligations.addAll(obs);
-//		}
-//		return obligations;
 	}
 }

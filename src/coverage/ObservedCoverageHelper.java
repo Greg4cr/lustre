@@ -115,12 +115,12 @@ public class ObservedCoverageHelper {
 			if (!exprs.keySet().contains(root.data)) {
 				throw new IllegalArgumentException("!!! No corresponding expression!!! >>> " + root.data);
 			} else {
-				if (seqMode >= 2) {
+				if (seqMode >= 3) {
 					// stop building tree
 					return null;
-				} else if (seqMode == 1 
+				} else if (seqMode > 0 
 						&& exprs.get(root.data).toString().contains(UnaryOp.PRE.toString() + " ")) {
-					seqMode = 2;
+					seqMode++;
 				} else if (seqMode == 0) {
 					// build first-level
 					List<String> delays = delayMap.get(root.data);
@@ -156,7 +156,6 @@ public class ObservedCoverageHelper {
 						}
 						children.put(item, children.get(item) + 1);
 						isPre = false;
-//						continue;
 					} else {
 						if (isPre && item.equals(root.data)) {
 							continue;
