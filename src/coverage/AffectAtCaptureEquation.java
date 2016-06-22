@@ -295,41 +295,43 @@ public class AffectAtCaptureEquation {
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
-			int index = path.size() - 1;
-			node = path.get(index).data;
-			father = path.get(index - 1).data;
 			root = path.get(0).data;
 			
-			lhs[0] = node + t + at + father + affect;
-			lhs[1] = node + f + at + father + affect;
-			nonMasked[0] = new IdExpr(node + t + at + father + c + t);
-			nonMasked[1] = new IdExpr(node + f + at + father + c + f);
-			
-			System.out.println("::: path :::\n\t" + path);
-			
-			for (int k = 0; k < lhs.length; k++) {
-				rToken = nodeToToken.get(root);
+			for (int index = path.size() - 1; 0 < index; index--) {
+				node = path.get(index).data;
+				father = path.get(index - 1).data;
 				
-				if (path.size() <= 2) {
-					premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
-				} else {
-					seqUsed = new IdExpr(father + seq + root);
-					premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
-										new BinaryExpr(seqUsed, BinaryOp.AND, 
-												new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
-				}
+				lhs[0] = node + t + at + father + affect;
+				lhs[1] = node + f + at + father + affect;
+				nonMasked[0] = new IdExpr(node + t + at + father + c + t);
+				nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 				
-				conclusion1 = premise;
-				conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+				System.out.println("::: path :::\n\t" + path);
 				
-				Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
-											new BinaryExpr(conclusion1, 
-													BinaryOp.OR, conclusion2));
-				if (!map.containsKey(lhs[k])) {
-					map.put(lhs[k], expr);
-				} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
-					expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs));
-					map.put(lhs[k], expr);
+				for (int k = 0; k < lhs.length; k++) {
+					rToken = nodeToToken.get(root);
+					
+					if (path.size() <= 2) {
+						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+					} else {
+						seqUsed = new IdExpr(father + seq + root);
+						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
+											new BinaryExpr(seqUsed, BinaryOp.AND, 
+													new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
+					}
+					
+					conclusion1 = premise;
+					conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+					
+					Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
+												new BinaryExpr(conclusion1, 
+														BinaryOp.OR, conclusion2));
+					if (!map.containsKey(lhs[k])) {
+						map.put(lhs[k], expr);
+					} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+						expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
+						map.put(lhs[k], expr);
+					}
 				}
 			}
 		}

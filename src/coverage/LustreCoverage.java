@@ -8,8 +8,11 @@ import enums.Coverage;
 import enums.Polarity;
 import main.LustreMain;
 import types.ExprTypeVisitor;
+import jkind.lustre.BinaryExpr;
+import jkind.lustre.BinaryOp;
 import jkind.lustre.Constant;
 import jkind.lustre.Equation;
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IntExpr;
 import jkind.lustre.NamedType;
@@ -104,8 +107,8 @@ public final class LustreCoverage {
 		case DECISION:
 			coverageVisitor = new DecisionVisitor(exprTypeVisitor);
 			break;
-		case OMCDC: // for OMCDC coverage. Meng
-			coverageVisitor = new OMCDCVisitor(exprTypeVisitor, program.nodes); 
+		case OMCDC: // for OMCDC coverage.
+			coverageVisitor = new OMCDCVisitor(exprTypeVisitor, node); 
 			break;
 		case OBRANCH:
 			break;
@@ -148,7 +151,7 @@ public final class LustreCoverage {
 			List<Obligation> obligations = equation.expr
 					.accept(coverageVisitor);
 			
-			if (coverage == coverage.OMCDC) {
+			if (coverage == Coverage.OMCDC) {
 				// popular delay maps for observed coverage
 				List<String> delayedItems = new ArrayList<>(); 
 				delayedItems.addAll(((OMCDCVisitor)coverageVisitor).getDelayList());
@@ -159,6 +162,42 @@ public final class LustreCoverage {
 					((OMCDCVisitor)coverageVisitor).resetDelayList();
 				}
 			}
+			
+			
+			if (coverage == Coverage.OMCDC) {
+				HashMap<String, Expr> map = new HashMap<>();
+				
+				for (Obligation obligation : obligations) {
+					if (polarity.equals(Polarity.TRUE)
+							&& !obligation.expressionPolarity) {
+						continue;
+					}
+					if (polarity.equals(Polarity.FALSE)
+							&& obligation.expressionPolarity) {
+						continue;
+					}
+					
+					String lhs = obligation.condition + "_COMB_USED_BY_" + id;
+					count++;
+					
+					Expr expr = obligation.obligation;
+					
+					if (!map.containsKey(lhs)) {
+						map.put(lhs, expr);
+					} else if (!map.get(lhs).toString().contains(expr.toString())) {
+						expr = new BinaryExpr(map.get(lhs), BinaryOp.OR, expr);
+						map.put(lhs, expr);
+					}
+				}
+				
+				for (String property : map.keySet()) {
+					builder.addEquation(new Equation(new IdExpr(property), 
+										map.get(property)));
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
+					builder.addProperty(property);
+				}
+			}
+			
 			
 			for (Obligation obligation : obligations) {
 				// Skip if the expression's polarity is different from what
@@ -175,10 +214,10 @@ public final class LustreCoverage {
 				String property = "";
 				if (coverage == coverage.OMCDC) {
 					// name pattern for observed coverage. Meng
-					property = obligation.condition + "_COMB_USED_BY_" + id;// + "_" + (count++);
-					count++;
-					builder.addEquation(new Equation(new IdExpr(property), 
-								obligation.obligation));
+//					property = obligation.condition + "_COMB_USED_BY_" + id;
+//					count++;
+//					builder.addEquation(new Equation(new IdExpr(property), 
+//								obligation.obligation));
 				} else {
 					// keep the rest in original pattern.
 					property = obligation.condition + "_"
@@ -197,7 +236,7 @@ public final class LustreCoverage {
 		}
 		
 		if (coverage == coverage.OMCDC) {
-			// obligations for observed coverage only. Meng
+			// obligations for observed coverage only.
 			String property = "";
 			
 			System.out.println("******** Delays *******");
