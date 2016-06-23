@@ -47,6 +47,7 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 
 	@Override
 	public Expr visit(BinaryExpr e) {
+		// XOR and boolean equality/inequality
 		if ((e.op.equals(BinaryOp.XOR) || e.op.equals(BinaryOp.EQUAL) || e.op
 				.equals(BinaryOp.NOTEQUAL))
 				&& e.left.accept(this.exprTypeVisitor).equals(NamedType.BOOL)) {
@@ -70,6 +71,7 @@ public final class LustreCleanVisitor extends AstMapVisitor {
 				return new BinaryExpr(e.location, left, BinaryOp.OR, right);
 			}
 		}
+		
 		return super.visit(e);
 	}
 }

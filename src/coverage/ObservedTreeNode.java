@@ -12,7 +12,7 @@ public class ObservedTreeNode {
     public boolean isPre;
     public ObservedTreeNode parent;
     private List<ObservedTreeNode> children;
-    private int occurrence;
+    public int occurrence;
     
     public ObservedTreeNode(String data, Type type) {
     	setName(data);
@@ -28,9 +28,9 @@ public class ObservedTreeNode {
     	setOccurrence(1);
     }
     
-	public int getOccurrence() {
+/*	public int getOccurrence() {
 		return occurrence;
-	}
+	}*/
 
 	public void setOccurrence(int occurrence) {
 		this.occurrence = occurrence;

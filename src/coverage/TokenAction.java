@@ -38,13 +38,10 @@ public class TokenAction {
 	// sequential trees (one token to one tree / root)
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
-//	HashMap<String, List<String>> rootToLeavesMap = new HashMap<String, List<String>>();
 	HashMap<ObservedTreeNode, List<ObservedTreeNode>> rootToLeavesMap = new HashMap<>();
 	// token to tree node (root), Map<Token, Node>
-//	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
 	HashMap<IdExpr, ObservedTreeNode> tokenToNode = new HashMap<>();
 	// tree node (root) to token, Map<Node, Token>
-//	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
 	HashMap<ObservedTreeNode, IdExpr> nodeToToken = new HashMap<>();
 	
 	public TokenAction(HashMap<VarDecl, ObservedTree> seqTrees) {
@@ -117,7 +114,7 @@ public class TokenAction {
 				}
 				
 				if (targetToken != null) {
-					id = sourceNode.data + seq + targetNode.data;
+					id = targetNode.data + seq + sourceNode.data;
 
 					errTrans = new IfThenElseExpr(new BinaryExpr(
 										new BinaryExpr(token_nondet, BinaryOp.EQUAL, targetToken),
