@@ -46,7 +46,7 @@ public class AffectAtCaptureEquation {
 									HashMap<VarDecl, ObservedTree> combUsedTrees) {
 		this.sequentialTrees = seqTrees;
 		this.combUsedByTrees = combUsedTrees;
-		drawMaps();
+		populateMaps();
 	}
 	
 	public List<Obligation> generate() {
@@ -106,7 +106,6 @@ public class AffectAtCaptureEquation {
 													new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
 						conclusion1 = premise;
 						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
-						
 						
 						Expr expr = new BinaryExpr(premise, 
 													BinaryOp.ARROW, 
@@ -192,10 +191,9 @@ public class AffectAtCaptureEquation {
 				}
 				
 				father = root.data;
-				int occ = child.getOccurrence();
 				
-				for (int i = 0; i < occ; i++) {
-					if (occ > 1) {
+				for (int i = 0; i < child.occurrence; i++) {
+					if (child.occurrence > 1) {
 						node += "_" + i;
 					}
 					lhs[0] = node + t + at + father + affect;
@@ -295,42 +293,50 @@ public class AffectAtCaptureEquation {
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
+			System.out.println("::: path :::\n\t" + path);
 			root = path.get(0).data;
 			
 			for (int index = path.size() - 1; 0 < index; index--) {
-				node = path.get(index).data;
-				father = path.get(index - 1).data;
+				int occurrence = path.get(index).occurrence;
 				
-				lhs[0] = node + t + at + father + affect;
-				lhs[1] = node + f + at + father + affect;
-				nonMasked[0] = new IdExpr(node + t + at + father + c + t);
-				nonMasked[1] = new IdExpr(node + f + at + father + c + f);
-				
-				System.out.println("::: path :::\n\t" + path);
-				
-				for (int k = 0; k < lhs.length; k++) {
-					rToken = nodeToToken.get(root);
-					
-					if (path.size() <= 2) {
-						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+				for (int j = 0; j < occurrence; j++) {
+					if (occurrence == 1) {
+						node = path.get(index).data;
 					} else {
-						seqUsed = new IdExpr(father + seq + root);
-						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
-											new BinaryExpr(seqUsed, BinaryOp.AND, 
-													new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
+						node = path.get(index).data + "_" + j;
 					}
+									
+					father = path.get(index - 1).data;
 					
-					conclusion1 = premise;
-					conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+					lhs[0] = node + t + at + father + affect;
+					lhs[1] = node + f + at + father + affect;
+					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
+					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 					
-					Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
-												new BinaryExpr(conclusion1, 
-														BinaryOp.OR, conclusion2));
-					if (!map.containsKey(lhs[k])) {
-						map.put(lhs[k], expr);
-					} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
-						expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
-						map.put(lhs[k], expr);
+					for (int k = 0; k < lhs.length; k++) {
+						rToken = nodeToToken.get(root);
+						
+						if (path.size() <= 2) {
+							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+						} else {
+							seqUsed = new IdExpr(father + seq + root);
+							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
+												new BinaryExpr(seqUsed, BinaryOp.AND, 
+														new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
+						}
+						
+						conclusion1 = premise;
+						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+						
+						Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
+													new BinaryExpr(conclusion1, 
+															BinaryOp.OR, conclusion2));
+						if (!map.containsKey(lhs[k])) {
+							map.put(lhs[k], expr);
+						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
+							map.put(lhs[k], expr);
+						}
 					}
 				}
 			}
@@ -373,7 +379,7 @@ public class AffectAtCaptureEquation {
 	}
 		
 	// build token-to-node, node-to-token, tokennode-dependency maps
-	private void drawMaps() {
+	private void populateMaps() {
 		tokens = new IdExpr[sequentialTrees.size()];
 		count = 0;
 		
@@ -384,7 +390,6 @@ public class AffectAtCaptureEquation {
 			nodeToToken.put(treeRoot.id, tokens[count]);
 			
 			ObservedTreeNode root = sequentialTrees.get(treeRoot).root;
-//			rootToLeavesMap.put(treeRoot.id, root.getAllLeaves());
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
 //			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
