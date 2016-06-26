@@ -37,35 +37,56 @@ public class OMCDCObligation {
 		int count = 0;
 		String omcdc = "omcdc_";
 		ObservedTreeNode node, parent;
+		String nodeName;
+//		String node, parent;
 		IdExpr lhs;
 		IdExpr[] nonMaskedExpr = new IdExpr[2], affectExpr = new IdExpr[2];
 		Expr lOperand, rOperand;
 		Obligation obligation;
-		
+//		StringBuilder allObs = new StringBuilder();
+		String allObs = "";
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
+			
 			for (int j = 1; j < path.size(); j++) {
-				node = path.get(j);
-				parent = path.get(j - 1);
+				int occurrence = path.get(j).occurrence;
 				
-				if (!("int".equals(node.type.toString()))) {
-					nonMaskedExpr[0] = new IdExpr(node.data + t + at + parent.data + cov + t);
-					nonMaskedExpr[1] = new IdExpr(node.data + f + at + parent.data + cov + f);
-					affectExpr[0] = new IdExpr(node.data + t + at + parent.data + affect);
-					affectExpr[1] = new IdExpr(node.data + f + at + parent.data + affect);
-					for (int k = 0; k < nonMaskedExpr.length; k++) {
-						lhs = new IdExpr(omcdc + (count++));
-						lOperand = new BinaryExpr(nonMaskedExpr[k], BinaryOp.AND, 
-											new IdExpr(parent.data + observed));
-						rOperand = new BinaryExpr(affectExpr[k], BinaryOp.AND,
-											new BinaryExpr(token, BinaryOp.EQUAL, outState));
-						obligation = new Obligation(lhs, true, new UnaryExpr(UnaryOp.NOT, (new BinaryExpr(
-											lOperand, BinaryOp.OR, rOperand))));
-						obligations.add(obligation);
+				for (int l = 0; l < occurrence; l++) {
+					if (occurrence == 1) {
+						node = path.get(j);
+						nodeName = node.data;
+					} else {
+						node = path.get(j);
+						nodeName = node.data + "_" + l;
 					}
-				} else {
-					continue;
+					
+					parent = path.get(j - 1);
+					
+					if (!("int".equals(node.type.toString()))) {
+						nonMaskedExpr[0] = new IdExpr(nodeName + t + at + parent.data + cov + t);
+						nonMaskedExpr[1] = new IdExpr(nodeName + f + at + parent.data + cov + f);
+						affectExpr[0] = new IdExpr(nodeName + t + at + parent.data + affect);
+						affectExpr[1] = new IdExpr(nodeName + f + at + parent.data + affect);
+						for (int k = 0; k < nonMaskedExpr.length; k++) {
+							lOperand = new BinaryExpr(nonMaskedExpr[k], BinaryOp.AND, 
+												new IdExpr(parent.data + observed));
+							rOperand = new BinaryExpr(affectExpr[k], BinaryOp.AND,
+												new BinaryExpr(token, BinaryOp.EQUAL, outState));
+							Expr condition = new UnaryExpr(UnaryOp.NOT, (new BinaryExpr(
+									lOperand, BinaryOp.OR, rOperand)));
+							
+							if (!allObs.contains(condition.toString())) {
+								lhs = new IdExpr(omcdc + (count++));
+								obligation = new Obligation(lhs, true, condition);
+								obligations.add(obligation);
+							}
+	//						allObs.append(obligation.condition).append(", ");
+							allObs += condition + ", ";
+						}
+					} else {
+						continue;
+					}
 				}
 			}
 		}
