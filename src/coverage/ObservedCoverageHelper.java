@@ -99,6 +99,7 @@ public class ObservedCoverageHelper {
 		HashMap<String, VarDecl> ids = getIds();
 		HashMap<String, Integer> children = new HashMap<>();
 		HashMap<String, Boolean> preNode = new HashMap<>();
+		String firstPreExpr = "";
 		
 		LustreMain.log(">>>>>> Building tree for " + root);
 		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
@@ -120,9 +121,15 @@ public class ObservedCoverageHelper {
 					return null;
 				} else if (seqMode > 0 
 						&& exprs.get(root.data).toString().contains(UnaryOp.PRE.toString() + " ")) {
-					seqMode++;
+					if (!firstPreExpr.equals(exprs.get(root.data).toString())) {
+						return null;
+					} else {
+						seqMode++;
+					}
 				} else if (seqMode == 0) {
 					// build first-level
+					firstPreExpr = exprs.get(root.data).toString();
+					
 					List<String> delays = delayMap.get(root.data);
 					System.out.println(delays);
 					for (int i = 0; i < delays.size(); i++) {
