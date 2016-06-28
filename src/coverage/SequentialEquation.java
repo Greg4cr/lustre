@@ -49,17 +49,7 @@ public class SequentialEquation {
 		
 		for (ObservedTreeNode node : firstLevel) {
 			lhs = node.data + seqUsedBy + root.data;
-//			Expr expr = new BoolExpr(true);
 			exprsMap.put(lhs, new BoolExpr(true));
-			
-//			if (!exprsMap.containsKey(lhs)) {
-//				exprsMap.put(lhs, expr);
-//			} else if (!exprsMap.get(lhs).toString().contains(expr.toString())) {
-////				System.out.println(">>>>>>>> " + exprsMap.get(lhs).toString());
-////				System.out.println(">>>>>>>>>>>>>>> " + expr.toString());
-//				expr = new BinaryExpr(expr, BinaryOp.OR, exprsMap.get(lhs));
-//				exprsMap.put(lhs, expr);
-//			}
 			
 			for (ObservedTreeNode child : node.getChildren()) {
 				generateObligation(exprsMap, child, root);
