@@ -20,6 +20,7 @@ public class AffectAtCaptureEquation {
 	
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	HashMap<VarDecl, ObservedTree> combUsedByTrees;
+	HashMap<String, List<String>> delayMap = new HashMap<>();
 	List<VarDecl> idList;
 	List<VarDecl> singleNodeList;
 	HashMap<VarDecl, ObservedTreeNode> singleNodeTrees = new HashMap<>();
@@ -43,9 +44,11 @@ public class AffectAtCaptureEquation {
 	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
 	
 	public AffectAtCaptureEquation(HashMap<VarDecl, ObservedTree> seqTrees,
-									HashMap<VarDecl, ObservedTree> combUsedTrees) {
+									HashMap<VarDecl, ObservedTree> combUsedTrees,
+									HashMap<String, List<String>> delayMap) {
 		this.sequentialTrees = seqTrees;
 		this.combUsedByTrees = combUsedTrees;
+		this.delayMap = delayMap;
 		populateMaps();
 	}
 	
@@ -134,7 +137,11 @@ public class AffectAtCaptureEquation {
 	}
 	
 	public void setSingleNodeTrees(HashMap<VarDecl, ObservedTreeNode> trees) {
-		this.singleNodeTrees = trees;
+		if (trees == null || trees.keySet().size() == 0) {
+			this.singleNodeTrees = new HashMap<VarDecl, ObservedTreeNode>();
+		} else {
+			this.singleNodeTrees = trees;
+		}
 	}
 	
 	private boolean isInLoop(ObservedTreeNode root, ObservedTreeNode leaf,
@@ -165,6 +172,7 @@ public class AffectAtCaptureEquation {
 				selfLoopRoots.add(path.get(0).data);
 			}
 		}
+		System.out.println("###### SelfLoopRoots: " + selfLoopRoots);
 		return selfLoopRoots;
 	}
 	
@@ -231,9 +239,13 @@ public class AffectAtCaptureEquation {
 		
 		for (int i = 0; i < paths.size(); i++) {
 			List<ObservedTreeNode> path = paths.get(i);
-
-			for (int j = path.size() - 2; j > 0; j--) {
+			
+			for (int j = path.size() - 1; j > 0; j--) {
 				int occurence = path.get(j).occurrence;
+				
+				if (delayMap.containsKey(path.get(j).data)) {
+					continue;
+				}
 				if ("int".equals(path.get(j - 1).type.toString())) {
 					continue;
 				}
@@ -310,15 +322,19 @@ public class AffectAtCaptureEquation {
 			root = path.get(0).data;
 			
 			for (int index = path.size() - 1; 0 < index; index--) {
-				int occurrence = path.get(index).occurrence;
+				int occurence = path.get(index).occurrence;
 				
-				for (int j = 0; j < occurrence; j++) {
-					if (occurrence == 1) {
-						node = path.get(index).data;
+				for (int j = 0; j < occurence; j++) {
+					if ("int".equals(path.get(j).type.toString())) {
+						node = "ArithExpr_" + j;
 					} else {
-						node = path.get(index).data + "_" + j;
+						node = path.get(index).data;
 					}
-									
+					
+					if (occurence > 1) {
+						node = node + "_" + j;
+					}
+					
 					father = path.get(index - 1).data;
 					
 					lhs[0] = node + t + at + father + affect;
