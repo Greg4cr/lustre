@@ -55,7 +55,8 @@ public class AffectAtCaptureEquation {
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 //		generateForSeqTrees(map);
-		generateForCombTrees(map);
+		generateForSeqDepTrees(map);
+//		generateForCombTrees(map);
 //		generateForSingleNodes(map);
 //		generateForLoops(map);
 		obligations.addAll(getObligations(map));
@@ -70,62 +71,6 @@ public class AffectAtCaptureEquation {
 		}
 		
 		return obligations;
-	}
-	
-	private void generateForLoops(HashMap<String, Expr> map) {
-		List<List<ObservedTreeNode>> paths = drawPaths(sequentialTrees, TYPE_SEQ);
-		IdExpr token = new IdExpr("token");
-		String seq = "_SEQ_USED_BY_";
-		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at ="_AT_", c = "_MCDC";
-		ObservedTreeNode node, leaf, root;
-		IdExpr seqUsed, rToken;
-		String[] lhs = new String[2];
-		IdExpr[] nonMasked = new IdExpr[2];
-		Expr premise, conclusion1, conclusion2;
-		
-		for (int i = 0; i < paths.size(); i++) {
-			List<ObservedTreeNode> path = paths.get(i);
-			root = path.get(0);
-			leaf = path.get(path.size() - 1);
-			
-			boolean isInLoop = isInLoop(root, leaf, paths);
-			if (isInLoop) {
-				// found a loop (hiding in two trees)
-				// generate obligations for the loop
-				for (int j = 1; j < path.size() - 1; j++) {
-					node = path.get(j);
-					
-					lhs[0] = node.data + t + at + root.data + affect;
-					lhs[1] = node.data + f + at + root.data + affect;
-					nonMasked[0] = new IdExpr(node.data + t + at + root.data + c + t);
-					nonMasked[1] = new IdExpr(node.data + f + at + root.data + c + f);
-					for (int k = 0; k < lhs.length; k++) {
-						seqUsed = new IdExpr(root.data + seq + leaf.data);
-						rToken = nodeToToken.get(leaf.data);
-						
-						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
-											new BinaryExpr(seqUsed, BinaryOp.AND, 
-													new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
-						conclusion1 = premise;
-						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
-						
-						Expr expr = new BinaryExpr(premise, 
-													BinaryOp.ARROW, 
-													new BinaryExpr(conclusion1, 
-																	BinaryOp.OR, 
-																	conclusion2));
-						if (!map.containsKey(lhs[k])) {
-							map.put(lhs[k], expr);
-						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
-							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
-							map.put(lhs[k], expr);
-						}
-					}
-				}
-			}
-			
-		}
 	}
 	
 	public void setSingleNodeList(List<VarDecl> singleNodeList) {
@@ -144,6 +89,22 @@ public class AffectAtCaptureEquation {
 		}
 	}
 	
+	private ObservedTreeNode getSuperRoot(ObservedTreeNode node, 
+											List<List<ObservedTreeNode>> paths) {
+		ObservedTreeNode supRoot = null;
+		
+		for (int i = 0; i < paths.size(); i++) {
+			List<ObservedTreeNode> path = paths.get(i);
+			int len = path.size();
+			
+			if (node.data.equals(path.get(len - 1).data)) {
+				supRoot = path.get(0);
+			}
+		}
+		
+		return supRoot;
+	}
+	
 	private boolean isInLoop(ObservedTreeNode root, ObservedTreeNode leaf,
 							List<List<ObservedTreeNode>> paths) {
 		Set<String> selfLoopNode = getSelfLoopRoots(paths);
@@ -160,6 +121,7 @@ public class AffectAtCaptureEquation {
 				isLoop = true;
 				break;
 			}
+			
 		}
 		return isLoop;
 	}
@@ -304,54 +266,63 @@ public class AffectAtCaptureEquation {
 		return inList;
 	}*/
 	
-	private void generateForSeqTrees(HashMap<String, Expr> map) {
+	private void generateForSeqDepTrees(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(sequentialTrees, TYPE_SEQ);
 		IdExpr token = new IdExpr("token");
 		String seq = "_SEQ_USED_BY_";
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
-		String node, father, root;
-		IdExpr seqUsed, rToken;
+		ObservedTreeNode node, father, root, supRoot;
+		IdExpr seqUsed, rootToken;
 		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
 		Expr premise, conclusion1, conclusion2;
 		
 		for (int i = 0; i < paths.size(); i++) {
+			// get find superToken if there is any
 			List<ObservedTreeNode> path = paths.get(i);
 			System.out.println("::: path :::\n\t" + path);
-			root = path.get(0).data;
+			root = path.get(0);
+			// get superRoot and superToken if there is any
+			// cases:	root -> nodeA -> nodeB -> ...
+			// 			superRoot -> ... -> root
+			supRoot = getSuperRoot(root, paths);
 			
-			for (int index = path.size() - 1; 0 < index; index--) {
+			for (int index = path.size() - 1; index > 0; index--) {
 				int occurence = path.get(index).occurrence;
-				
 				for (int j = 0; j < occurence; j++) {
-					if ("int".equals(path.get(j).type.toString())) {
-						node = "ArithExpr_" + j;
+					if ("int".equals(path.get(index).type.toString())) {
+						node = new ObservedTreeNode("ArithExpr_" + index, path.get(index).type);
+						node.occurrence = path.get(index).occurrence;
 					} else {
-						node = path.get(index).data;
+						node = path.get(index);
 					}
 					
 					if (occurence > 1) {
-						node = node + "_" + j;
+						node.data = node.data + "_" + j;
 					}
 					
-					father = path.get(index - 1).data;
-					
-					lhs[0] = node + t + at + father + affect;
-					lhs[1] = node + f + at + father + affect;
-					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
-					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
+					father = path.get(index - 1);
+					lhs[0] = node.data + t + at + father.data + affect;
+					lhs[1] = node.data + f + at + father.data + affect;
+					nonMasked[0] = new IdExpr(node.data + t + at + father.data + c + t);
+					nonMasked[1] = new IdExpr(node.data + f + at + father.data + c + f);
 					
 					for (int k = 0; k < lhs.length; k++) {
-						rToken = nodeToToken.get(root);
+						rootToken = nodeToToken.get(root.data);
 						
 						if (path.size() <= 2) {
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
 						} else {
-							seqUsed = new IdExpr(father + seq + root);
+							if (supRoot == null) {
+								seqUsed = new IdExpr(father.data + seq + root.data);
+							} else {
+								seqUsed = new IdExpr(father.data + seq + supRoot.data);
+								rootToken = nodeToToken.get(supRoot.data);
+							}
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
 												new BinaryExpr(seqUsed, BinaryOp.AND, 
-														new BinaryExpr(token, BinaryOp.EQUAL, rToken)));
+														new BinaryExpr(token, BinaryOp.EQUAL, rootToken)));
 						}
 						
 						conclusion1 = premise;
@@ -366,10 +337,13 @@ public class AffectAtCaptureEquation {
 							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
 							map.put(lhs[k], expr);
 						}
-					}
+					}					
 				}
 			}
+			
 		}
+		
+		
 	}
 	
 	private List<List<ObservedTreeNode>> drawPaths(HashMap<VarDecl, ObservedTree> trees, 
@@ -412,7 +386,7 @@ public class AffectAtCaptureEquation {
 		tokens = new IdExpr[sequentialTrees.size()];
 		count = 0;
 		
-//		System.out.println("============= drawing maps =============");
+		System.out.println("============= drawing maps =============");
 		for (VarDecl treeRoot : sequentialTrees.keySet()) {
 			tokens[count] = new IdExpr(prefix + (count + 1));
 			tokenToNode.put(tokens[count], treeRoot.id);
@@ -421,9 +395,9 @@ public class AffectAtCaptureEquation {
 			ObservedTreeNode root = sequentialTrees.get(treeRoot).root;
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
-//			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
-//			System.out.println(count + " node-to-token: " + tree.id + " - " + nodeToToken.get(tree.id));
-//			System.out.println(count + " dependency: " + tree.id + " >>> " + rootToLeavesMap.get(tree.id));
+			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
+			System.out.println(count + " node-to-token: " + treeRoot.id + " - " + nodeToToken.get(treeRoot.id));
+			System.out.println(count + " dependency: " + treeRoot.id + " >>> " + rootToLeavesMap.get(treeRoot.id));
 			count++;
 		}
 	}
