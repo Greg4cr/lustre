@@ -2,9 +2,7 @@ package coverage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
@@ -54,11 +52,9 @@ public class AffectAtCaptureEquation {
 	
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
-//		generateForSeqTrees(map);
 		generateForSeqDepTrees(map);
-//		generateForCombTrees(map);
-//		generateForSingleNodes(map);
-//		generateForLoops(map);
+		generateForCombTrees(map);
+		generateForSingleNodes(map);
 		obligations.addAll(getObligations(map));
 		return obligations;
 	}
@@ -103,39 +99,6 @@ public class AffectAtCaptureEquation {
 		}
 		
 		return supRoot;
-	}
-	
-	private boolean isInLoop(ObservedTreeNode root, ObservedTreeNode leaf,
-							List<List<ObservedTreeNode>> paths) {
-		Set<String> selfLoopNode = getSelfLoopRoots(paths);
-		boolean isLoop = false;
-		
-		for (int i = 0; i < paths.size(); i++) {
-			List<ObservedTreeNode> path = paths.get(i);
-			
-			if (!selfLoopNode.contains(root.data) && 
-					root.data.equals(path.get(path.size() - 1).data) &&
-					leaf.data.equals(path.get(0).data)) {
-					// if root is the leaf of some tree and
-					// leaf is the root of the tree, a loop has been found
-				isLoop = true;
-				break;
-			}
-			
-		}
-		return isLoop;
-	}
-	
-	private Set<String> getSelfLoopRoots(List<List<ObservedTreeNode>> paths) {
-		Set<String> selfLoopRoots = new HashSet<>();
-		for (int i = 0; i < paths.size(); i++) {
-			List<ObservedTreeNode> path = paths.get(i);
-			if (path.get(0).data.equals(path.get(path.size() - 1).data)) {
-				selfLoopRoots.add(path.get(0).data);
-			}
-		}
-		System.out.println("###### SelfLoopRoots: " + selfLoopRoots);
-		return selfLoopRoots;
 	}
 	
 	private void generateForSingleNodes(HashMap<String, Expr> map) {
@@ -309,17 +272,18 @@ public class AffectAtCaptureEquation {
 					nonMasked[1] = new IdExpr(node.data + f + at + father.data + c + f);
 					
 					for (int k = 0; k < lhs.length; k++) {
-						rootToken = nodeToToken.get(root.data);
 						
 						if (path.size() <= 2) {
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
 						} else {
-							if (supRoot == null) {
-								seqUsed = new IdExpr(father.data + seq + root.data);
-							} else {
+							if (supRoot != null && father.data.equals(root.data)) {
 								seqUsed = new IdExpr(father.data + seq + supRoot.data);
 								rootToken = nodeToToken.get(supRoot.data);
+							} else {
+								seqUsed = new IdExpr(father.data + seq + root.data);
+								rootToken = nodeToToken.get(root.data);
 							}
+							
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
 												new BinaryExpr(seqUsed, BinaryOp.AND, 
 														new BinaryExpr(token, BinaryOp.EQUAL, rootToken)));
@@ -342,8 +306,6 @@ public class AffectAtCaptureEquation {
 			}
 			
 		}
-		
-		
 	}
 	
 	private List<List<ObservedTreeNode>> drawPaths(HashMap<VarDecl, ObservedTree> trees, 
