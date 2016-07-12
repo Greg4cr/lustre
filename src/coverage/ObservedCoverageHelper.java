@@ -208,7 +208,7 @@ public class ObservedCoverageHelper {
 			}
 		}
 		System.out.println("(" + root.data + ") has " + root.getNumberOfChildren() 
-							+ " children: "+ root.getChildren().toString());
+							+ " children: "+ root.children.toString());
 		return root;
 	}
 	
@@ -300,7 +300,6 @@ public class ObservedCoverageHelper {
 	public List<VarDecl> getSingleNodeList(HashMap<VarDecl, ObservedTree> referenceTrees) {
 		List<ObservedTreeNode> nodes = new ArrayList<>();
 		List<String> treeNodeList = new ArrayList<>();
-//		List<VarDecl> singleNodeList = new ArrayList<>();
 		List<VarDecl> idList = getIdList();
 		List<VarDecl> inputList = node.inputs;
 		
@@ -325,24 +324,7 @@ public class ObservedCoverageHelper {
 		
 		return this.singleNodeList;
 	}	
-	
-	/*
-	 * Search for all roots of delay dependency trees in given node
-	 */
-	/*private List<String> getSeqTreeRoots(HashMap<String, Expr> exprTable) {
-		List<String> rootStr = new ArrayList<String>();
 		
-		for (String lhs : exprTable.keySet()) {
-			if (exprTable.get(lhs).toString().contains(UnaryOp.PRE + " ")) {
-				rootStr.add(lhs);
-			}
-		}
-		
-		return rootStr;
-	}*/
-	
-	
-	
 	/*
 	 * re-organize expressions of given node with hashtable
 	 */
