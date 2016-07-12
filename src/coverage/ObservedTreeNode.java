@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jkind.lustre.Type;
-import jkind.lustre.VarDecl;
 
 public class ObservedTreeNode {
     public String data;
     public Type type;
     public boolean isPre;
     public ObservedTreeNode parent;
-    private List<ObservedTreeNode> children;
+    public List<ObservedTreeNode> children;
     public int occurrence;
     
     public ObservedTreeNode(String data, Type type) {
@@ -19,6 +18,8 @@ public class ObservedTreeNode {
     	setType(type);
     	setIsPre(false);
     	setOccurrence(1);
+    	this.parent = null;
+    	children = new ArrayList<>();
     }
     
     public ObservedTreeNode(String data, Type type, boolean isPre) {
@@ -36,16 +37,16 @@ public class ObservedTreeNode {
 		this.occurrence = occurrence;
 	}
 	
-    public List<ObservedTreeNode> getChildren() {
-        if (this.children == null) {
-            return new ArrayList<ObservedTreeNode>();
-        }
-        return this.children;
-    }
- 
-    public void setChildren(List<ObservedTreeNode> children) {
-        this.children = children;
-    }
+//    public List<ObservedTreeNode> getChildren() {
+//        if (this.children == null) {
+//            return new ArrayList<ObservedTreeNode>();
+//        }
+//        return this.children;
+//    }
+// 
+//    public void setChildren(List<ObservedTreeNode> children) {
+//        this.children = children;
+//    }
  
     public int getNumberOfChildren() {
         if (children == null) {
@@ -147,7 +148,7 @@ public class ObservedTreeNode {
 		// append the node to the list next to its parent
 		path.add(root);
     	
-    	if (root.children == null) {
+    	if (root.children == null || root.children.isEmpty()) {
     		// add one path (root -> node list -> leaf)
     		paths.add(new ArrayList<ObservedTreeNode>(path));
     	} else {
