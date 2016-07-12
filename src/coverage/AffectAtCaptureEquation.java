@@ -19,6 +19,7 @@ public class AffectAtCaptureEquation {
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	HashMap<VarDecl, ObservedTree> combUsedByTrees;
 	HashMap<String, List<String>> delayMap = new HashMap<>();
+	
 	List<VarDecl> idList;
 	List<VarDecl> singleNodeList;
 	HashMap<VarDecl, ObservedTreeNode> singleNodeTrees = new HashMap<>();
@@ -53,8 +54,8 @@ public class AffectAtCaptureEquation {
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		generateForSeqDepTrees(map);
-		generateForCombTrees(map);
-		generateForSingleNodes(map);
+//		generateForCombTrees(map);
+//		generateForSingleNodes(map);
 		obligations.addAll(getObligations(map));
 		return obligations;
 	}
@@ -85,20 +86,25 @@ public class AffectAtCaptureEquation {
 		}
 	}
 	
-	private ObservedTreeNode getSuperRoot(ObservedTreeNode node, 
-											List<List<ObservedTreeNode>> paths) {
-		ObservedTreeNode supRoot = null;
-		
+	private HashMap<ObservedTreeNode, List<ObservedTreeNode>> populateSuperRootMap(List<List<ObservedTreeNode>> paths) {
+		HashMap<ObservedTreeNode, List<ObservedTreeNode>> superRootsMap = new HashMap<>();
+				
 		for (int i = 0; i < paths.size(); i++) {
-			List<ObservedTreeNode> path = paths.get(i);
-			int len = path.size();
+			ObservedTreeNode root = paths.get(i).get(0);
+			List<ObservedTreeNode> supRoots = new ArrayList<>();
 			
-			if (node.data.equals(path.get(len - 1).data)) {
-				supRoot = path.get(0);
+			for (int j = 0; j < paths.size(); j++) {
+				List<ObservedTreeNode> path = paths.get(j);
+				int len = path.size();
+				
+				if (root.data.equals(path.get(len - 1).data)) {
+					supRoots.add(path.get(0));
+				}
 			}
+			superRootsMap.put(root, supRoots);
 		}
 		
-		return supRoot;
+		return superRootsMap;
 	}
 	
 	private void generateForSingleNodes(HashMap<String, Expr> map) {
@@ -115,7 +121,7 @@ public class AffectAtCaptureEquation {
 		
 		for (VarDecl exprId : this.singleNodeTrees.keySet()) {
 			ObservedTreeNode root = this.singleNodeTrees.get(exprId);
-			List<ObservedTreeNode> children = root.getChildren();
+			List<ObservedTreeNode> children = root.children;
 			for (ObservedTreeNode child : children) {
 				if ("int".equals(child.type.toString())) {
 					node = "ArithExpr";
@@ -212,34 +218,22 @@ public class AffectAtCaptureEquation {
 			}
 		}
 	}
-	
-	/*private <T> boolean isInList(List<T> list, Object obj) {
-		boolean inList = false;
-		if (list == null) {
-			return inList;
-		}
-		
-		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i).toString().equals(obj.toString())) {
-				inList = true;
-				break;
-			}
-		}
-		
-		return inList;
-	}*/
-	
+
 	private void generateForSeqDepTrees(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(sequentialTrees, TYPE_SEQ);
+		HashMap<ObservedTreeNode, List<ObservedTreeNode>> superRootsMap = populateSuperRootMap(paths);
+		
 		IdExpr token = new IdExpr("token");
 		String seq = "_SEQ_USED_BY_";
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
-		ObservedTreeNode node, father, root, supRoot;
+		String nodeStr;
+		ObservedTreeNode node, father, root;
+		List<ObservedTreeNode> superRoots;
 		IdExpr seqUsed, rootToken;
 		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
-		Expr premise, conclusion1, conclusion2;
+		Expr premise, tokenExpr, conclusion1, conclusion2;
 		
 		for (int i = 0; i < paths.size(); i++) {
 			// get find superToken if there is any
@@ -249,7 +243,8 @@ public class AffectAtCaptureEquation {
 			// get superRoot and superToken if there is any
 			// cases:	root -> nodeA -> nodeB -> ...
 			// 			superRoot -> ... -> root
-			supRoot = getSuperRoot(root, paths);
+			superRoots = superRootsMap.get(root);
+			System.out.println("super roots of ( " + root.data + "):" + superRoots);
 			
 			for (int index = path.size() - 1; index > 0; index--) {
 				int occurence = path.get(index).occurrence;
@@ -262,31 +257,44 @@ public class AffectAtCaptureEquation {
 					}
 					
 					if (occurence > 1) {
-						node.data = node.data + "_" + j;
+						nodeStr = node.data + "_" + j;
+					} else {
+						nodeStr = node.data;
 					}
 					
 					father = path.get(index - 1);
-					lhs[0] = node.data + t + at + father.data + affect;
-					lhs[1] = node.data + f + at + father.data + affect;
-					nonMasked[0] = new IdExpr(node.data + t + at + father.data + c + t);
-					nonMasked[1] = new IdExpr(node.data + f + at + father.data + c + f);
+					lhs[0] = nodeStr + t + at + father.data + affect;
+					lhs[1] = nodeStr + f + at + father.data + affect;
+					nonMasked[0] = new IdExpr(nodeStr + t + at + father.data + c + t);
+					nonMasked[1] = new IdExpr(nodeStr + f + at + father.data + c + f);
 					
 					for (int k = 0; k < lhs.length; k++) {
 						
 						if (path.size() <= 2) {
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
 						} else {
-							if (supRoot != null && father.data.equals(root.data)) {
-								seqUsed = new IdExpr(father.data + seq + supRoot.data);
-								rootToken = nodeToToken.get(supRoot.data);
-							} else {
-								seqUsed = new IdExpr(father.data + seq + root.data);
-								rootToken = nodeToToken.get(root.data);
+							seqUsed = new IdExpr(father.data + seq + root.data);
+							rootToken = nodeToToken.get(root.data);
+							tokenExpr = new BinaryExpr(seqUsed, BinaryOp.AND,
+											new BinaryExpr(token, BinaryOp.EQUAL, rootToken));
+							
+							if (!superRoots.isEmpty()) {
+								if (superRoots.size() > 1 || father.data.equals(root.data)) {
+									seqUsed = new IdExpr(father.data + seq + superRoots.get(0).data);
+									rootToken = nodeToToken.get(superRoots.get(0).data);
+									tokenExpr = new BinaryExpr(seqUsed, BinaryOp.AND, 
+														new BinaryExpr(token, BinaryOp.EQUAL, rootToken));
+								}
+								for (int m = 1; m < superRoots.size(); m++) {
+									seqUsed = new IdExpr(father.data + seq + superRoots.get(m).data);
+									rootToken = nodeToToken.get(superRoots.get(m).data);
+									Expr tmpExpr = new BinaryExpr(seqUsed, BinaryOp.AND, 
+														new BinaryExpr(token, BinaryOp.EQUAL, rootToken));
+									tokenExpr = new BinaryExpr(tokenExpr, BinaryOp.OR, tmpExpr);
+								}
 							}
 							
-							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
-												new BinaryExpr(seqUsed, BinaryOp.AND, 
-														new BinaryExpr(token, BinaryOp.EQUAL, rootToken)));
+							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, tokenExpr);
 						}
 						
 						conclusion1 = premise;
