@@ -19,10 +19,10 @@ import main.LustreMain;
  */
 public class ObservedCoverageHelper {
 	private Node node;
-	private List<VarDecl> idList = new ArrayList<VarDecl>();
+	private List<VarDecl> idList = new ArrayList<>();
 	private boolean isSeqRoot;
 	private boolean isPre = false;
-	private List<VarDecl> singleNodeList = new ArrayList<VarDecl>();
+	private List<VarDecl> singleNodeList = new ArrayList<>();
 	private HashMap<String, List<String>> delayMap = new HashMap<>();
 	
 	public ObservedCoverageHelper(Node node) {
@@ -100,6 +100,7 @@ public class ObservedCoverageHelper {
 		HashMap<String, Integer> children = new HashMap<>();
 		HashMap<String, Boolean> preNode = new HashMap<>();
 		String firstPreExpr = "";
+		HashMap<String, String> arithIds = new HashMap<>();
 		
 		LustreMain.log(">>>>>> Building tree for " + root);
 		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
@@ -137,6 +138,21 @@ public class ObservedCoverageHelper {
 						preNode.put(delays.get(i), true);
 					}
 				}
+			}
+		}
+		
+		for (String arithExpr : Obligation.arithExprByExpr.keySet()) {
+			boolean containsArith = exprs.get(root.data).toString().contains(arithExpr);
+			if (containsArith) {
+				for (String lhs : exprs.keySet()) {
+					if (exprs.get(root.data).toString().contains(lhs) && arithExpr.contains(lhs)) {
+						arithIds.put(lhs, Obligation.arithExprByExpr.get(arithExpr));
+						System.out.println(exprs.get(root.data).toString() +
+								"\n\tcontains arith expr:\n\t" + arithExpr +
+								"\n\tget arith-pair:\n\t" + lhs + " vs " + arithIds.get(lhs));
+					}
+				}
+				
 			}
 		}
 		
@@ -188,16 +204,23 @@ public class ObservedCoverageHelper {
 		}
 		
 		System.out.println("children of " + root.toString()	+
-							"\t::::: " + children.keySet());
+							"\t::::: " + children.keySet() + ", " + arithIds.keySet());
 		
 		// add children to current root
 		for (String child : children.keySet()) {
+			
 			ObservedTreeNode newTreeNode = new ObservedTreeNode(child, ids.get(child).type);
 			newTreeNode.setOccurrence(children.get(child));
 			newTreeNode.setIsPre(preNode.get(child));
+			if (arithIds.get(child) != null) {
+				newTreeNode.setIsArithExpr(true);
+				newTreeNode.setArithId(arithIds.get(child));
+			}
 			root.addChild(newTreeNode);
 			System.out.println("xxxxxxxx new node: " + newTreeNode);
 			System.out.println(exprs.get(child));
+			
+			
 			if (exprs.keySet().contains(child)) {
 				// build the tree recursively if next node is 
 				// on the left-hand-side of some expressions

@@ -9,7 +9,6 @@ import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
-import jkind.lustre.Node;
 import jkind.lustre.VarDecl;
 
 public class SequentialEquation {
@@ -43,7 +42,7 @@ public class SequentialEquation {
 	private void generateObligationForTree(HashMap<String, Expr> exprsMap, 
 												ObservedTree tree) {
 		ObservedTreeNode root = tree.root;
-		List<ObservedTreeNode> firstLevel = root.getChildren();
+		List<ObservedTreeNode> firstLevel = root.children;
 		String seqUsedBy = "_SEQ_USED_BY_";
 		String lhs;
 		
@@ -51,7 +50,7 @@ public class SequentialEquation {
 			lhs = node.data + seqUsedBy + root.data;
 			exprsMap.put(lhs, new BoolExpr(true));
 			
-			for (ObservedTreeNode child : node.getChildren()) {
+			for (ObservedTreeNode child : node.children) {
 				generateObligation(exprsMap, child, root);
 			}
 		}
@@ -83,7 +82,7 @@ public class SequentialEquation {
 		}
 		
 //		if (node.getChildren() != null) {
-			for (ObservedTreeNode child : node.getChildren()) {
+			for (ObservedTreeNode child : node.children) {
 				generateObligation(exprsMap, child, root);
 			}
 //		}

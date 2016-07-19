@@ -54,8 +54,8 @@ public class AffectAtCaptureEquation {
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		generateForSeqDepTrees(map);
-//		generateForCombTrees(map);
-//		generateForSingleNodes(map);
+		generateForCombTrees(map);
+		generateForSingleNodes(map);
 		obligations.addAll(getObligations(map));
 		return obligations;
 	}
@@ -123,8 +123,10 @@ public class AffectAtCaptureEquation {
 			ObservedTreeNode root = this.singleNodeTrees.get(exprId);
 			List<ObservedTreeNode> children = root.children;
 			for (ObservedTreeNode child : children) {
-				if ("int".equals(child.type.toString())) {
-					node = "ArithExpr";
+				if ("int".equals(child.type.toString()) && !child.isArithExpr) {
+					continue;
+				} else if (child.isArithExpr) {
+					node = child.arithId;
 				} else {
 					node = child.data;
 				}
@@ -182,12 +184,15 @@ public class AffectAtCaptureEquation {
 				}
 				
 				for (int l = 0; l < occurence; l++) {
-					if ("int".equals(path.get(j).type.toString())) {
-						node = "ArithExpr_" + l;
+					ObservedTreeNode child = path.get(j);
+					if ("int".equals(child.type.toString()) && !child.isArithExpr) {
+						continue;
+					} else if (child.isArithExpr) {
+						node = child.arithId;
 					} else {
-						node = path.get(j).data;
+						node = child.data;
 					}
-					
+										
 					if (occurence > 1) {
 						node = node + "_" + l;
 					}
@@ -227,8 +232,8 @@ public class AffectAtCaptureEquation {
 		String seq = "_SEQ_USED_BY_";
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
-		String nodeStr;
-		ObservedTreeNode node, father, root;
+		String node;
+		ObservedTreeNode father, root;
 		List<ObservedTreeNode> superRoots;
 		IdExpr seqUsed, rootToken;
 		String[] lhs = new String[2];
@@ -248,25 +253,26 @@ public class AffectAtCaptureEquation {
 			
 			for (int index = path.size() - 1; index > 0; index--) {
 				int occurence = path.get(index).occurrence;
+				ObservedTreeNode child = path.get(index);
 				for (int j = 0; j < occurence; j++) {
-					if ("int".equals(path.get(index).type.toString())) {
-						node = new ObservedTreeNode("ArithExpr_" + index, path.get(index).type);
-						node.occurrence = path.get(index).occurrence;
+					
+					if ("int".equals(child.type.toString()) && !child.isArithExpr) {
+						continue;
+					} else if (child.isArithExpr) {
+						node = child.arithId;
 					} else {
-						node = path.get(index);
+						node = child.data;
 					}
 					
 					if (occurence > 1) {
-						nodeStr = node.data + "_" + j;
-					} else {
-						nodeStr = node.data;
+						node = node + "_" + j;
 					}
 					
 					father = path.get(index - 1);
-					lhs[0] = nodeStr + t + at + father.data + affect;
-					lhs[1] = nodeStr + f + at + father.data + affect;
-					nonMasked[0] = new IdExpr(nodeStr + t + at + father.data + c + t);
-					nonMasked[1] = new IdExpr(nodeStr + f + at + father.data + c + f);
+					lhs[0] = node + t + at + father.data + affect;
+					lhs[1] = node + f + at + father.data + affect;
+					nonMasked[0] = new IdExpr(node + t + at + father.data + c + t);
+					nonMasked[1] = new IdExpr(node + f + at + father.data + c + f);
 					
 					for (int k = 0; k < lhs.length; k++) {
 						

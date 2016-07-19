@@ -24,7 +24,7 @@ public class CombObservedEquation {
 //			System.out.println("Generate comb observed expressions for [" + root + "]...");
 			tree = referenceTrees.get(rootVar);
 //			System.out.println("single node tree? " + tree.root.getChildren().isEmpty());
-			if (tree.root.getChildren().isEmpty()) {
+			if (tree.root.children.isEmpty()) {
 				// for single-node tree
 				genereateForSingleNodes(map, tree.root);
 			} else {
@@ -77,7 +77,7 @@ public class CombObservedEquation {
 		// COMB_OBSERVED for root
 		map.put(lhs, new BoolExpr(true));
 		
-		for (ObservedTreeNode node : root.getChildren()) {
+		for (ObservedTreeNode node : root.children) {
 			generateForNode(map, node);
 		}
 	}
@@ -102,7 +102,7 @@ public class CombObservedEquation {
 			map.put(lhs, expr);
 		}
 		
-		for (ObservedTreeNode child : node.getChildren()) {
+		for (ObservedTreeNode child : node.children) {
 			generateForNode(map, child);
 		}
 	}

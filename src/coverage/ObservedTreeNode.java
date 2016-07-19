@@ -12,11 +12,14 @@ public class ObservedTreeNode {
     public ObservedTreeNode parent;
     public List<ObservedTreeNode> children;
     public int occurrence;
+    public boolean isArithExpr;
+    public String arithId;
     
     public ObservedTreeNode(String data, Type type) {
     	setName(data);
     	setType(type);
     	setIsPre(false);
+    	setArithId(null);
     	setOccurrence(1);
     	this.parent = null;
     	children = new ArrayList<>();
@@ -81,6 +84,14 @@ public class ObservedTreeNode {
     
     public void setIsPre(boolean isPre) {
     	this.isPre = isPre;
+    }
+    
+    public void setIsArithExpr(boolean isArithExpr) {
+    	this.isArithExpr = isArithExpr;
+    }
+    
+    public void setArithId(String arithId) {
+    	this.arithId = arithId;
     }
     
 //    // return all leaf nodes of specific node
@@ -163,10 +174,13 @@ public class ObservedTreeNode {
     	StringBuilder node = new StringBuilder();
     	
     	node.append("(");
-    	node.append(this.data).append(", ");
-    	node.append(this.type.toString()).append(", ");
-    	node.append(this.occurrence).append(", ");
-    	node.append(this.isPre);
+    	node.append("data=").append(this.data).append(", ");
+    	node.append("type=").append(this.type.toString()).append(", ");
+    	node.append("occur=").append(this.occurrence).append(", ");
+    	node.append("isPre=").append(this.isPre);
+    	if (this.isArithExpr) {
+    		node.append(", ").append("arithId=").append(this.arithId);
+    	}
     	node.append(")");
     	
     	return node.toString();
