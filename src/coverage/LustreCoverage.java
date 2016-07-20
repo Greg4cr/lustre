@@ -163,7 +163,6 @@ public final class LustreCoverage {
 				}
 			}
 			
-			
 			if (coverage == Coverage.OMCDC) {
 				HashMap<String, Expr> map = new HashMap<>();
 				
@@ -212,13 +211,7 @@ public final class LustreCoverage {
 				}
 
 				String property = "";
-				if (coverage == coverage.OMCDC) {
-					// name pattern for observed coverage. Meng
-//					property = obligation.condition + "_COMB_USED_BY_" + id;
-//					count++;
-//					builder.addEquation(new Equation(new IdExpr(property), 
-//								obligation.obligation));
-				} else {
+				if (coverage != coverage.OMCDC) {
 					// keep the rest in original pattern.
 					property = obligation.condition + "_"
 						+ (obligation.polarity ? "TRUE" : "FALSE") + "_AT_"
@@ -229,9 +222,11 @@ public final class LustreCoverage {
 					builder.addEquation(new Equation(new IdExpr(property),
 							new UnaryExpr(UnaryOp.NOT, obligation.obligation)));
 				}
-
-				builder.addLocal(new VarDecl(property, NamedType.BOOL));
-				builder.addProperty(property);
+				
+				if (!"".equals(property)) {
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
+					builder.addProperty(property);
+				}
 			}
 		}
 		
