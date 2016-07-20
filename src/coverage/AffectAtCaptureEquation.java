@@ -362,7 +362,7 @@ public class AffectAtCaptureEquation {
 		tokens = new IdExpr[sequentialTrees.size()];
 		count = 0;
 		
-		System.out.println("============= drawing maps =============");
+//		System.out.println("============= drawing maps =============");
 		for (VarDecl treeRoot : sequentialTrees.keySet()) {
 			tokens[count] = new IdExpr(prefix + (count + 1));
 			tokenToNode.put(tokens[count], treeRoot.id);
@@ -371,9 +371,9 @@ public class AffectAtCaptureEquation {
 			ObservedTreeNode root = sequentialTrees.get(treeRoot).root;
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
-			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
-			System.out.println(count + " node-to-token: " + treeRoot.id + " - " + nodeToToken.get(treeRoot.id));
-			System.out.println(count + " dependency: " + treeRoot.id + " >>> " + rootToLeavesMap.get(treeRoot.id));
+//			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
+//			System.out.println(count + " node-to-token: " + treeRoot.id + " - " + nodeToToken.get(treeRoot.id));
+//			System.out.println(count + " dependency: " + treeRoot.id + " >>> " + rootToLeavesMap.get(treeRoot.id));
 			count++;
 		}
 	}

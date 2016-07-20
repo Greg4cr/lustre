@@ -239,10 +239,10 @@ public final class LustreCoverage {
 			// obligations for observed coverage only.
 			String property = "";
 			
-			System.out.println("******** Delays *******");
-			for (String key : delayMap.keySet()) {
-				System.out.println("\"" + key + "\" " + delayMap.get(key));
-			}
+//			System.out.println("******** Delays *******");
+//			for (String key : delayMap.keySet()) {
+//				System.out.println("\"" + key + "\" " + delayMap.get(key));
+//			}
 			
 			// set delay mapping
 			((OMCDCVisitor)coverageVisitor).setDelayMap(delayMap);

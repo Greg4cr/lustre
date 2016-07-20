@@ -111,7 +111,7 @@ public class ObservedTreeNode {
     // return all leaf nodes of specific node
     public List<ObservedTreeNode> getAllLeafNodes() {
     	List<ObservedTreeNode> leaves = new ArrayList<>();
-    	if (this.children == null) {
+    	if (this.children == null || this.children.isEmpty()) {
     		leaves.add(this);
     	} else {
     		for (ObservedTreeNode child : this.children) {

@@ -52,19 +52,19 @@ public class OMCDCVisitor extends ConditionVisitor {
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		// need info from Obligation.arithExprByExpr 
-		// and/or Obligation.arithExprById, 
+		// and Obligation.arithExprById to build trees, 
 		// which will be filled by MC/DC Visitor,
 		// therefore, get MC/DC obligations first.
 		obligations.addAll(getMCDCObligation(exprTypeVisitor));
 		
-//		obHelper.setDelayMap(delayMap);
-//		delayDependencyTrees = obHelper.buildSeqTrees();
-//		refDependencyTrees = obHelper.buildRefTrees();
+		obHelper.setDelayMap(delayMap);
+		delayDependencyTrees = obHelper.buildSeqTrees();
+		refDependencyTrees = obHelper.buildRefTrees();
 		
-//		obligations.addAll(getCombObervedObligations());
-//		obligations.addAll(getSeqUsedByObligations());
-//		obligations.addAll(getTokenActions());
-//		obligations.addAll(getAffectAtCaptureObligations()); 
+		obligations.addAll(getCombObervedObligations());
+		obligations.addAll(getSeqUsedByObligations());
+		obligations.addAll(getTokenActions());
+		obligations.addAll(getAffectAtCaptureObligations()); 
 		obligations.addAll(getObligations());
 		
 		return obligations;
@@ -393,13 +393,13 @@ public class OMCDCVisitor extends ConditionVisitor {
 		}
 		
 		// output map for testing
-		for (String key : obligationMap.keySet()) {
-			System.out.print(key + " >>> ");
-			for (String val : obligationMap.get(key).keySet()) {
-				System.out.print(val + ", " + obligationMap.get(key).get(val) + "; ");
-			}
-			System.out.println();
-		}
+//		for (String key : obligationMap.keySet()) {
+//			System.out.print(key + " >>> ");
+//			for (String val : obligationMap.get(key).keySet()) {
+//				System.out.print(val + ", " + obligationMap.get(key).get(val) + "; ");
+//			}
+//			System.out.println();
+//		}
 		
 		return obligations;
 	}

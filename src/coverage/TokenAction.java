@@ -160,9 +160,9 @@ public class TokenAction {
 			ObservedTreeNode root = sequentialTrees.get(tree).root;
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
-			System.out.println(count + " token-to-node: [" + tokens[count] + "] - " + tokenToNode.get(tokens[count]));
-			System.out.println(count + " node-to-token: [" + node + "] - " + nodeToToken.get(node));
-			System.out.println(count + " dependency: [" + node + "] >>> " + rootToLeavesMap.get(node));
+//			System.out.println(count + " token-to-node: [" + tokens[count] + "] - " + tokenToNode.get(tokens[count]));
+//			System.out.println(count + " node-to-token: [" + node + "] - " + nodeToToken.get(node));
+//			System.out.println(count + " dependency: [" + node + "] >>> " + rootToLeavesMap.get(node));
 			count++;
 		}
 	}
