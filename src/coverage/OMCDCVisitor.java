@@ -2,25 +2,21 @@ package coverage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
-import enums.Polarity;
 import types.ExprTypeVisitor;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Equation;
-import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
-import jkind.lustre.IntExpr;
 import jkind.lustre.Node;
-import jkind.lustre.Program;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 
+/* Generate Obligations for OMC/DC */
 public class OMCDCVisitor extends ConditionVisitor {
 	Node node;
 	ObservedCoverageHelper obHelper;
@@ -44,28 +40,32 @@ public class OMCDCVisitor extends ConditionVisitor {
 	// delay dependency tree and reference dependency tree
 	HashMap<VarDecl, ObservedTree> delayDependencyTrees = new HashMap<>();
 	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
+	HashMap<String, HashMap<String, Integer>> obligationMap = new HashMap<>();
 		
 	public OMCDCVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
 		super(exprTypeVisitor);
-		this.node = node;
+		this.node = node; 
 		this.obHelper = new ObservedCoverageHelper(node);
 	}
 	
 	// main entrance to get OMCDC obligations
 	public List<Obligation> generate() {
-		obHelper.setDelayMap(delayMap);
-		delayDependencyTrees = obHelper.buildSeqTrees();
-		refDependencyTrees = obHelper.buildRefTrees();
-		
 		List<Obligation> obligations = new ArrayList<>();
+		// need info from Obligation.arithExprByExpr 
+		// and/or Obligation.arithExprById, 
+		// which will be filled by MC/DC Visitor,
+		// therefore, get MC/DC obligations first.
+		obligations.addAll(getMCDCObligation(exprTypeVisitor));
 		
-//		obligations.addAll(getMCDCObligation(exprTypeVisitor)); // done
-//		obligations.addAll(getCombObervedObligations());  // done
+//		obHelper.setDelayMap(delayMap);
+//		delayDependencyTrees = obHelper.buildSeqTrees();
+//		refDependencyTrees = obHelper.buildRefTrees();
+		
+//		obligations.addAll(getCombObervedObligations());
 //		obligations.addAll(getSeqUsedByObligations());
-//		obligations.addAll(getTokenActions());	// done
-//		// FIXME
-		obligations.addAll(getAffectAtCaptureObligations()); // bugs to fix
-//		obligations.addAll(getObligations());
+//		obligations.addAll(getTokenActions());
+//		obligations.addAll(getAffectAtCaptureObligations()); 
+		obligations.addAll(getObligations());
 		
 		return obligations;
 	}
@@ -352,13 +352,15 @@ public class OMCDCVisitor extends ConditionVisitor {
 	}
 	
 	// get MCDC obligations (without prefix NOTs), using original APIs
+	// and populate obligationMap for omcdc obligation generation
 	private List<Obligation> getMCDCObligation(ExprTypeVisitor exprTypeVisitor) {
 		mcdcVisitor = new MCDCVisitor(exprTypeVisitor);
 		List<Obligation> obligations = new ArrayList<>();
 		for (Equation equation : node.equations) {
 			List<Obligation> obs = equation.expr.accept(mcdcVisitor);
 			String id = null;
-
+			HashMap<String, Integer> conditions = new HashMap<>();
+			
 			if (equation.lhs.isEmpty()) {
 				id = "EMPTY";
 			} else {
@@ -372,14 +374,31 @@ public class OMCDCVisitor extends ConditionVisitor {
 			
 			String property;
 			for (Obligation ob : obs) {
+				if (conditions.containsKey(ob.condition)) {
+					conditions.put(ob.condition, conditions.get(ob.condition) + 1);
+				} else {
+					conditions.put(ob.condition, 1);
+				}
+
 				property = ob.condition + "_"
 						+ (ob.polarity ? "TRUE" : "FALSE") + "_AT_"
 						+ id + "_MCDC_"
 						+ (ob.expressionPolarity ? "TRUE" : "FALSE");
 				properties.add(property);
-				Obligation currentOb = new Obligation(new IdExpr(property), false, ob.obligation);
+				Obligation currentOb = new Obligation(new IdExpr(property), true, ob.obligation);
 				obligations.add(currentOb);
 			}
+			
+			obligationMap.put(id, conditions);
+		}
+		
+		// output map for testing
+		for (String key : obligationMap.keySet()) {
+			System.out.print(key + " >>> ");
+			for (String val : obligationMap.get(key).keySet()) {
+				System.out.print(val + ", " + obligationMap.get(key).get(val) + "; ");
+			}
+			System.out.println();
 		}
 		
 		return obligations;
@@ -403,18 +422,16 @@ public class OMCDCVisitor extends ConditionVisitor {
 		TokenAction tokenAction = new TokenAction(delayDependencyTrees);
 		tokenAction.setInIdList(obHelper.getInStrList());
 		
-		if (delayDependencyTrees.size() > 0) {
-			tokenAction.setHasDynamic(true);
-		} else {
-			tokenAction.setHasDynamic(false);
-		}
+		boolean dynamic = (delayDependencyTrees.size() > 0);
+		tokenAction.setHasDynamic(dynamic);
+		
 		return tokenAction.generate();
 	}
 	
 	// generate affecting_at_capture expressions
 	private List<Obligation> getAffectAtCaptureObligations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayDependencyTrees,
-				refDependencyTrees);
+				refDependencyTrees, delayMap);
 		affect.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
 		affect.setSingleNodeTrees(obHelper.getSingleNodeTrees());
 		return affect.generate();
@@ -422,8 +439,7 @@ public class OMCDCVisitor extends ConditionVisitor {
 	
 	// generate omcdc obligations for each expression
 	private List<Obligation> getObligations() {
-		OMCDCObligation obligation = new OMCDCObligation(delayDependencyTrees,
-				refDependencyTrees);
+		OMCDCObligation obligation = new OMCDCObligation(obligationMap);
 		return obligation.generate();
 	}
 }
