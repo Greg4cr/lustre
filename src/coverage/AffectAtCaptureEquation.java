@@ -215,8 +215,9 @@ public class AffectAtCaptureEquation {
 						if (!map.containsKey(lhs[k])) {
 							map.put(lhs[k], expr);
 						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
-							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
-							map.put(lhs[k], expr);
+							continue;
+//							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
+//							map.put(lhs[k], expr);
 						}
 					}
 				}

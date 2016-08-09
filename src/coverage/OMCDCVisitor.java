@@ -9,6 +9,7 @@ import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Equation;
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
 import jkind.lustre.Node;
@@ -295,14 +296,30 @@ public class OMCDCVisitor extends ConditionVisitor {
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
 		for (Obligation thenOb : thenObs) {
-//			System.out.println("thenOb >>>>> " + thenOb.toString());
-			thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND, thenOb.obligation);
+//				System.out.println("thenOb >>>>> " + thenOb.toString());
+			
+			if ((expr.thenExpr instanceof IdExpr)
+					|| (expr.thenExpr instanceof UnaryExpr
+						&& ((UnaryExpr)expr.thenExpr).op.equals(UnaryOp.NOT)
+						&& ((UnaryExpr)expr.thenExpr).expr instanceof IdExpr)) {
+				thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND, new BoolExpr(true));
+			} else {
+				thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND, thenOb.obligation);
+			}
+			
 		}
 		
 		for (Obligation elseOb : elseObs) {
 //			System.out.println("elseOb >>>>> " + elseOb.toString());
-			elseOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT, expr.cond),
-					BinaryOp.AND, elseOb.obligation);
+			if ((expr.elseExpr instanceof IdExpr)
+					|| (expr.elseExpr instanceof UnaryExpr
+							&& ((UnaryExpr)expr.elseExpr).op.equals(UnaryOp.NOT)
+							&& ((UnaryExpr)expr.elseExpr).expr instanceof IdExpr)) {
+				elseOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT, expr.cond), BinaryOp.AND, new BoolExpr(true));
+			} else {
+				elseOb.obligation = new BinaryExpr(new UnaryExpr(UnaryOp.NOT, expr.cond),
+						BinaryOp.AND, elseOb.obligation);
+			}
 		}
 		
 		obligations.addAll(thenObs);
