@@ -107,14 +107,12 @@ public final class LustreCoverage {
 		case DECISION:
 			coverageVisitor = new DecisionVisitor(exprTypeVisitor);
 			break;
-		case OMCDC: // for OMCDC coverage.
-			coverageVisitor = new OMCDCVisitor(exprTypeVisitor, node); 
-			break;
+		case OMCDC:
 		case OBRANCH:
-			break;
 		case OCONDITION:
-			break;
 		case ODECISION:
+			coverageVisitor = new ObservedCoverageVisitor(exprTypeVisitor, 
+														node, coverage); 
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown coverage: " + coverage);
@@ -137,33 +135,39 @@ public final class LustreCoverage {
 				id += "_" + equation.lhs.get(i);
 			}
 			
-			if (coverage == coverage.OMCDC) {
+			if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+					|| coverage == Coverage.OCONDITION
+					|| coverage == Coverage.ODECISION) {
 				// A = B; or A = (not B);
 				if (equation.expr instanceof IdExpr
 						|| ((equation.expr instanceof UnaryExpr)
 								&& ((UnaryExpr)equation.expr).expr instanceof IdExpr)) {
-					((OMCDCVisitor) coverageVisitor).setIsDef(true);
+					((ObservedCoverageVisitor) coverageVisitor).setIsDef(true);
 				} else {
-					((OMCDCVisitor) coverageVisitor).setIsDef(false);
+					((ObservedCoverageVisitor) coverageVisitor).setIsDef(false);
 				}
 			}
 			
 			List<Obligation> obligations = equation.expr
 					.accept(coverageVisitor);
 			
-			if (coverage == Coverage.OMCDC) {
+			if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+					|| coverage == Coverage.OCONDITION
+					|| coverage == Coverage.ODECISION) {
 				// popular delay maps for observed coverage
 				List<String> delayedItems = new ArrayList<>(); 
-				delayedItems.addAll(((OMCDCVisitor)coverageVisitor).getDelayList());
+				delayedItems.addAll(((ObservedCoverageVisitor)coverageVisitor).getDelayList());
 				
 				if (delayedItems != null && !delayedItems.isEmpty()) {
 					delayMap.put(id, delayedItems);
 					System.out.println("<" + id + ">\t" + delayMap.get(id));
-					((OMCDCVisitor)coverageVisitor).resetDelayList();
+					((ObservedCoverageVisitor)coverageVisitor).resetDelayList();
 				}
 			}
 			
-			if (coverage == Coverage.OMCDC) {
+			if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+					|| coverage == Coverage.OCONDITION
+					|| coverage == Coverage.ODECISION) {
 				HashMap<String, Expr> map = new HashMap<>();
 				
 				for (Obligation obligation : obligations) {
@@ -211,7 +215,9 @@ public final class LustreCoverage {
 				}
 
 				String property = "";
-				if (coverage != coverage.OMCDC) {
+				if (!(coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+						|| coverage == Coverage.OCONDITION
+						|| coverage == Coverage.ODECISION)) {
 					// keep the rest in original pattern.
 					property = obligation.condition + "_"
 						+ (obligation.polarity ? "TRUE" : "FALSE") + "_AT_"
@@ -230,7 +236,9 @@ public final class LustreCoverage {
 			}
 		}
 		
-		if (coverage == coverage.OMCDC) {
+		if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+				|| coverage == Coverage.OCONDITION
+				|| coverage == Coverage.ODECISION) {
 			// obligations for observed coverage only.
 			String property = "";
 			
@@ -240,11 +248,11 @@ public final class LustreCoverage {
 //			}
 			
 			// set delay mapping
-			((OMCDCVisitor)coverageVisitor).setDelayMap(delayMap);
+			((ObservedCoverageVisitor)coverageVisitor).setDelayMap(delayMap);
 			
-			List<Obligation> obligations = ((OMCDCVisitor) coverageVisitor).generate();
+			List<Obligation> obligations = ((ObservedCoverageVisitor) coverageVisitor).generate();
 			count += obligations.size();
-			upperbound = ((OMCDCVisitor) coverageVisitor).getTokenRange();
+			upperbound = ((ObservedCoverageVisitor) coverageVisitor).getTokenRange();
 			StringBuilder subrange = new StringBuilder();
 			subrange.append("subrange");
 			

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import enums.Coverage;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
@@ -19,6 +20,7 @@ public class AffectAtCaptureEquation {
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	HashMap<VarDecl, ObservedTree> combUsedByTrees;
 	HashMap<String, List<String>> delayMap = new HashMap<>();
+	Coverage coverage;
 	
 	List<VarDecl> idList;
 	List<VarDecl> singleNodeList;
@@ -44,10 +46,12 @@ public class AffectAtCaptureEquation {
 	
 	public AffectAtCaptureEquation(HashMap<VarDecl, ObservedTree> seqTrees,
 									HashMap<VarDecl, ObservedTree> combUsedTrees,
-									HashMap<String, List<String>> delayMap) {
+									HashMap<String, List<String>> delayMap,
+									Coverage coverage) {
 		this.sequentialTrees = seqTrees;
 		this.combUsedByTrees = combUsedTrees;
 		this.delayMap = delayMap;
+		this.coverage = coverage;
 		populateMaps();
 	}
 	
@@ -109,7 +113,7 @@ public class AffectAtCaptureEquation {
 	
 	private void generateForSingleNodes(HashMap<String, Expr> map) {
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
+		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_" + coverage.name();
 		String node = "", father;
 		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
@@ -164,7 +168,7 @@ public class AffectAtCaptureEquation {
 	private void generateForCombTrees(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(combUsedByTrees, TYPE_COMB);
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
+		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_" + coverage.name();
 		String node = "", father;
 		String[] lhs = new String[2];
 		IdExpr[] nonMasked = new IdExpr[2];
@@ -232,7 +236,7 @@ public class AffectAtCaptureEquation {
 		IdExpr token = new IdExpr("token");
 		String seq = "_SEQ_USED_BY_";
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_MCDC";
+		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_" + coverage.name();
 		String node;
 		ObservedTreeNode father, root;
 		List<ObservedTreeNode> superRoots;

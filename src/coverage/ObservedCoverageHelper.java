@@ -20,7 +20,6 @@ import main.LustreMain;
 public class ObservedCoverageHelper {
 	private Node node;
 	private List<VarDecl> idList = new ArrayList<>();
-	private boolean isSeqRoot;
 	private boolean isPre = false;
 	private List<VarDecl> singleNodeList = new ArrayList<>();
 	private HashMap<String, List<String>> delayMap = new HashMap<>();
@@ -79,7 +78,6 @@ public class ObservedCoverageHelper {
 		ObservedTreeNode treeNode;
 		
 		for (String root : delayMap.keySet()) {
-			isSeqRoot = true;
 			treeNode = buildTreeRecursively(new ObservedTreeNode(root, idMap.get(root).type), 
 											expressions, false, 0);
 			seqTrees.put(idMap.get(root), new ObservedTree(treeNode));

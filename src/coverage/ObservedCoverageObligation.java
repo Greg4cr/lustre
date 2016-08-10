@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import enums.Coverage;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.Expr;
@@ -11,21 +12,25 @@ import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
-public class OMCDCObligation {
+public class ObservedCoverageObligation {
 	private HashMap<String, HashMap<String, Integer>> obligationMap;
+	private Coverage coverage;
 	
-	public OMCDCObligation(HashMap<String, HashMap<String, Integer>> obligationMap) {
+	public ObservedCoverageObligation(HashMap<String, 
+									HashMap<String, Integer>> obligationMap,
+									Coverage coverage) {
 		this.obligationMap = obligationMap;
+		this.coverage = coverage;
 	}
 		
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String at = "_AT_", cov = "_MCDC";
+		String at = "_AT_", cov = "_"+coverage.name();
 		String observed = "_COMB_OBSERVED";
 		int count = 0;
-		String omcdc = "omcdc_";
+		String property = "property";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};
 		IdExpr[] nonMaskedExpr = new IdExpr[2], affectExpr = new IdExpr[2];
@@ -43,7 +48,7 @@ public class OMCDCObligation {
 						cond = cond + "_" + i;
 					}
 					for (int j = 0; j < vals.length; j++) {
-						lhs = new IdExpr(omcdc + "_" + count++);
+						lhs = new IdExpr(property + "_" + count++);
 						nonMaskedExpr[j] = new IdExpr(cond + vals[j] + at + key + cov + vals[j]);
 						affectExpr[j] = new IdExpr(cond + vals[j] + at + key + affect);
 						
