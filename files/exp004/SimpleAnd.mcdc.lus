@@ -1,0 +1,138 @@
+node SimpleAnd(
+  A : bool;
+  B : bool;
+  C : bool
+) returns (
+  E : bool;
+  F : bool
+);
+var
+  D : bool;
+  A_TRUE_AT_D_MCDC_TRUE_0 : bool;
+  A_FALSE_AT_D_MCDC_FALSE_1 : bool;
+  B_TRUE_AT_D_MCDC_TRUE_2 : bool;
+  B_FALSE_AT_D_MCDC_FALSE_3 : bool;
+  D_TRUE_AT_E_MCDC_TRUE_4 : bool;
+  D_FALSE_AT_E_MCDC_FALSE_5 : bool;
+  C_TRUE_AT_E_MCDC_TRUE_6 : bool;
+  C_FALSE_AT_E_MCDC_FALSE_7 : bool;
+  D_TRUE_AT_F_MCDC_FALSE_8 : bool;
+  D_FALSE_AT_F_MCDC_TRUE_9 : bool;
+  C_TRUE_AT_F_MCDC_FALSE_10 : bool;
+  C_FALSE_AT_F_MCDC_TRUE_11 : bool;
+let
+  D = (A or B);
+
+  E = (D and C);
+
+  F = (not (D or C));
+
+  A_TRUE_AT_D_MCDC_TRUE_0 = (not (A and (not B)));
+
+  A_FALSE_AT_D_MCDC_FALSE_1 = (not ((not A) and (not B)));
+
+  B_TRUE_AT_D_MCDC_TRUE_2 = (not ((not A) and B));
+
+  B_FALSE_AT_D_MCDC_FALSE_3 = (not ((not A) and (not B)));
+
+  D_TRUE_AT_E_MCDC_TRUE_4 = (not (D and C));
+
+  D_FALSE_AT_E_MCDC_FALSE_5 = (not ((not D) and C));
+
+  C_TRUE_AT_E_MCDC_TRUE_6 = (not (D and C));
+
+  C_FALSE_AT_E_MCDC_FALSE_7 = (not (D and (not C)));
+
+  D_TRUE_AT_F_MCDC_FALSE_8 = (not (D and (not C)));
+
+  D_FALSE_AT_F_MCDC_TRUE_9 = (not ((not D) and (not C)));
+
+  C_TRUE_AT_F_MCDC_FALSE_10 = (not ((not D) and C));
+
+  C_FALSE_AT_F_MCDC_TRUE_11 = (not ((not D) and (not C)));
+
+  --%PROPERTY A_TRUE_AT_D_MCDC_TRUE_0;
+  --%PROPERTY A_FALSE_AT_D_MCDC_FALSE_1;
+  --%PROPERTY B_TRUE_AT_D_MCDC_TRUE_2;
+  --%PROPERTY B_FALSE_AT_D_MCDC_FALSE_3;
+  --%PROPERTY D_TRUE_AT_E_MCDC_TRUE_4;
+  --%PROPERTY D_FALSE_AT_E_MCDC_FALSE_5;
+  --%PROPERTY C_TRUE_AT_E_MCDC_TRUE_6;
+  --%PROPERTY C_FALSE_AT_E_MCDC_FALSE_7;
+  --%PROPERTY D_TRUE_AT_F_MCDC_FALSE_8;
+  --%PROPERTY D_FALSE_AT_F_MCDC_TRUE_9;
+  --%PROPERTY C_TRUE_AT_F_MCDC_FALSE_10;
+  --%PROPERTY C_FALSE_AT_F_MCDC_TRUE_11;
+
+tel;
+
+node AnotherNode(
+  H : bool;
+  I : bool
+) returns (
+  J : bool
+);
+var
+  L : bool;
+  M : bool;
+  N : bool;
+  H_TRUE_AT_M_MCDC_TRUE_12 : bool;
+  H_FALSE_AT_M_MCDC_FALSE_13 : bool;
+  I_TRUE_AT_N_MCDC_TRUE_14 : bool;
+  I_FALSE_AT_N_MCDC_FALSE_15 : bool;
+  M_TRUE_AT_L_MCDC_TRUE_16 : bool;
+  M_FALSE_AT_L_MCDC_FALSE_17 : bool;
+  N_TRUE_AT_L_MCDC_TRUE_18 : bool;
+  N_FALSE_AT_L_MCDC_FALSE_19 : bool;
+  L_TRUE_AT_J_MCDC_FALSE_20 : bool;
+  L_FALSE_AT_J_MCDC_TRUE_21 : bool;
+  L_TRUE_AT_J_MCDC_TRUE_22 : bool;
+  L_FALSE_AT_J_MCDC_FALSE_23 : bool;
+let
+  --%MAIN;
+  M = (false -> H);
+
+  N = (true -> I);
+
+  L = (M and N);
+
+  J = ((not L) -> (pre L));
+
+  H_TRUE_AT_M_MCDC_TRUE_12 = (not (false -> H));
+
+  H_FALSE_AT_M_MCDC_FALSE_13 = (not (false -> (not H)));
+
+  I_TRUE_AT_N_MCDC_TRUE_14 = (not (false -> I));
+
+  I_FALSE_AT_N_MCDC_FALSE_15 = (not (false -> (not I)));
+
+  M_TRUE_AT_L_MCDC_TRUE_16 = (not (M and N));
+
+  M_FALSE_AT_L_MCDC_FALSE_17 = (not ((not M) and N));
+
+  N_TRUE_AT_L_MCDC_TRUE_18 = (not (M and N));
+
+  N_FALSE_AT_L_MCDC_FALSE_19 = (not (M and (not N)));
+
+  L_TRUE_AT_J_MCDC_FALSE_20 = (not (L -> false));
+
+  L_FALSE_AT_J_MCDC_TRUE_21 = (not ((not L) -> false));
+
+  L_TRUE_AT_J_MCDC_TRUE_22 = (not (false -> (pre L)));
+
+  L_FALSE_AT_J_MCDC_FALSE_23 = (not (false -> (pre (not L))));
+
+  --%PROPERTY H_TRUE_AT_M_MCDC_TRUE_12;
+  --%PROPERTY H_FALSE_AT_M_MCDC_FALSE_13;
+  --%PROPERTY I_TRUE_AT_N_MCDC_TRUE_14;
+  --%PROPERTY I_FALSE_AT_N_MCDC_FALSE_15;
+  --%PROPERTY M_TRUE_AT_L_MCDC_TRUE_16;
+  --%PROPERTY M_FALSE_AT_L_MCDC_FALSE_17;
+  --%PROPERTY N_TRUE_AT_L_MCDC_TRUE_18;
+  --%PROPERTY N_FALSE_AT_L_MCDC_FALSE_19;
+  --%PROPERTY L_TRUE_AT_J_MCDC_FALSE_20;
+  --%PROPERTY L_FALSE_AT_J_MCDC_TRUE_21;
+  --%PROPERTY L_TRUE_AT_J_MCDC_TRUE_22;
+  --%PROPERTY L_FALSE_AT_J_MCDC_FALSE_23;
+
+tel;

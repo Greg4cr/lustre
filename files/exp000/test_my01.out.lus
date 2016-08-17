@@ -1,0 +1,313 @@
+const TOKEN_INIT_STATE : subrange[-2,2] of int = -2;
+const TOKEN_ERROR_STATE : subrange[-2,2] of int = -1;
+const TOKEN_OUTPUT_STATE : subrange[-2,2] of int = 0;
+const TOKEN_D1 : subrange[-2,2] of int = 1;
+const TOKEN_D2 : subrange[-2,2] of int = 2;
+
+node NonInlined(in_1: int; in_2: bool; in_3: bool; in_4: bool;
+	token_nondet: subrange[1,2] of int;
+	token_init: bool)
+returns(out: bool);
+
+var
+  expr1: int;
+  expr2: bool;
+  expr3: bool;
+  expr4: bool;
+	in_1_COMB_USED_BY_expr1: bool;
+	BSE_1_AT_expr1_NONMASKED_TRUE: bool;
+	BSE_1_AT_expr1_NONMASKED_FALSE: bool;
+	omcdc_0: bool;
+	omcdc_1: bool;
+	expr1_COMB_USED_BY_expr2: bool;
+	BSE_1_AT_expr2_NONMASKED_TRUE: bool;
+	BSE_1_AT_expr2_NONMASKED_FALSE: bool;
+	omcdc_2: bool;
+	omcdc_3: bool;
+	in_2_COMB_USED_BY_expr2: bool;
+	in_2_AT_expr2_NONMASKED_TRUE: bool;
+	in_2_AT_expr2_NONMASKED_FALSE: bool;
+	omcdc_4: bool;
+	omcdc_5: bool;
+	in_3_COMB_USED_BY_expr2: bool;
+	in_3_AT_expr2_NONMASKED_TRUE: bool;
+	in_3_AT_expr2_NONMASKED_FALSE: bool;
+	omcdc_6: bool;
+	omcdc_7: bool;
+	expr2_COMB_USED_BY_expr3: bool;
+	expr2_1_AT_expr3_NONMASKED_TRUE: bool;
+	expr2_1_AT_expr3_NONMASKED_FALSE: bool;
+	omcdc_8: bool;
+	omcdc_9: bool;
+	expr2_2_AT_expr3_NONMASKED_TRUE: bool;
+	expr2_2_AT_expr3_NONMASKED_FALSE: bool;
+	omcdc_10: bool;
+	omcdc_11: bool;
+	in_3_COMB_USED_BY_expr3: bool;
+	in_3_1_AT_expr3_NONMASKED_TRUE: bool;
+	in_3_1_AT_expr3_NONMASKED_FALSE: bool;
+	omcdc_12: bool;
+	omcdc_13: bool;
+	in_3_2_AT_expr3_NONMASKED_TRUE: bool;
+	in_3_2_AT_expr3_NONMASKED_FALSE: bool;
+	omcdc_14: bool;
+	omcdc_15: bool;
+	in_2_COMB_USED_BY_expr3: bool;
+	in_2_AT_expr3_NONMASKED_TRUE: bool;
+	in_2_AT_expr3_NONMASKED_FALSE: bool;
+	omcdc_16: bool;
+	omcdc_17: bool;
+	in_4_COMB_USED_BY_expr3: bool;
+	in_4_AT_expr3_NONMASKED_TRUE: bool;
+	in_4_AT_expr3_NONMASKED_FALSE: bool;
+	omcdc_18: bool;
+	omcdc_19: bool;
+	expr2_COMB_USED_BY_expr4: bool;
+	expr2_AT_expr4_NONMASKED_TRUE: bool;
+	expr2_AT_expr4_NONMASKED_FALSE: bool;
+	omcdc_20: bool;
+	omcdc_21: bool;
+	expr3_COMB_USED_BY_out: bool;
+	expr3_AT_out_NONMASKED_TRUE: bool;
+	expr3_AT_out_NONMASKED_FALSE: bool;
+	omcdc_22: bool;
+	omcdc_23: bool;
+	expr2_COMB_USED_BY_out: bool;
+	expr2_AT_out_NONMASKED_TRUE: bool;
+	expr2_AT_out_NONMASKED_FALSE: bool;
+	omcdc_24: bool;
+	omcdc_25: bool;
+	out_COMB_OBSERVED: bool;
+	in_1_COMB_OBSERVED: bool;
+	expr1_COMB_OBSERVED: bool;
+	in_2_COMB_OBSERVED: bool;
+	in_3_COMB_OBSERVED: bool;
+	expr2_COMB_OBSERVED: bool;
+	in_4_COMB_OBSERVED: bool;
+	expr3_COMB_OBSERVED: bool;
+	expr4_COMB_OBSERVED: bool;
+	in_1_SEQ_USED_BY_expr4: bool;
+	in_3_SEQ_USED_BY_expr4: bool;
+	in_2_SEQ_USED_BY_expr4: bool;
+	expr2_SEQ_USED_BY_expr4: bool;
+	expr1_SEQ_USED_BY_expr4: bool;
+	in_1_SEQ_USED_BY_out: bool;
+	in_3_SEQ_USED_BY_out: bool;
+	in_2_SEQ_USED_BY_out: bool;
+	expr2_SEQ_USED_BY_out: bool;
+	expr1_SEQ_USED_BY_out: bool;
+	expr2_TRUE_AT_expr4_AFFECTING_AT_CAPTURE: bool;
+	expr2_FALSE_AT_expr4_AFFECTING_AT_CAPTURE: bool;
+	expr2_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	expr2_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	expr2_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	expr2_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_3_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_3_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_3_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_3_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_4_TRUE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_4_FALSE_AT_expr3_AFFECTING_AT_CAPTURE: bool;
+	in_2_TRUE_AT_expr2_AFFECTING_AT_CAPTURE: bool;
+	in_2_FALSE_AT_expr2_AFFECTING_AT_CAPTURE: bool;
+	in_3_TRUE_AT_expr2_AFFECTING_AT_CAPTURE: bool;
+	in_3_FALSE_AT_expr2_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_TRUE_AT_expr2_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_FALSE_AT_expr2_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_TRUE_AT_expr1_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_FALSE_AT_expr1_AFFECTING_AT_CAPTURE: bool;
+	expr3_TRUE_AT_out_AFFECTING_AT_CAPTURE: bool;
+	expr3_FALSE_AT_out_AFFECTING_AT_CAPTURE: bool;
+	expr2_TRUE_AT_out_AFFECTING_AT_CAPTURE: bool;
+	expr2_FALSE_AT_out_AFFECTING_AT_CAPTURE: bool;
+	token: subrange[-2,2] of int;
+	token_first: subrange[-2,2] of int;
+	token_next: subrange[-2,2] of int;
+let
+
+	expr1 = (if (in_1 <= 10) then (in_1 + 1) else (in_1 - 10));
+
+	/*"Used By" Equations */
+	in_1_COMB_USED_BY_expr1 = (true or ((((in_1 <= 10)) and true) or ((not ((in_1 <= 10))) and true)));
+	BSE_1_AT_expr1_NONMASKED_TRUE = ((in_1 <= 10) and ((true)));
+	BSE_1_AT_expr1_NONMASKED_FALSE = ((not (in_1 <= 10)) and ((true)));
+
+	expr2 = ((expr1 < 3) and (in_2 or in_3));
+
+	/*"Used By" Equations */
+	expr1_COMB_USED_BY_expr2 = (in_2 or in_3);
+	BSE_1_AT_expr2_NONMASKED_TRUE = ((expr1 < 3) and ((in_2 or in_3)));
+	BSE_1_AT_expr2_NONMASKED_FALSE = ((not (expr1 < 3)) and ((in_2 or in_3)));
+	in_2_COMB_USED_BY_expr2 = ((not (in_3)) and ((expr1 < 3)));
+	in_2_AT_expr2_NONMASKED_TRUE = (in_2 and (((not (in_3)) and ((expr1 < 3)))));
+	in_2_AT_expr2_NONMASKED_FALSE = ((not in_2) and (((not (in_3)) and ((expr1 < 3)))));
+	in_3_COMB_USED_BY_expr2 = ((not (in_2)) and ((expr1 < 3)));
+	in_3_AT_expr2_NONMASKED_TRUE = (in_3 and (((not (in_2)) and ((expr1 < 3)))));
+	in_3_AT_expr2_NONMASKED_FALSE = ((not in_3) and (((not (in_2)) and ((expr1 < 3)))));
+
+	expr3 = ((((expr2 or in_3) and not (expr2 and in_3))) or (not (in_2 and in_4)));
+
+	/*"Used By" Equations */
+	expr2_COMB_USED_BY_expr3 = ((((not (in_3)) and (not (expr2 and in_3))) or (in_3 and ((expr2 or in_3)))) and (not ((not (in_2 and in_4)))));
+	expr2_1_AT_expr3_NONMASKED_TRUE = (expr2 and (((not (in_3)) and (not (expr2 and in_3))) and (not ((not (in_2 and in_4))))));
+	expr2_1_AT_expr3_NONMASKED_FALSE = ((not expr2) and (((not (in_3)) and (not (expr2 and in_3))) and (not ((not (in_2 and in_4))))));
+	expr2_2_AT_expr3_NONMASKED_TRUE = (expr2 and ((in_3 and ((expr2 or in_3))) and (not ((not (in_2 and in_4))))));
+	expr2_2_AT_expr3_NONMASKED_FALSE = ((not expr2) and ((in_3 and ((expr2 or in_3))) and (not ((not (in_2 and in_4))))));
+	in_3_COMB_USED_BY_expr3 = ((((not (expr2)) and (not (expr2 and in_3))) or (expr2 and ((expr2 or in_3)))) and (not ((not (in_2 and in_4)))));
+	in_3_1_AT_expr3_NONMASKED_TRUE = (in_3 and (((not (expr2)) and (not (expr2 and in_3))) and (not ((not (in_2 and in_4))))));
+	in_3_1_AT_expr3_NONMASKED_FALSE = ((not in_3) and (((not (expr2)) and (not (expr2 and in_3))) and (not ((not (in_2 and in_4))))));
+	in_3_2_AT_expr3_NONMASKED_TRUE = (in_3 and ((expr2 and ((expr2 or in_3))) and (not ((not (in_2 and in_4))))));
+	in_3_2_AT_expr3_NONMASKED_FALSE = ((not in_3) and ((expr2 and ((expr2 or in_3))) and (not ((not (in_2 and in_4))))));
+	in_2_COMB_USED_BY_expr3 = (in_4 and (not ((((expr2 or in_3) and not (expr2 and in_3))))));
+	in_2_AT_expr3_NONMASKED_TRUE = (in_2 and ((in_4 and (not ((((expr2 or in_3) and not (expr2 and in_3))))))));
+	in_2_AT_expr3_NONMASKED_FALSE = ((not in_2) and ((in_4 and (not ((((expr2 or in_3) and not (expr2 and in_3))))))));
+	in_4_COMB_USED_BY_expr3 = (in_2 and (not ((((expr2 or in_3) and not (expr2 and in_3))))));
+	in_4_AT_expr3_NONMASKED_TRUE = (in_4 and ((in_2 and (not ((((expr2 or in_3) and not (expr2 and in_3))))))));
+	in_4_AT_expr3_NONMASKED_FALSE = ((not in_4) and ((in_2 and (not ((((expr2 or in_3) and not (expr2 and in_3))))))));
+
+	expr4 = (false -> pre expr2);
+
+	/*"Used By" Equations */
+	expr2_COMB_USED_BY_expr4 = false;
+	expr2_AT_expr4_NONMASKED_TRUE = (false -> (pre expr2) and (true));
+	expr2_AT_expr4_NONMASKED_FALSE = (false -> (pre (not expr2)) and (true));
+
+	out = (expr3 -> pre expr2);
+
+	/*"Used By" Equations */
+	expr3_COMB_USED_BY_out = (true -> false);
+	expr3_AT_out_NONMASKED_TRUE = (expr3 and ((true -> false)));
+	expr3_AT_out_NONMASKED_FALSE = ((not expr3) and ((true -> false)));
+	expr2_COMB_USED_BY_out = false;
+	expr2_AT_out_NONMASKED_TRUE = (false -> (pre expr2) and (true));
+	expr2_AT_out_NONMASKED_FALSE = (false -> (pre (not expr2)) and (true));
+
+	/* comb_observed equations */
+	out_COMB_OBSERVED = true;
+	in_1_COMB_OBSERVED = false;
+	expr1_COMB_OBSERVED = false;
+	in_2_COMB_OBSERVED = false;
+	in_3_COMB_OBSERVED = false;
+	expr2_COMB_OBSERVED = false;
+	in_4_COMB_OBSERVED = false;
+	expr3_COMB_OBSERVED = false;
+	expr4_COMB_OBSERVED = false;
+
+	/* backwards slice from delay expr4 */
+	in_1_SEQ_USED_BY_expr4 = (in_1_COMB_USED_BY_expr1 and expr1_SEQ_USED_BY_expr4);
+	in_3_SEQ_USED_BY_expr4 = (in_3_COMB_USED_BY_expr2 and expr2_SEQ_USED_BY_expr4);
+	in_2_SEQ_USED_BY_expr4 = (in_2_COMB_USED_BY_expr2 and expr2_SEQ_USED_BY_expr4);
+	expr2_SEQ_USED_BY_expr4 = true;
+	expr1_SEQ_USED_BY_expr4 = (expr1_COMB_USED_BY_expr2 and expr2_SEQ_USED_BY_expr4);
+
+	/* backwards slice from delay out */
+	in_1_SEQ_USED_BY_out = (in_1_COMB_USED_BY_expr1 and expr1_SEQ_USED_BY_out);
+	in_3_SEQ_USED_BY_out = (in_3_COMB_USED_BY_expr2 and expr2_SEQ_USED_BY_out);
+	in_2_SEQ_USED_BY_out = (in_2_COMB_USED_BY_expr2 and expr2_SEQ_USED_BY_out);
+	expr2_SEQ_USED_BY_out = true;
+	expr1_SEQ_USED_BY_out = (expr1_COMB_USED_BY_expr2 and expr2_SEQ_USED_BY_out);
+
+	/* Affecting at capture equations */
+	expr2_TRUE_AT_expr4_AFFECTING_AT_CAPTURE = (expr2_AT_expr4_NONMASKED_TRUE and false) -> ((expr2_AT_expr4_NONMASKED_TRUE and false) or pre expr2_TRUE_AT_expr4_AFFECTING_AT_CAPTURE);
+	expr2_FALSE_AT_expr4_AFFECTING_AT_CAPTURE = (expr2_AT_expr4_NONMASKED_FALSE and false) -> ((expr2_AT_expr4_NONMASKED_FALSE and false) or pre expr2_FALSE_AT_expr4_AFFECTING_AT_CAPTURE);
+	expr2_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE = (expr2_1_AT_expr3_NONMASKED_TRUE and false) -> ((expr2_1_AT_expr3_NONMASKED_TRUE and false) or pre expr2_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE);
+	expr2_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE = (expr2_1_AT_expr3_NONMASKED_FALSE and false) -> ((expr2_1_AT_expr3_NONMASKED_FALSE and false) or pre expr2_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE);
+	expr2_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE = (expr2_2_AT_expr3_NONMASKED_TRUE and false) -> ((expr2_2_AT_expr3_NONMASKED_TRUE and false) or pre expr2_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE);
+	expr2_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE = (expr2_2_AT_expr3_NONMASKED_FALSE and false) -> ((expr2_2_AT_expr3_NONMASKED_FALSE and false) or pre expr2_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_3_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE = (in_3_1_AT_expr3_NONMASKED_TRUE and false) -> ((in_3_1_AT_expr3_NONMASKED_TRUE and false) or pre in_3_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_3_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE = (in_3_1_AT_expr3_NONMASKED_FALSE and false) -> ((in_3_1_AT_expr3_NONMASKED_FALSE and false) or pre in_3_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_3_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE = (in_3_2_AT_expr3_NONMASKED_TRUE and false) -> ((in_3_2_AT_expr3_NONMASKED_TRUE and false) or pre in_3_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_3_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE = (in_3_2_AT_expr3_NONMASKED_FALSE and false) -> ((in_3_2_AT_expr3_NONMASKED_FALSE and false) or pre in_3_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE = (in_2_AT_expr3_NONMASKED_TRUE and false) -> ((in_2_AT_expr3_NONMASKED_TRUE and false) or pre in_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE = (in_2_AT_expr3_NONMASKED_FALSE and false) -> ((in_2_AT_expr3_NONMASKED_FALSE and false) or pre in_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_4_TRUE_AT_expr3_AFFECTING_AT_CAPTURE = (in_4_AT_expr3_NONMASKED_TRUE and false) -> ((in_4_AT_expr3_NONMASKED_TRUE and false) or pre in_4_TRUE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_4_FALSE_AT_expr3_AFFECTING_AT_CAPTURE = (in_4_AT_expr3_NONMASKED_FALSE and false) -> ((in_4_AT_expr3_NONMASKED_FALSE and false) or pre in_4_FALSE_AT_expr3_AFFECTING_AT_CAPTURE);
+	in_2_TRUE_AT_expr2_AFFECTING_AT_CAPTURE = (in_2_AT_expr2_NONMASKED_TRUE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((in_2_AT_expr2_NONMASKED_TRUE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) or pre in_2_TRUE_AT_expr2_AFFECTING_AT_CAPTURE);
+	in_2_FALSE_AT_expr2_AFFECTING_AT_CAPTURE = (in_2_AT_expr2_NONMASKED_FALSE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((in_2_AT_expr2_NONMASKED_FALSE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) or pre in_2_FALSE_AT_expr2_AFFECTING_AT_CAPTURE);
+	in_3_TRUE_AT_expr2_AFFECTING_AT_CAPTURE = (in_3_AT_expr2_NONMASKED_TRUE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((in_3_AT_expr2_NONMASKED_TRUE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) or pre in_3_TRUE_AT_expr2_AFFECTING_AT_CAPTURE);
+	in_3_FALSE_AT_expr2_AFFECTING_AT_CAPTURE = (in_3_AT_expr2_NONMASKED_FALSE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((in_3_AT_expr2_NONMASKED_FALSE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) or pre in_3_FALSE_AT_expr2_AFFECTING_AT_CAPTURE);
+	BSE_1_TRUE_AT_expr2_AFFECTING_AT_CAPTURE = (BSE_1_AT_expr2_NONMASKED_TRUE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((BSE_1_AT_expr2_NONMASKED_TRUE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) or pre BSE_1_TRUE_AT_expr2_AFFECTING_AT_CAPTURE);
+	BSE_1_FALSE_AT_expr2_AFFECTING_AT_CAPTURE = (BSE_1_AT_expr2_NONMASKED_FALSE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((BSE_1_AT_expr2_NONMASKED_FALSE and ((expr2_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr2_SEQ_USED_BY_out and token=TOKEN_D2))) or pre BSE_1_FALSE_AT_expr2_AFFECTING_AT_CAPTURE);
+	BSE_1_TRUE_AT_expr1_AFFECTING_AT_CAPTURE = (BSE_1_AT_expr1_NONMASKED_TRUE and ((expr1_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr1_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((BSE_1_AT_expr1_NONMASKED_TRUE and ((expr1_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr1_SEQ_USED_BY_out and token=TOKEN_D2))) or pre BSE_1_TRUE_AT_expr1_AFFECTING_AT_CAPTURE);
+	BSE_1_FALSE_AT_expr1_AFFECTING_AT_CAPTURE = (BSE_1_AT_expr1_NONMASKED_FALSE and ((expr1_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr1_SEQ_USED_BY_out and token=TOKEN_D2))) -> ((BSE_1_AT_expr1_NONMASKED_FALSE and ((expr1_SEQ_USED_BY_expr4 and token=TOKEN_D1) or (expr1_SEQ_USED_BY_out and token=TOKEN_D2))) or pre BSE_1_FALSE_AT_expr1_AFFECTING_AT_CAPTURE);
+	expr3_TRUE_AT_out_AFFECTING_AT_CAPTURE = (expr3_AT_out_NONMASKED_TRUE and false) -> ((expr3_AT_out_NONMASKED_TRUE and false) or pre expr3_TRUE_AT_out_AFFECTING_AT_CAPTURE);
+	expr3_FALSE_AT_out_AFFECTING_AT_CAPTURE = (expr3_AT_out_NONMASKED_FALSE and false) -> ((expr3_AT_out_NONMASKED_FALSE and false) or pre expr3_FALSE_AT_out_AFFECTING_AT_CAPTURE);
+	expr2_TRUE_AT_out_AFFECTING_AT_CAPTURE = (expr2_AT_out_NONMASKED_TRUE and false) -> ((expr2_AT_out_NONMASKED_TRUE and false) or pre expr2_TRUE_AT_out_AFFECTING_AT_CAPTURE);
+	expr2_FALSE_AT_out_AFFECTING_AT_CAPTURE = (expr2_AT_out_NONMASKED_FALSE and false) -> ((expr2_AT_out_NONMASKED_FALSE and false) or pre expr2_FALSE_AT_out_AFFECTING_AT_CAPTURE);
+
+	/* Token code */
+	token_first = if (token_init) then token_nondet else TOKEN_INIT_STATE;
+	token_next =
+		if (pre(token) = TOKEN_INIT_STATE) then token_first
+		else (if (pre(token) = TOKEN_ERROR_STATE) then TOKEN_ERROR_STATE
+		else (if (pre(token) = TOKEN_OUTPUT_STATE) then TOKEN_OUTPUT_STATE
+		else (if (pre(token) = TOKEN_D1) then
+			(if (expr4_COMB_OBSERVED) then TOKEN_OUTPUT_STATE
+			else TOKEN_ERROR_STATE)
+		else (if (pre(token) = TOKEN_D2) then
+			(if (out_COMB_OBSERVED) then TOKEN_OUTPUT_STATE
+			else TOKEN_ERROR_STATE)
+		else TOKEN_ERROR_STATE))));
+	token = token_first -> token_next;
+
+	/* Check properties */
+/* Obligations for statement expr1 on line 13 of the original program. */
+	omcdc_0 = not ((BSE_1_AT_expr1_NONMASKED_TRUE and expr1_COMB_OBSERVED) or (BSE_1_TRUE_AT_expr1_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_0;
+	omcdc_1 = not ((BSE_1_AT_expr1_NONMASKED_FALSE and expr1_COMB_OBSERVED) or (BSE_1_FALSE_AT_expr1_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_1;
+/* Obligations for statement expr2 on line 16 of the original program. */
+	omcdc_2 = not ((BSE_1_AT_expr2_NONMASKED_TRUE and expr2_COMB_OBSERVED) or (BSE_1_TRUE_AT_expr2_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_2;
+	omcdc_3 = not ((BSE_1_AT_expr2_NONMASKED_FALSE and expr2_COMB_OBSERVED) or (BSE_1_FALSE_AT_expr2_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_3;
+	omcdc_4 = not ((in_2_AT_expr2_NONMASKED_TRUE and expr2_COMB_OBSERVED) or (in_2_TRUE_AT_expr2_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_4;
+	omcdc_5 = not ((in_2_AT_expr2_NONMASKED_FALSE and expr2_COMB_OBSERVED) or (in_2_FALSE_AT_expr2_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_5;
+	omcdc_6 = not ((in_3_AT_expr2_NONMASKED_TRUE and expr2_COMB_OBSERVED) or (in_3_TRUE_AT_expr2_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_6;
+	omcdc_7 = not ((in_3_AT_expr2_NONMASKED_FALSE and expr2_COMB_OBSERVED) or (in_3_FALSE_AT_expr2_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_7;
+/* Obligations for statement expr3 on line 18 of the original program. */
+	omcdc_8 = not ((expr2_1_AT_expr3_NONMASKED_TRUE and expr3_COMB_OBSERVED) or (expr2_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_8;
+	omcdc_9 = not ((expr2_1_AT_expr3_NONMASKED_FALSE and expr3_COMB_OBSERVED) or (expr2_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_9;
+	omcdc_10 = not ((expr2_2_AT_expr3_NONMASKED_TRUE and expr3_COMB_OBSERVED) or (expr2_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_10;
+	omcdc_11 = not ((expr2_2_AT_expr3_NONMASKED_FALSE and expr3_COMB_OBSERVED) or (expr2_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_11;
+	omcdc_12 = not ((in_3_1_AT_expr3_NONMASKED_TRUE and expr3_COMB_OBSERVED) or (in_3_1_TRUE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_12;
+	omcdc_13 = not ((in_3_1_AT_expr3_NONMASKED_FALSE and expr3_COMB_OBSERVED) or (in_3_1_FALSE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_13;
+	omcdc_14 = not ((in_3_2_AT_expr3_NONMASKED_TRUE and expr3_COMB_OBSERVED) or (in_3_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_14;
+	omcdc_15 = not ((in_3_2_AT_expr3_NONMASKED_FALSE and expr3_COMB_OBSERVED) or (in_3_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_15;
+	omcdc_16 = not ((in_2_AT_expr3_NONMASKED_TRUE and expr3_COMB_OBSERVED) or (in_2_TRUE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_16;
+	omcdc_17 = not ((in_2_AT_expr3_NONMASKED_FALSE and expr3_COMB_OBSERVED) or (in_2_FALSE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_17;
+	omcdc_18 = not ((in_4_AT_expr3_NONMASKED_TRUE and expr3_COMB_OBSERVED) or (in_4_TRUE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_18;
+	omcdc_19 = not ((in_4_AT_expr3_NONMASKED_FALSE and expr3_COMB_OBSERVED) or (in_4_FALSE_AT_expr3_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_19;
+/* Obligations for statement expr4 on line 20 of the original program. */
+	omcdc_20 = not ((expr2_AT_expr4_NONMASKED_TRUE and expr4_COMB_OBSERVED) or (expr2_TRUE_AT_expr4_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_20;
+	omcdc_21 = not ((expr2_AT_expr4_NONMASKED_FALSE and expr4_COMB_OBSERVED) or (expr2_FALSE_AT_expr4_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_21;
+/* Obligations for statement out on line 22 of the original program. */
+	omcdc_22 = not ((expr3_AT_out_NONMASKED_TRUE and out_COMB_OBSERVED) or (expr3_TRUE_AT_out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_22;
+	omcdc_23 = not ((expr3_AT_out_NONMASKED_FALSE and out_COMB_OBSERVED) or (expr3_FALSE_AT_out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_23;
+	omcdc_24 = not ((expr2_AT_out_NONMASKED_TRUE and out_COMB_OBSERVED) or (expr2_TRUE_AT_out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_24;
+	omcdc_25 = not ((expr2_AT_out_NONMASKED_FALSE and out_COMB_OBSERVED) or (expr2_FALSE_AT_out_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_25;
+tel;

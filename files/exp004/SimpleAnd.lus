@@ -1,0 +1,9 @@
+node SimpleAnd(A: bool; B: bool; C: bool) returns(E: bool; F: bool);
+var
+	D: bool;
+let
+	D = (A or B);
+	E = (D and C);
+	F = (not (D or C));
+tel;
+

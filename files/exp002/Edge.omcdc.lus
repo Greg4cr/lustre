@@ -1,0 +1,22 @@
+node Edge(
+  X : bool
+) returns (
+  E : bool
+);
+var
+  A : bool;
+  B : bool;
+  B_COMB_USED_BY_E : bool;
+let
+  --%MAIN;
+  A = ((X and (not (pre X))) or ((not X) and (pre X)));
+
+  B = (((A and X) or ((not A) and (not X))) and (pre A));
+
+  E = ((false -> B) and (not (pre B)));
+
+  B_COMB_USED_BY_E = (not (pre B));
+
+  --%PROPERTY B_COMB_USED_BY_E;
+
+tel;

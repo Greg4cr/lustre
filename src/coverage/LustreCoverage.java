@@ -1,16 +1,24 @@
 package coverage;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import enums.Coverage;
 import enums.Polarity;
 import main.LustreMain;
 import types.ExprTypeVisitor;
+import jkind.lustre.BinaryExpr;
+import jkind.lustre.BinaryOp;
+import jkind.lustre.Constant;
 import jkind.lustre.Equation;
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
+import jkind.lustre.IntExpr;
 import jkind.lustre.NamedType;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
+import jkind.lustre.Type;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
@@ -18,6 +26,9 @@ import jkind.lustre.builders.NodeBuilder;
 import jkind.lustre.builders.ProgramBuilder;
 
 public final class LustreCoverage {
+	int upperbound = 0;
+	HashMap<String, List<String>> delayMap = new HashMap<>();
+	
 	// By default, use polarity ALL
 	public static Program program(Program program, Coverage coverage) {
 		return program(program, coverage, Polarity.ALL);
@@ -46,15 +57,28 @@ public final class LustreCoverage {
 
 	private Program generate() {
 		String coverageType = coverage.name();
-
+		
 		LustreMain.log("------------Generating " + coverageType
 				+ " obligations");
 
 		ProgramBuilder builder = new ProgramBuilder();
 		builder.addConstants(this.program.constants)
 				.addTypes(this.program.types).setMain(this.program.main);
+		
 		for (Node node : this.program.nodes) {
 			builder.addNode(this.generate(node));
+		}
+
+		if (coverage.equals(Coverage.OMCDC)) {
+			// add more constants for observed coverage
+			Type type = new NamedType("subrange[-2," + upperbound + "] of int");
+			builder.addConstant(new Constant("TOKEN_INIT_STATE", type, new IntExpr(-2)));
+			builder.addConstant(new Constant("TOKEN_ERROR_STATE", type, new IntExpr(-1)));
+			builder.addConstant(new Constant("TOKEN_OUTPUT_STATE", type, new IntExpr(-0)));
+			
+			for (int i = 1; i < upperbound + 1; i++) {
+				builder.addConstant(new Constant("TOKEN_D" + i, type, new IntExpr(i)));
+			}
 		}
 
 		LustreMain.log("Number of Obligations: " + count);
@@ -64,7 +88,6 @@ public final class LustreCoverage {
 	// Generate obligations for a node
 	private Node generate(Node node) {
 		LustreMain.log("Node: " + node.id);
-
 		NodeBuilder builder = new NodeBuilder(node);
 
 		CoverageVisitor coverageVisitor = null;
@@ -84,14 +107,23 @@ public final class LustreCoverage {
 		case DECISION:
 			coverageVisitor = new DecisionVisitor(exprTypeVisitor);
 			break;
+		case OMCDC:
+		case OBRANCH:
+		case OCONDITION:
+		case ODECISION:
+			coverageVisitor = new ObservedCoverageVisitor(exprTypeVisitor, 
+														node, coverage); 
+			break;
 		default:
 			throw new IllegalArgumentException("Unknown coverage: " + coverage);
 		}
-
+		
 		// Start generating obligations
+		// non-observed & comb_used_by obligations
 		for (Equation equation : node.equations) {
 			String id = null;
-
+//			System.out.println("dealing with equation:\n\t" + equation.toString());
+			
 			if (equation.lhs.isEmpty()) {
 				id = "EMPTY";
 			} else {
@@ -102,10 +134,74 @@ public final class LustreCoverage {
 			for (int i = 1; i < equation.lhs.size(); i++) {
 				id += "_" + equation.lhs.get(i);
 			}
-
+			
+			if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+					|| coverage == Coverage.OCONDITION
+					|| coverage == Coverage.ODECISION) {
+				// A = B; or A = (not B);
+				if (equation.expr instanceof IdExpr
+						|| ((equation.expr instanceof UnaryExpr)
+								&& ((UnaryExpr)equation.expr).expr instanceof IdExpr)) {
+					((ObservedCoverageVisitor) coverageVisitor).setIsDef(true);
+				} else {
+					((ObservedCoverageVisitor) coverageVisitor).setIsDef(false);
+				}
+			}
+			
 			List<Obligation> obligations = equation.expr
 					.accept(coverageVisitor);
-
+			
+			if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+					|| coverage == Coverage.OCONDITION
+					|| coverage == Coverage.ODECISION) {
+				// popular delay maps for observed coverage
+				List<String> delayedItems = new ArrayList<>(); 
+				delayedItems.addAll(((ObservedCoverageVisitor)coverageVisitor).getDelayList());
+				
+				if (delayedItems != null && !delayedItems.isEmpty()) {
+					delayMap.put(id, delayedItems);
+					System.out.println("<" + id + ">\t" + delayMap.get(id));
+					((ObservedCoverageVisitor)coverageVisitor).resetDelayList();
+				}
+			}
+			
+			if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+					|| coverage == Coverage.OCONDITION
+					|| coverage == Coverage.ODECISION) {
+				HashMap<String, Expr> map = new HashMap<>();
+				
+				for (Obligation obligation : obligations) {
+					if (polarity.equals(Polarity.TRUE)
+							&& !obligation.expressionPolarity) {
+						continue;
+					}
+					if (polarity.equals(Polarity.FALSE)
+							&& obligation.expressionPolarity) {
+						continue;
+					}
+					
+					String lhs = obligation.condition + "_COMB_USED_BY_" + id;
+					count++;
+					
+					Expr expr = obligation.obligation;
+					
+					if (!map.containsKey(lhs)) {
+						map.put(lhs, expr);
+					} else if (!map.get(lhs).toString().contains(expr.toString())) {
+						expr = new BinaryExpr(map.get(lhs), BinaryOp.OR, expr);
+						map.put(lhs, expr);
+					}
+				}
+				
+				for (String property : map.keySet()) {
+					builder.addEquation(new Equation(new IdExpr(property), 
+										map.get(property)));
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
+					builder.addProperty(property);
+				}
+			}
+			
+			
 			for (Obligation obligation : obligations) {
 				// Skip if the expression's polarity is different from what
 				// we need
@@ -118,18 +214,75 @@ public final class LustreCoverage {
 					continue;
 				}
 
-				String property = obligation.condition + "_"
+				String property = "";
+				if (!(coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+						|| coverage == Coverage.OCONDITION
+						|| coverage == Coverage.ODECISION)) {
+					// keep the rest in original pattern.
+					property = obligation.condition + "_"
 						+ (obligation.polarity ? "TRUE" : "FALSE") + "_AT_"
 						+ id + "_" + coverage.name() + "_"
 						+ (obligation.expressionPolarity ? "TRUE" : "FALSE")
 						+ "_" + (count++);
-
-				builder.addLocal(new VarDecl(property, NamedType.BOOL));
-				builder.addEquation(new Equation(new IdExpr(property),
-						new UnaryExpr(UnaryOp.NOT, obligation.obligation)));
-				builder.addProperty(property);
+					
+					builder.addEquation(new Equation(new IdExpr(property),
+							new UnaryExpr(UnaryOp.NOT, obligation.obligation)));
+				}
+				
+				if (!"".equals(property)) {
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
+					builder.addProperty(property);
+				}
 			}
 		}
+		
+		if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+				|| coverage == Coverage.OCONDITION
+				|| coverage == Coverage.ODECISION) {
+			// obligations for observed coverage only.
+			String property = "";
+			
+//			System.out.println("******** Delays *******");
+//			for (String key : delayMap.keySet()) {
+//				System.out.println("\"" + key + "\" " + delayMap.get(key));
+//			}
+			
+			// set delay mapping
+			((ObservedCoverageVisitor)coverageVisitor).setDelayMap(delayMap);
+			
+			List<Obligation> obligations = ((ObservedCoverageVisitor) coverageVisitor).generate();
+			count += obligations.size();
+			upperbound = ((ObservedCoverageVisitor) coverageVisitor).getTokenRange();
+			StringBuilder subrange = new StringBuilder();
+			subrange.append("subrange");
+			
+			if (upperbound > 0) {
+				// add local token definition if there is any
+				subrange.append("[").append("1,").append(upperbound).append("]");
+				builder.addInput(new VarDecl("token_nondet", new NamedType(subrange.toString() + " of int")));
+				builder.addInput(new VarDecl("token_init", NamedType.BOOL));
+				subrange.delete(subrange.indexOf("["), subrange.length());
+			}
+			subrange.append("[").append("-2,").append(upperbound).append("] of int");
+			
+			for (Obligation obligation : obligations) {
+				property = obligation.condition;// + "_" + (count++);
+				builder.addEquation(new Equation(new IdExpr(property), obligation.obligation));
+				if (property.contains("token_")) {
+					builder.addLocal(new VarDecl(property, new NamedType(subrange.toString())));
+				} else if (!property.contains("token")){
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
+				}
+				builder.addProperty(property);
+			}
+			
+			// token, token_first, and token_next should be added in all cases.
+			builder.addLocal(new VarDecl("token", new NamedType(subrange.toString())));
+			builder.addLocal(new VarDecl("token_first", new NamedType(subrange.toString())));
+			builder.addLocal(new VarDecl("token_next", new NamedType(subrange.toString())));
+			
+		}
+		
 		return builder.build();
 	}
 }

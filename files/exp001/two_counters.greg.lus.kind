@@ -1,0 +1,365 @@
+const TOKEN_D1 : subrange[-2,4] of int = 1;
+const TOKEN_D2 : subrange[-2,4] of int = 2;
+const TOKEN_D3 : subrange[-2,4] of int = 3;
+const TOKEN_D4 : subrange[-2,4] of int = 4;
+
+node top(x: bool;
+	token_nondet: subrange[1,4] of int;
+	token_init: bool)
+returns (OK: bool);
+
+var
+   gry_ite: int; 
+   V13_b: bool; 
+   V14_d: bool; 
+   V40_a: bool; 
+   V41_b: bool; 
+   V51_time: int; 
+   rlt__PRE3: bool; 
+   rlt__PRE2: bool; 
+   rlt__PRE1: int; 
+   rlt__PRE: int;
+	rlt__PRE_COMB_USED_BY_gry_ite: bool;
+	BSE_1_AT_gry_ite_NONMASKED_TRUE: bool;
+	BSE_1_AT_gry_ite_NONMASKED_FALSE: bool;
+	omcdc_0: bool;
+	omcdc_1: bool;
+	rlt__PRE1_COMB_USED_BY_gry_ite: bool;
+	V13_b_COMB_USED_BY_OK: bool;
+	V13_b_AT_OK_NONMASKED_TRUE: bool;
+	V13_b_AT_OK_NONMASKED_FALSE: bool;
+	omcdc_2: bool;
+	omcdc_3: bool;
+	V14_d_COMB_USED_BY_OK: bool;
+	V14_d_AT_OK_NONMASKED_TRUE: bool;
+	V14_d_AT_OK_NONMASKED_FALSE: bool;
+	omcdc_4: bool;
+	omcdc_5: bool;
+	BSE_1_AT_OK_NONMASKED_TRUE: bool;
+	BSE_1_AT_OK_NONMASKED_FALSE: bool;
+	omcdc_6: bool;
+	omcdc_7: bool;
+	V40_a_COMB_USED_BY_V13_b: bool;
+	V40_a_AT_V13_b_NONMASKED_TRUE: bool;
+	V40_a_AT_V13_b_NONMASKED_FALSE: bool;
+	omcdc_8: bool;
+	omcdc_9: bool;
+	V41_b_COMB_USED_BY_V13_b: bool;
+	V41_b_AT_V13_b_NONMASKED_TRUE: bool;
+	V41_b_AT_V13_b_NONMASKED_FALSE: bool;
+	omcdc_10: bool;
+	omcdc_11: bool;
+	V51_time_COMB_USED_BY_V14_d: bool;
+	BSE_1_AT_V14_d_NONMASKED_TRUE: bool;
+	BSE_1_AT_V14_d_NONMASKED_FALSE: bool;
+	omcdc_12: bool;
+	omcdc_13: bool;
+	rlt__PRE2_COMB_USED_BY_V40_a: bool;
+	rlt__PRE2_AT_V40_a_NONMASKED_TRUE: bool;
+	rlt__PRE2_AT_V40_a_NONMASKED_FALSE: bool;
+	omcdc_14: bool;
+	omcdc_15: bool;
+	rlt__PRE3_COMB_USED_BY_V41_b: bool;
+	rlt__PRE3_AT_V41_b_NONMASKED_TRUE: bool;
+	rlt__PRE3_AT_V41_b_NONMASKED_FALSE: bool;
+	omcdc_16: bool;
+	omcdc_17: bool;
+	gry_ite_COMB_USED_BY_V51_time: bool;
+	V40_a_COMB_USED_BY_rlt__PRE3: bool;
+	V40_a_AT_rlt__PRE3_NONMASKED_TRUE: bool;
+	V40_a_AT_rlt__PRE3_NONMASKED_FALSE: bool;
+	omcdc_18: bool;
+	omcdc_19: bool;
+	V41_b_COMB_USED_BY_rlt__PRE2: bool;
+	V41_b_AT_rlt__PRE2_NONMASKED_TRUE: bool;
+	V41_b_AT_rlt__PRE2_NONMASKED_FALSE: bool;
+	omcdc_20: bool;
+	omcdc_21: bool;
+	V51_time_COMB_USED_BY_rlt__PRE1: bool;
+	V51_time_COMB_USED_BY_rlt__PRE: bool;
+	V40_a_COMB_OBSERVED: bool;
+	V41_b_COMB_OBSERVED: bool;
+	V51_time_COMB_OBSERVED: bool;
+	V13_b_COMB_OBSERVED: bool;
+	gry_ite_COMB_OBSERVED: bool;
+	rlt__PRE_COMB_OBSERVED: bool;
+	OK_COMB_OBSERVED: bool;
+	V14_d_COMB_OBSERVED: bool;
+	rlt__PRE3_COMB_OBSERVED: bool;
+	rlt__PRE2_COMB_OBSERVED: bool;
+	rlt__PRE1_COMB_OBSERVED: bool;
+	V40_a_SEQ_USED_BY_rlt__PRE3: bool;
+	rlt__PRE2_SEQ_USED_BY_rlt__PRE3: bool;
+	V41_b_SEQ_USED_BY_rlt__PRE2: bool;
+	rlt__PRE3_SEQ_USED_BY_rlt__PRE2: bool;
+	V51_time_SEQ_USED_BY_rlt__PRE1: bool;
+	gry_ite_SEQ_USED_BY_rlt__PRE1: bool;
+	rlt__PRE_SEQ_USED_BY_rlt__PRE1: bool;
+	rlt__PRE1_SEQ_USED_BY_rlt__PRE1: bool;
+	V51_time_SEQ_USED_BY_rlt__PRE: bool;
+	gry_ite_SEQ_USED_BY_rlt__PRE: bool;
+	rlt__PRE_SEQ_USED_BY_rlt__PRE: bool;
+	rlt__PRE1_SEQ_USED_BY_rlt__PRE: bool;
+	rlt__PRE2_TRUE_AT_V40_a_AFFECTING_AT_CAPTURE: bool;
+	rlt__PRE2_FALSE_AT_V40_a_AFFECTING_AT_CAPTURE: bool;
+	rlt__PRE3_TRUE_AT_V41_b_AFFECTING_AT_CAPTURE: bool;
+	rlt__PRE3_FALSE_AT_V41_b_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_TRUE_AT_gry_ite_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_FALSE_AT_gry_ite_AFFECTING_AT_CAPTURE: bool;
+	V40_a_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE: bool;
+	V40_a_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE: bool;
+	V41_b_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE: bool;
+	V41_b_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE: bool;
+	V13_b_TRUE_AT_OK_AFFECTING_AT_CAPTURE: bool;
+	V13_b_FALSE_AT_OK_AFFECTING_AT_CAPTURE: bool;
+	V14_d_TRUE_AT_OK_AFFECTING_AT_CAPTURE: bool;
+	V14_d_FALSE_AT_OK_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_TRUE_AT_OK_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_FALSE_AT_OK_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_TRUE_AT_V14_d_AFFECTING_AT_CAPTURE: bool;
+	BSE_1_FALSE_AT_V14_d_AFFECTING_AT_CAPTURE: bool;
+	V40_a_TRUE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE: bool;
+	V40_a_FALSE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE: bool;
+	V41_b_TRUE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE: bool;
+	V41_b_FALSE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE: bool;
+	token: int;
+	token_first: subrange[-2,4] of int;
+	token_next: subrange[-2,4] of int;
+let
+
+	gry_ite = (if (rlt__PRE = 3)
+         then 0
+         else (rlt__PRE1 + 1));
+
+	/*"Used By" Equations */
+	rlt__PRE_COMB_USED_BY_gry_ite = (true);
+	BSE_1_AT_gry_ite_NONMASKED_TRUE = ((rlt__PRE = 3) and ((true)));
+	BSE_1_AT_gry_ite_NONMASKED_FALSE = ((not (rlt__PRE = 3)) and ((true)));
+	rlt__PRE1_COMB_USED_BY_gry_ite = (not (rlt__PRE = 3) and true);
+
+	OK = (V13_b = V14_d);
+
+	/*"Used By" Equations */
+	V13_b_COMB_USED_BY_OK = true;
+	V13_b_AT_OK_NONMASKED_TRUE = (V13_b and (true));
+	V13_b_AT_OK_NONMASKED_FALSE = ((not V13_b) and (true));
+	V14_d_COMB_USED_BY_OK = true;
+	V14_d_AT_OK_NONMASKED_TRUE = (V14_d and (true));
+	V14_d_AT_OK_NONMASKED_FALSE = ((not V14_d) and (true));
+	BSE_1_AT_OK_NONMASKED_TRUE = ((V13_b = V14_d) and (true));
+	BSE_1_AT_OK_NONMASKED_FALSE = ((not (V13_b = V14_d)) and (true));
+
+	V13_b = (V40_a and 
+      V41_b);
+
+	/*"Used By" Equations */
+	V40_a_COMB_USED_BY_V13_b = V41_b;
+	V40_a_AT_V13_b_NONMASKED_TRUE = (V40_a and (V41_b));
+	V40_a_AT_V13_b_NONMASKED_FALSE = ((not V40_a) and (V41_b));
+	V41_b_COMB_USED_BY_V13_b = V40_a;
+	V41_b_AT_V13_b_NONMASKED_TRUE = (V41_b and (V40_a));
+	V41_b_AT_V13_b_NONMASKED_FALSE = ((not V41_b) and (V40_a));
+
+	V14_d = (V51_time = 2);
+
+	/*"Used By" Equations */
+	V51_time_COMB_USED_BY_V14_d = true;
+	BSE_1_AT_V14_d_NONMASKED_TRUE = ((V51_time = 2) and (true));
+	BSE_1_AT_V14_d_NONMASKED_FALSE = ((not (V51_time = 2)) and (true));
+
+	V40_a = (false -> ( not rlt__PRE2));
+
+	/*"Used By" Equations */
+	rlt__PRE2_COMB_USED_BY_V40_a = (false -> true);
+	rlt__PRE2_AT_V40_a_NONMASKED_TRUE = (rlt__PRE2 and ((false -> true)));
+	rlt__PRE2_AT_V40_a_NONMASKED_FALSE = ((not rlt__PRE2) and ((false -> true)));
+
+	V41_b = (false -> rlt__PRE3);
+
+	/*"Used By" Equations */
+	rlt__PRE3_COMB_USED_BY_V41_b = (false -> true);
+	rlt__PRE3_AT_V41_b_NONMASKED_TRUE = (rlt__PRE3 and ((false -> true)));
+	rlt__PRE3_AT_V41_b_NONMASKED_FALSE = ((not rlt__PRE3) and ((false -> true)));
+
+	V51_time = (0 -> gry_ite);
+
+	/*"Used By" Equations */
+	gry_ite_COMB_USED_BY_V51_time = (false -> true);
+
+	rlt__PRE3 = (false -> ( pre V40_a));
+
+	/*"Used By" Equations */
+	V40_a_COMB_USED_BY_rlt__PRE3 = false;
+	V40_a_AT_rlt__PRE3_NONMASKED_TRUE = (false -> (pre V40_a) and (true));
+	V40_a_AT_rlt__PRE3_NONMASKED_FALSE = (false -> (pre (not V40_a)) and (true));
+
+	rlt__PRE2 = (false -> ( pre V41_b));
+
+	/*"Used By" Equations */
+	V41_b_COMB_USED_BY_rlt__PRE2 = false;
+	V41_b_AT_rlt__PRE2_NONMASKED_TRUE = (false -> (pre V41_b) and (true));
+	V41_b_AT_rlt__PRE2_NONMASKED_FALSE = (false -> (pre (not V41_b)) and (true));
+
+	rlt__PRE1 = (0 -> ( pre V51_time));
+
+	/*"Used By" Equations */
+	V51_time_COMB_USED_BY_rlt__PRE1 = false;
+
+	rlt__PRE = (0 -> ( pre V51_time));
+
+	/*"Used By" Equations */
+	V51_time_COMB_USED_BY_rlt__PRE = false;
+
+	/* comb_observed equations */
+	V40_a_COMB_OBSERVED = (V40_a_COMB_USED_BY_V13_b and V13_b_COMB_OBSERVED);
+	V41_b_COMB_OBSERVED = (V41_b_COMB_USED_BY_V13_b and V13_b_COMB_OBSERVED);
+	V51_time_COMB_OBSERVED = (V51_time_COMB_USED_BY_V14_d and V14_d_COMB_OBSERVED);
+	V13_b_COMB_OBSERVED = (V13_b_COMB_USED_BY_OK and OK_COMB_OBSERVED);
+	gry_ite_COMB_OBSERVED = (gry_ite_COMB_USED_BY_V51_time and V51_time_COMB_OBSERVED);
+	rlt__PRE_COMB_OBSERVED = (rlt__PRE_COMB_USED_BY_gry_ite and gry_ite_COMB_OBSERVED);
+	OK_COMB_OBSERVED = true;
+	V14_d_COMB_OBSERVED = (V14_d_COMB_USED_BY_OK and OK_COMB_OBSERVED);
+	rlt__PRE3_COMB_OBSERVED = (rlt__PRE3_COMB_USED_BY_V41_b and V41_b_COMB_OBSERVED);
+	rlt__PRE2_COMB_OBSERVED = (rlt__PRE2_COMB_USED_BY_V40_a and V40_a_COMB_OBSERVED);
+	rlt__PRE1_COMB_OBSERVED = (rlt__PRE1_COMB_USED_BY_gry_ite and gry_ite_COMB_OBSERVED);
+
+	/* backwards slice from delay rlt__PRE3 */
+	V40_a_SEQ_USED_BY_rlt__PRE3 = true;
+	rlt__PRE2_SEQ_USED_BY_rlt__PRE3 = (rlt__PRE2_COMB_USED_BY_V40_a and V40_a_SEQ_USED_BY_rlt__PRE3);
+
+	/* backwards slice from delay rlt__PRE2 */
+	V41_b_SEQ_USED_BY_rlt__PRE2 = true;
+	rlt__PRE3_SEQ_USED_BY_rlt__PRE2 = (rlt__PRE3_COMB_USED_BY_V41_b and V41_b_SEQ_USED_BY_rlt__PRE2);
+
+	/* backwards slice from delay rlt__PRE1 */
+	V51_time_SEQ_USED_BY_rlt__PRE1 = true;
+	gry_ite_SEQ_USED_BY_rlt__PRE1 = (gry_ite_COMB_USED_BY_V51_time and V51_time_SEQ_USED_BY_rlt__PRE1);
+	rlt__PRE_SEQ_USED_BY_rlt__PRE1 = (rlt__PRE_COMB_USED_BY_gry_ite and gry_ite_SEQ_USED_BY_rlt__PRE1);
+	rlt__PRE1_SEQ_USED_BY_rlt__PRE1 = (rlt__PRE1_COMB_USED_BY_gry_ite and gry_ite_SEQ_USED_BY_rlt__PRE1);
+
+	/* backwards slice from delay rlt__PRE */
+	V51_time_SEQ_USED_BY_rlt__PRE = true;
+	gry_ite_SEQ_USED_BY_rlt__PRE = (gry_ite_COMB_USED_BY_V51_time and V51_time_SEQ_USED_BY_rlt__PRE);
+	rlt__PRE_SEQ_USED_BY_rlt__PRE = (rlt__PRE_COMB_USED_BY_gry_ite and gry_ite_SEQ_USED_BY_rlt__PRE);
+	rlt__PRE1_SEQ_USED_BY_rlt__PRE = (rlt__PRE1_COMB_USED_BY_gry_ite and gry_ite_SEQ_USED_BY_rlt__PRE);
+
+	/* Affecting at capture equations */
+	rlt__PRE2_TRUE_AT_V40_a_AFFECTING_AT_CAPTURE = (rlt__PRE2_AT_V40_a_NONMASKED_TRUE and (V40_a_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) -> ((rlt__PRE2_AT_V40_a_NONMASKED_TRUE and (V40_a_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) or pre rlt__PRE2_TRUE_AT_V40_a_AFFECTING_AT_CAPTURE);
+	rlt__PRE2_FALSE_AT_V40_a_AFFECTING_AT_CAPTURE = (rlt__PRE2_AT_V40_a_NONMASKED_FALSE and (V40_a_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) -> ((rlt__PRE2_AT_V40_a_NONMASKED_FALSE and (V40_a_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) or pre rlt__PRE2_FALSE_AT_V40_a_AFFECTING_AT_CAPTURE);
+	rlt__PRE3_TRUE_AT_V41_b_AFFECTING_AT_CAPTURE = (rlt__PRE3_AT_V41_b_NONMASKED_TRUE and (V41_b_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) -> ((rlt__PRE3_AT_V41_b_NONMASKED_TRUE and (V41_b_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) or pre rlt__PRE3_TRUE_AT_V41_b_AFFECTING_AT_CAPTURE);
+	rlt__PRE3_FALSE_AT_V41_b_AFFECTING_AT_CAPTURE = (rlt__PRE3_AT_V41_b_NONMASKED_FALSE and (V41_b_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) -> ((rlt__PRE3_AT_V41_b_NONMASKED_FALSE and (V41_b_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) or pre rlt__PRE3_FALSE_AT_V41_b_AFFECTING_AT_CAPTURE);
+	BSE_1_TRUE_AT_gry_ite_AFFECTING_AT_CAPTURE = (BSE_1_AT_gry_ite_NONMASKED_TRUE and ((gry_ite_SEQ_USED_BY_rlt__PRE1 and token=TOKEN_D3) or (gry_ite_SEQ_USED_BY_rlt__PRE and token=TOKEN_D4))) -> ((BSE_1_AT_gry_ite_NONMASKED_TRUE and ((gry_ite_SEQ_USED_BY_rlt__PRE1 and token=TOKEN_D3) or (gry_ite_SEQ_USED_BY_rlt__PRE and token=TOKEN_D4))) or pre BSE_1_TRUE_AT_gry_ite_AFFECTING_AT_CAPTURE);
+	BSE_1_FALSE_AT_gry_ite_AFFECTING_AT_CAPTURE = (BSE_1_AT_gry_ite_NONMASKED_FALSE and ((gry_ite_SEQ_USED_BY_rlt__PRE1 and token=TOKEN_D3) or (gry_ite_SEQ_USED_BY_rlt__PRE and token=TOKEN_D4))) -> ((BSE_1_AT_gry_ite_NONMASKED_FALSE and ((gry_ite_SEQ_USED_BY_rlt__PRE1 and token=TOKEN_D3) or (gry_ite_SEQ_USED_BY_rlt__PRE and token=TOKEN_D4))) or pre BSE_1_FALSE_AT_gry_ite_AFFECTING_AT_CAPTURE);
+	V40_a_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE = (V40_a_AT_V13_b_NONMASKED_TRUE and false) -> ((V40_a_AT_V13_b_NONMASKED_TRUE and false) or pre V40_a_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE);
+	V40_a_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE = (V40_a_AT_V13_b_NONMASKED_FALSE and false) -> ((V40_a_AT_V13_b_NONMASKED_FALSE and false) or pre V40_a_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE);
+	V41_b_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE = (V41_b_AT_V13_b_NONMASKED_TRUE and false) -> ((V41_b_AT_V13_b_NONMASKED_TRUE and false) or pre V41_b_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE);
+	V41_b_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE = (V41_b_AT_V13_b_NONMASKED_FALSE and false) -> ((V41_b_AT_V13_b_NONMASKED_FALSE and false) or pre V41_b_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE);
+	V13_b_TRUE_AT_OK_AFFECTING_AT_CAPTURE = (V13_b_AT_OK_NONMASKED_TRUE and false) -> ((V13_b_AT_OK_NONMASKED_TRUE and false) or pre V13_b_TRUE_AT_OK_AFFECTING_AT_CAPTURE);
+	V13_b_FALSE_AT_OK_AFFECTING_AT_CAPTURE = (V13_b_AT_OK_NONMASKED_FALSE and false) -> ((V13_b_AT_OK_NONMASKED_FALSE and false) or pre V13_b_FALSE_AT_OK_AFFECTING_AT_CAPTURE);
+	V14_d_TRUE_AT_OK_AFFECTING_AT_CAPTURE = (V14_d_AT_OK_NONMASKED_TRUE and false) -> ((V14_d_AT_OK_NONMASKED_TRUE and false) or pre V14_d_TRUE_AT_OK_AFFECTING_AT_CAPTURE);
+	V14_d_FALSE_AT_OK_AFFECTING_AT_CAPTURE = (V14_d_AT_OK_NONMASKED_FALSE and false) -> ((V14_d_AT_OK_NONMASKED_FALSE and false) or pre V14_d_FALSE_AT_OK_AFFECTING_AT_CAPTURE);
+	BSE_1_TRUE_AT_OK_AFFECTING_AT_CAPTURE = (BSE_1_AT_OK_NONMASKED_TRUE and false) -> ((BSE_1_AT_OK_NONMASKED_TRUE and false) or pre BSE_1_TRUE_AT_OK_AFFECTING_AT_CAPTURE);
+	BSE_1_FALSE_AT_OK_AFFECTING_AT_CAPTURE = (BSE_1_AT_OK_NONMASKED_FALSE and false) -> ((BSE_1_AT_OK_NONMASKED_FALSE and false) or pre BSE_1_FALSE_AT_OK_AFFECTING_AT_CAPTURE);
+	BSE_1_TRUE_AT_V14_d_AFFECTING_AT_CAPTURE = (BSE_1_AT_V14_d_NONMASKED_TRUE and false) -> ((BSE_1_AT_V14_d_NONMASKED_TRUE and false) or pre BSE_1_TRUE_AT_V14_d_AFFECTING_AT_CAPTURE);
+	BSE_1_FALSE_AT_V14_d_AFFECTING_AT_CAPTURE = (BSE_1_AT_V14_d_NONMASKED_FALSE and false) -> ((BSE_1_AT_V14_d_NONMASKED_FALSE and false) or pre BSE_1_FALSE_AT_V14_d_AFFECTING_AT_CAPTURE);
+	V40_a_TRUE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE = (V40_a_AT_rlt__PRE3_NONMASKED_TRUE and (rlt__PRE3_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) -> ((V40_a_AT_rlt__PRE3_NONMASKED_TRUE and (rlt__PRE3_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) or pre V40_a_TRUE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE);
+	V40_a_FALSE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE = (V40_a_AT_rlt__PRE3_NONMASKED_FALSE and (rlt__PRE3_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) -> ((V40_a_AT_rlt__PRE3_NONMASKED_FALSE and (rlt__PRE3_SEQ_USED_BY_rlt__PRE2 and token=TOKEN_D2)) or pre V40_a_FALSE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE);
+	V41_b_TRUE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE = (V41_b_AT_rlt__PRE2_NONMASKED_TRUE and (rlt__PRE2_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) -> ((V41_b_AT_rlt__PRE2_NONMASKED_TRUE and (rlt__PRE2_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) or pre V41_b_TRUE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE);
+	V41_b_FALSE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE = (V41_b_AT_rlt__PRE2_NONMASKED_FALSE and (rlt__PRE2_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) -> ((V41_b_AT_rlt__PRE2_NONMASKED_FALSE and (rlt__PRE2_SEQ_USED_BY_rlt__PRE3 and token=TOKEN_D1)) or pre V41_b_FALSE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE);
+
+	/* Token code */
+	token_first = if (token_init) then token_nondet else (0-2);
+	token_next =
+		if (pre(token) = (0-2)) then token_first
+		else (if (pre(token) = (0-1)) then (0-1)
+		else (if (pre(token) = 0) then 0
+		else (if (pre(token) = TOKEN_D1) then
+			(if (rlt__PRE3_COMB_OBSERVED) then 0
+			else (if ((token_nondet = TOKEN_D2) and rlt__PRE3_SEQ_USED_BY_rlt__PRE2) then TOKEN_D2
+			else (0-1)))
+		else (if (pre(token) = TOKEN_D2) then
+			(if (rlt__PRE2_COMB_OBSERVED) then 0
+			else (if ((token_nondet = TOKEN_D1) and rlt__PRE2_SEQ_USED_BY_rlt__PRE3) then TOKEN_D1
+			else (0-1)))
+		else (if (pre(token) = TOKEN_D3) then
+			(if (rlt__PRE1_COMB_OBSERVED) then 0
+			else (if ((token_nondet = TOKEN_D3) and rlt__PRE1_SEQ_USED_BY_rlt__PRE1) then TOKEN_D3
+			else (if ((token_nondet = TOKEN_D4) and rlt__PRE1_SEQ_USED_BY_rlt__PRE) then TOKEN_D4
+			else (0-1))))
+		else (if (pre(token) = TOKEN_D4) then
+			(if (rlt__PRE_COMB_OBSERVED) then 0
+			else (if ((token_nondet = TOKEN_D3) and rlt__PRE_SEQ_USED_BY_rlt__PRE1) then TOKEN_D3
+			else (if ((token_nondet = TOKEN_D4) and rlt__PRE_SEQ_USED_BY_rlt__PRE) then TOKEN_D4
+			else (0-1))))
+		else (0-1)))))));
+	token = token_first -> token_next;
+
+	/* Check properties */
+	omcdc_0 = not ((BSE_1_AT_gry_ite_NONMASKED_TRUE and gry_ite_COMB_OBSERVED) or (BSE_1_TRUE_AT_gry_ite_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_0;
+	omcdc_1 = not ((BSE_1_AT_gry_ite_NONMASKED_FALSE and gry_ite_COMB_OBSERVED) or (BSE_1_FALSE_AT_gry_ite_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_1;
+	omcdc_2 = not ((V13_b_AT_OK_NONMASKED_TRUE and OK_COMB_OBSERVED) or (V13_b_TRUE_AT_OK_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_2;
+	omcdc_3 = not ((V13_b_AT_OK_NONMASKED_FALSE and OK_COMB_OBSERVED) or (V13_b_FALSE_AT_OK_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_3;
+	omcdc_4 = not ((V14_d_AT_OK_NONMASKED_TRUE and OK_COMB_OBSERVED) or (V14_d_TRUE_AT_OK_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_4;
+	omcdc_5 = not ((V14_d_AT_OK_NONMASKED_FALSE and OK_COMB_OBSERVED) or (V14_d_FALSE_AT_OK_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_5;
+	omcdc_6 = not ((BSE_1_AT_OK_NONMASKED_TRUE and OK_COMB_OBSERVED) or (BSE_1_TRUE_AT_OK_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_6;
+	omcdc_7 = not ((BSE_1_AT_OK_NONMASKED_FALSE and OK_COMB_OBSERVED) or (BSE_1_FALSE_AT_OK_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_7;
+	omcdc_8 = not ((V40_a_AT_V13_b_NONMASKED_TRUE and V13_b_COMB_OBSERVED) or (V40_a_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_8;
+	omcdc_9 = not ((V40_a_AT_V13_b_NONMASKED_FALSE and V13_b_COMB_OBSERVED) or (V40_a_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_9;
+	omcdc_10 = not ((V41_b_AT_V13_b_NONMASKED_TRUE and V13_b_COMB_OBSERVED) or (V41_b_TRUE_AT_V13_b_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_10;
+	omcdc_11 = not ((V41_b_AT_V13_b_NONMASKED_FALSE and V13_b_COMB_OBSERVED) or (V41_b_FALSE_AT_V13_b_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_11;
+	omcdc_12 = not ((BSE_1_AT_V14_d_NONMASKED_TRUE and V14_d_COMB_OBSERVED) or (BSE_1_TRUE_AT_V14_d_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_12;
+	omcdc_13 = not ((BSE_1_AT_V14_d_NONMASKED_FALSE and V14_d_COMB_OBSERVED) or (BSE_1_FALSE_AT_V14_d_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_13;
+	omcdc_14 = not ((rlt__PRE2_AT_V40_a_NONMASKED_TRUE and V40_a_COMB_OBSERVED) or (rlt__PRE2_TRUE_AT_V40_a_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_14;
+	omcdc_15 = not ((rlt__PRE2_AT_V40_a_NONMASKED_FALSE and V40_a_COMB_OBSERVED) or (rlt__PRE2_FALSE_AT_V40_a_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_15;
+	omcdc_16 = not ((rlt__PRE3_AT_V41_b_NONMASKED_TRUE and V41_b_COMB_OBSERVED) or (rlt__PRE3_TRUE_AT_V41_b_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_16;
+	omcdc_17 = not ((rlt__PRE3_AT_V41_b_NONMASKED_FALSE and V41_b_COMB_OBSERVED) or (rlt__PRE3_FALSE_AT_V41_b_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_17;
+	omcdc_18 = not ((V40_a_AT_rlt__PRE3_NONMASKED_TRUE and rlt__PRE3_COMB_OBSERVED) or (V40_a_TRUE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_18;
+	omcdc_19 = not ((V40_a_AT_rlt__PRE3_NONMASKED_FALSE and rlt__PRE3_COMB_OBSERVED) or (V40_a_FALSE_AT_rlt__PRE3_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_19;
+	omcdc_20 = not ((V41_b_AT_rlt__PRE2_NONMASKED_TRUE and rlt__PRE2_COMB_OBSERVED) or (V41_b_TRUE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_20;
+	omcdc_21 = not ((V41_b_AT_rlt__PRE2_NONMASKED_FALSE and rlt__PRE2_COMB_OBSERVED) or (V41_b_FALSE_AT_rlt__PRE2_AFFECTING_AT_CAPTURE and token=0));
+	--%PROPERTY omcdc_21;
+
+/* Obligations for statement gry_ite on line 20 of the original program. */
+
+/* Obligations for statement OK on line 26 of the original program. */
+
+/* Obligations for statement V13_b on line 28 of the original program. */
+
+/* Obligations for statement V14_d on line 31 of the original program. */
+
+/* Obligations for statement V40_a on line 33 of the original program. */
+
+/* Obligations for statement V41_b on line 35 of the original program. */
+
+/* Obligations for statement V51_time on line 37 of the original program. */
+
+/* Obligations for statement rlt__PRE3 on line 39 of the original program. */
+
+/* Obligations for statement rlt__PRE2 on line 41 of the original program. */
+
+/* Obligations for statement rlt__PRE1 on line 43 of the original program. */
+
+/* Obligations for statement rlt__PRE on line 45 of the original program. */
+
+tel;

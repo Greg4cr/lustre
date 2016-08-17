@@ -1,0 +1,113 @@
+const TOKEN_INIT_STATE : subrange[-2,0] of int = -2;
+const TOKEN_ERROR_STATE : subrange[-2,0] of int = -1;
+const TOKEN_OUTPUT_STATE : subrange[-2,0] of int = 0;
+
+node SimpleAnd(A: bool; B: bool; C: bool;
+	token_init:bool)
+returns(E: bool);
+var
+	D: bool;
+	A_COMB_USED_BY_D: bool;
+	A_AT_D_NONMASKED_TRUE: bool;
+	A_AT_D_NONMASKED_FALSE: bool;
+	omcdc_0: bool;
+	omcdc_1: bool;
+	B_COMB_USED_BY_D: bool;
+	B_AT_D_NONMASKED_TRUE: bool;
+	B_AT_D_NONMASKED_FALSE: bool;
+	omcdc_2: bool;
+	omcdc_3: bool;
+	D_COMB_USED_BY_E: bool;
+	D_AT_E_NONMASKED_TRUE: bool;
+	D_AT_E_NONMASKED_FALSE: bool;
+	omcdc_4: bool;
+	omcdc_5: bool;
+	C_COMB_USED_BY_E: bool;
+	C_AT_E_NONMASKED_TRUE: bool;
+	C_AT_E_NONMASKED_FALSE: bool;
+	omcdc_6: bool;
+	omcdc_7: bool;
+	A_COMB_OBSERVED: bool;
+	B_COMB_OBSERVED: bool;
+	C_COMB_OBSERVED: bool;
+	D_COMB_OBSERVED: bool;
+	E_COMB_OBSERVED: bool;
+	A_TRUE_AT_D_AFFECTING_AT_CAPTURE: bool;
+	A_FALSE_AT_D_AFFECTING_AT_CAPTURE: bool;
+	B_TRUE_AT_D_AFFECTING_AT_CAPTURE: bool;
+	B_FALSE_AT_D_AFFECTING_AT_CAPTURE: bool;
+	D_TRUE_AT_E_AFFECTING_AT_CAPTURE: bool;
+	D_FALSE_AT_E_AFFECTING_AT_CAPTURE: bool;
+	C_TRUE_AT_E_AFFECTING_AT_CAPTURE: bool;
+	C_FALSE_AT_E_AFFECTING_AT_CAPTURE: bool;
+	token: subrange[-2,0] of int;
+	token_first: subrange[-2,0] of int;
+	token_next: subrange[-2,0] of int;
+let
+
+	D = (A or B);
+
+	/*"Used By" Equations */
+	A_COMB_USED_BY_D = (not (B));
+	A_AT_D_NONMASKED_TRUE = (A and ((not (B))));
+	A_AT_D_NONMASKED_FALSE = ((not A) and ((not (B))));
+	B_COMB_USED_BY_D = (not (A));
+	B_AT_D_NONMASKED_TRUE = (B and ((not (A))));
+	B_AT_D_NONMASKED_FALSE = ((not B) and ((not (A))));
+
+	E = (D and C);
+
+	/*"Used By" Equations */
+	D_COMB_USED_BY_E = C;
+	D_AT_E_NONMASKED_TRUE = (D and (C));
+	D_AT_E_NONMASKED_FALSE = ((not D) and (C));
+	C_COMB_USED_BY_E = D;
+	C_AT_E_NONMASKED_TRUE = (C and (D));
+	C_AT_E_NONMASKED_FALSE = ((not C) and (D));
+
+	/* comb_observed equations */
+	A_COMB_OBSERVED = (A_COMB_USED_BY_D and D_COMB_OBSERVED);
+	B_COMB_OBSERVED = (B_COMB_USED_BY_D and D_COMB_OBSERVED);
+	C_COMB_OBSERVED = (C_COMB_USED_BY_E and E_COMB_OBSERVED);
+	D_COMB_OBSERVED = (D_COMB_USED_BY_E and E_COMB_OBSERVED);
+	E_COMB_OBSERVED = true;
+
+	/* Affecting at capture equations */
+	A_TRUE_AT_D_AFFECTING_AT_CAPTURE = (A_AT_D_NONMASKED_TRUE and false) -> ((A_AT_D_NONMASKED_TRUE and false) or pre A_TRUE_AT_D_AFFECTING_AT_CAPTURE);
+	A_FALSE_AT_D_AFFECTING_AT_CAPTURE = (A_AT_D_NONMASKED_FALSE and false) -> ((A_AT_D_NONMASKED_FALSE and false) or pre A_FALSE_AT_D_AFFECTING_AT_CAPTURE);
+	B_TRUE_AT_D_AFFECTING_AT_CAPTURE = (B_AT_D_NONMASKED_TRUE and false) -> ((B_AT_D_NONMASKED_TRUE and false) or pre B_TRUE_AT_D_AFFECTING_AT_CAPTURE);
+	B_FALSE_AT_D_AFFECTING_AT_CAPTURE = (B_AT_D_NONMASKED_FALSE and false) -> ((B_AT_D_NONMASKED_FALSE and false) or pre B_FALSE_AT_D_AFFECTING_AT_CAPTURE);
+	D_TRUE_AT_E_AFFECTING_AT_CAPTURE = (D_AT_E_NONMASKED_TRUE and false) -> ((D_AT_E_NONMASKED_TRUE and false) or pre D_TRUE_AT_E_AFFECTING_AT_CAPTURE);
+	D_FALSE_AT_E_AFFECTING_AT_CAPTURE = (D_AT_E_NONMASKED_FALSE and false) -> ((D_AT_E_NONMASKED_FALSE and false) or pre D_FALSE_AT_E_AFFECTING_AT_CAPTURE);
+	C_TRUE_AT_E_AFFECTING_AT_CAPTURE = (C_AT_E_NONMASKED_TRUE and false) -> ((C_AT_E_NONMASKED_TRUE and false) or pre C_TRUE_AT_E_AFFECTING_AT_CAPTURE);
+	C_FALSE_AT_E_AFFECTING_AT_CAPTURE = (C_AT_E_NONMASKED_FALSE and false) -> ((C_AT_E_NONMASKED_FALSE and false) or pre C_FALSE_AT_E_AFFECTING_AT_CAPTURE);
+
+	/* Token code */
+	token_first = if (token_init) then TOKEN_ERROR_STATE else TOKEN_INIT_STATE;
+	token_next =
+		if (pre(token) = TOKEN_INIT_STATE) then token_first
+		else (if (pre(token) = TOKEN_ERROR_STATE) then TOKEN_ERROR_STATE
+		else (if (pre(token) = TOKEN_OUTPUT_STATE) then TOKEN_OUTPUT_STATE
+		else TOKEN_ERROR_STATE));
+	token = token_first -> token_next;
+
+	/* Check properties */
+/* Obligations for statement D on line 8 of the original program. */
+	omcdc_0 = not ((A_AT_D_NONMASKED_TRUE and D_COMB_OBSERVED) or (A_TRUE_AT_D_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_0;
+	omcdc_1 = not ((A_AT_D_NONMASKED_FALSE and D_COMB_OBSERVED) or (A_FALSE_AT_D_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_1;
+	omcdc_2 = not ((B_AT_D_NONMASKED_TRUE and D_COMB_OBSERVED) or (B_TRUE_AT_D_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_2;
+	omcdc_3 = not ((B_AT_D_NONMASKED_FALSE and D_COMB_OBSERVED) or (B_FALSE_AT_D_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_3;
+/* Obligations for statement E on line 10 of the original program. */
+	omcdc_4 = not ((D_AT_E_NONMASKED_TRUE and E_COMB_OBSERVED) or (D_TRUE_AT_E_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_4;
+	omcdc_5 = not ((D_AT_E_NONMASKED_FALSE and E_COMB_OBSERVED) or (D_FALSE_AT_E_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_5;
+	omcdc_6 = not ((C_AT_E_NONMASKED_TRUE and E_COMB_OBSERVED) or (C_TRUE_AT_E_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_6;
+	omcdc_7 = not ((C_AT_E_NONMASKED_FALSE and E_COMB_OBSERVED) or (C_FALSE_AT_E_AFFECTING_AT_CAPTURE and token=TOKEN_OUTPUT_STATE));
+	--%PROPERTY omcdc_7;
+tel;

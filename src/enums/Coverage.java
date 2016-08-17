@@ -1,7 +1,8 @@
 package enums;
 
 public enum Coverage {
-	MCDC, CONDITION, BRANCH, DECISION;
+	MCDC, CONDITION, BRANCH, DECISION,
+	OMCDC, OCONDITION, OBRANCH, ODECISION;
 
 	@Override
 	public String toString() {

@@ -1,0 +1,106 @@
+node Edge(
+  X : bool
+) returns (
+  E : bool
+);
+var
+  A : bool;
+  B : bool;
+  X_TRUE_AT_A_MCDC_TRUE_0 : bool;
+  X_FALSE_AT_A_MCDC_FALSE_1 : bool;
+  X_TRUE_AT_A_MCDC_FALSE_2 : bool;
+  X_FALSE_AT_A_MCDC_TRUE_3 : bool;
+  X_TRUE_AT_A_MCDC_FALSE_4 : bool;
+  X_FALSE_AT_A_MCDC_TRUE_5 : bool;
+  X_TRUE_AT_A_MCDC_TRUE_6 : bool;
+  X_FALSE_AT_A_MCDC_FALSE_7 : bool;
+  A_TRUE_AT_B_MCDC_TRUE_8 : bool;
+  A_FALSE_AT_B_MCDC_FALSE_9 : bool;
+  X_TRUE_AT_B_MCDC_TRUE_10 : bool;
+  X_FALSE_AT_B_MCDC_FALSE_11 : bool;
+  A_TRUE_AT_B_MCDC_FALSE_12 : bool;
+  A_FALSE_AT_B_MCDC_TRUE_13 : bool;
+  X_TRUE_AT_B_MCDC_FALSE_14 : bool;
+  X_FALSE_AT_B_MCDC_TRUE_15 : bool;
+  A_TRUE_AT_B_MCDC_TRUE_16 : bool;
+  A_FALSE_AT_B_MCDC_FALSE_17 : bool;
+  B_TRUE_AT_E_MCDC_TRUE_18 : bool;
+  B_FALSE_AT_E_MCDC_FALSE_19 : bool;
+  B_TRUE_AT_E_MCDC_FALSE_20 : bool;
+  B_FALSE_AT_E_MCDC_TRUE_21 : bool;
+let
+  --%MAIN;
+  A = ((X and (not (pre X))) or ((not X) and (pre X)));
+
+  B = (((A and X) or ((not A) and (not X))) and (pre A));
+
+  E = ((false -> B) and (not (pre B)));
+
+  X_TRUE_AT_A_MCDC_TRUE_0 = (not ((X and (not (pre X))) and (not ((not X) and (pre X)))));
+
+  X_FALSE_AT_A_MCDC_FALSE_1 = (not (((not X) and (not (pre X))) and (not ((not X) and (pre X)))));
+
+  X_TRUE_AT_A_MCDC_FALSE_2 = (not ((X and (pre X)) and (not ((not X) and (pre X)))));
+
+  X_FALSE_AT_A_MCDC_TRUE_3 = (not ((X and (pre (not X))) and (not ((not X) and (pre X)))));
+
+  X_TRUE_AT_A_MCDC_FALSE_4 = (not ((not (X and (not (pre X)))) and (X and (pre X))));
+
+  X_FALSE_AT_A_MCDC_TRUE_5 = (not ((not (X and (not (pre X)))) and ((not X) and (pre X))));
+
+  X_TRUE_AT_A_MCDC_TRUE_6 = (not ((not (X and (not (pre X)))) and ((not X) and (pre X))));
+
+  X_FALSE_AT_A_MCDC_FALSE_7 = (not ((not (X and (not (pre X)))) and ((not X) and (pre (not X)))));
+
+  A_TRUE_AT_B_MCDC_TRUE_8 = (not (((A and X) and (not ((not A) and (not X)))) and (pre A)));
+
+  A_FALSE_AT_B_MCDC_FALSE_9 = (not ((((not A) and X) and (not ((not A) and (not X)))) and (pre A)));
+
+  X_TRUE_AT_B_MCDC_TRUE_10 = (not (((A and X) and (not ((not A) and (not X)))) and (pre A)));
+
+  X_FALSE_AT_B_MCDC_FALSE_11 = (not (((A and (not X)) and (not ((not A) and (not X)))) and (pre A)));
+
+  A_TRUE_AT_B_MCDC_FALSE_12 = (not (((not (A and X)) and (A and (not X))) and (pre A)));
+
+  A_FALSE_AT_B_MCDC_TRUE_13 = (not (((not (A and X)) and ((not A) and (not X))) and (pre A)));
+
+  X_TRUE_AT_B_MCDC_FALSE_14 = (not (((not (A and X)) and ((not A) and X)) and (pre A)));
+
+  X_FALSE_AT_B_MCDC_TRUE_15 = (not (((not (A and X)) and ((not A) and (not X))) and (pre A)));
+
+  A_TRUE_AT_B_MCDC_TRUE_16 = (not (((A and X) or ((not A) and (not X))) and (pre A)));
+
+  A_FALSE_AT_B_MCDC_FALSE_17 = (not (((A and X) or ((not A) and (not X))) and (pre (not A))));
+
+  B_TRUE_AT_E_MCDC_TRUE_18 = (not ((false -> B) and (not (pre B))));
+
+  B_FALSE_AT_E_MCDC_FALSE_19 = (not ((false -> (not B)) and (not (pre B))));
+
+  B_TRUE_AT_E_MCDC_FALSE_20 = (not ((false -> B) and (pre B)));
+
+  B_FALSE_AT_E_MCDC_TRUE_21 = (not ((false -> B) and (pre (not B))));
+
+  --%PROPERTY X_TRUE_AT_A_MCDC_TRUE_0;
+  --%PROPERTY X_FALSE_AT_A_MCDC_FALSE_1;
+  --%PROPERTY X_TRUE_AT_A_MCDC_FALSE_2;
+  --%PROPERTY X_FALSE_AT_A_MCDC_TRUE_3;
+  --%PROPERTY X_TRUE_AT_A_MCDC_FALSE_4;
+  --%PROPERTY X_FALSE_AT_A_MCDC_TRUE_5;
+  --%PROPERTY X_TRUE_AT_A_MCDC_TRUE_6;
+  --%PROPERTY X_FALSE_AT_A_MCDC_FALSE_7;
+  --%PROPERTY A_TRUE_AT_B_MCDC_TRUE_8;
+  --%PROPERTY A_FALSE_AT_B_MCDC_FALSE_9;
+  --%PROPERTY X_TRUE_AT_B_MCDC_TRUE_10;
+  --%PROPERTY X_FALSE_AT_B_MCDC_FALSE_11;
+  --%PROPERTY A_TRUE_AT_B_MCDC_FALSE_12;
+  --%PROPERTY A_FALSE_AT_B_MCDC_TRUE_13;
+  --%PROPERTY X_TRUE_AT_B_MCDC_FALSE_14;
+  --%PROPERTY X_FALSE_AT_B_MCDC_TRUE_15;
+  --%PROPERTY A_TRUE_AT_B_MCDC_TRUE_16;
+  --%PROPERTY A_FALSE_AT_B_MCDC_FALSE_17;
+  --%PROPERTY B_TRUE_AT_E_MCDC_TRUE_18;
+  --%PROPERTY B_FALSE_AT_E_MCDC_FALSE_19;
+  --%PROPERTY B_TRUE_AT_E_MCDC_FALSE_20;
+  --%PROPERTY B_FALSE_AT_E_MCDC_TRUE_21;
+
+tel;

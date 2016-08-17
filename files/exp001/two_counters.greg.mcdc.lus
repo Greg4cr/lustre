@@ -1,0 +1,138 @@
+node top(
+  x : bool
+) returns (
+  OK : bool
+);
+var
+  gry_ite : int;
+  V13_b : bool;
+  V14_d : bool;
+  V40_a : bool;
+  V41_b : bool;
+  V51_time : int;
+  rlt__PRE3 : bool;
+  rlt__PRE2 : bool;
+  rlt__PRE1 : int;
+  rlt__PRE : int;
+  ArithExpr_0_TRUE_AT_gry_ite_MCDC_TRUE_0 : bool;
+  ArithExpr_0_FALSE_AT_gry_ite_MCDC_FALSE_1 : bool;
+  V13_b_TRUE_AT_OK_MCDC_TRUE_2 : bool;
+  V13_b_FALSE_AT_OK_MCDC_FALSE_3 : bool;
+  V14_d_TRUE_AT_OK_MCDC_TRUE_4 : bool;
+  V14_d_FALSE_AT_OK_MCDC_FALSE_5 : bool;
+  V13_b_TRUE_AT_OK_MCDC_FALSE_6 : bool;
+  V13_b_FALSE_AT_OK_MCDC_TRUE_7 : bool;
+  V14_d_TRUE_AT_OK_MCDC_FALSE_8 : bool;
+  V14_d_FALSE_AT_OK_MCDC_TRUE_9 : bool;
+  V40_a_TRUE_AT_V13_b_MCDC_TRUE_10 : bool;
+  V40_a_FALSE_AT_V13_b_MCDC_FALSE_11 : bool;
+  V41_b_TRUE_AT_V13_b_MCDC_TRUE_12 : bool;
+  V41_b_FALSE_AT_V13_b_MCDC_FALSE_13 : bool;
+  ArithExpr_1_TRUE_AT_V14_d_MCDC_TRUE_14 : bool;
+  ArithExpr_1_FALSE_AT_V14_d_MCDC_FALSE_15 : bool;
+  rlt__PRE2_TRUE_AT_V40_a_MCDC_FALSE_16 : bool;
+  rlt__PRE2_FALSE_AT_V40_a_MCDC_TRUE_17 : bool;
+  rlt__PRE3_TRUE_AT_V41_b_MCDC_TRUE_18 : bool;
+  rlt__PRE3_FALSE_AT_V41_b_MCDC_FALSE_19 : bool;
+  V40_a_TRUE_AT_rlt__PRE3_MCDC_TRUE_20 : bool;
+  V40_a_FALSE_AT_rlt__PRE3_MCDC_FALSE_21 : bool;
+  V41_b_TRUE_AT_rlt__PRE2_MCDC_TRUE_22 : bool;
+  V41_b_FALSE_AT_rlt__PRE2_MCDC_FALSE_23 : bool;
+let
+  --%MAIN;
+  gry_ite = (if (rlt__PRE = 3) then 0 else (rlt__PRE1 + 1));
+
+  OK = ((V13_b and V14_d) or ((not V13_b) and (not V14_d)));
+
+  V13_b = (V40_a and V41_b);
+
+  V14_d = (V51_time = 2);
+
+  V40_a = (false -> (not rlt__PRE2));
+
+  V41_b = (false -> rlt__PRE3);
+
+  V51_time = (0 -> gry_ite);
+
+  rlt__PRE3 = (false -> (pre V40_a));
+
+  rlt__PRE2 = (false -> (pre V41_b));
+
+  rlt__PRE1 = (0 -> (pre V51_time));
+
+  rlt__PRE = (0 -> (pre V51_time));
+
+  ArithExpr_0_TRUE_AT_gry_ite_MCDC_TRUE_0 = (not (rlt__PRE = 3));
+
+  ArithExpr_0_FALSE_AT_gry_ite_MCDC_FALSE_1 = (not (not (rlt__PRE = 3)));
+
+  V13_b_TRUE_AT_OK_MCDC_TRUE_2 = (not ((V13_b and V14_d) and (not ((not V13_b) and (not V14_d)))));
+
+  V13_b_FALSE_AT_OK_MCDC_FALSE_3 = (not (((not V13_b) and V14_d) and (not ((not V13_b) and (not V14_d)))));
+
+  V14_d_TRUE_AT_OK_MCDC_TRUE_4 = (not ((V13_b and V14_d) and (not ((not V13_b) and (not V14_d)))));
+
+  V14_d_FALSE_AT_OK_MCDC_FALSE_5 = (not ((V13_b and (not V14_d)) and (not ((not V13_b) and (not V14_d)))));
+
+  V13_b_TRUE_AT_OK_MCDC_FALSE_6 = (not ((not (V13_b and V14_d)) and (V13_b and (not V14_d))));
+
+  V13_b_FALSE_AT_OK_MCDC_TRUE_7 = (not ((not (V13_b and V14_d)) and ((not V13_b) and (not V14_d))));
+
+  V14_d_TRUE_AT_OK_MCDC_FALSE_8 = (not ((not (V13_b and V14_d)) and ((not V13_b) and V14_d)));
+
+  V14_d_FALSE_AT_OK_MCDC_TRUE_9 = (not ((not (V13_b and V14_d)) and ((not V13_b) and (not V14_d))));
+
+  V40_a_TRUE_AT_V13_b_MCDC_TRUE_10 = (not (V40_a and V41_b));
+
+  V40_a_FALSE_AT_V13_b_MCDC_FALSE_11 = (not ((not V40_a) and V41_b));
+
+  V41_b_TRUE_AT_V13_b_MCDC_TRUE_12 = (not (V40_a and V41_b));
+
+  V41_b_FALSE_AT_V13_b_MCDC_FALSE_13 = (not (V40_a and (not V41_b)));
+
+  ArithExpr_1_TRUE_AT_V14_d_MCDC_TRUE_14 = (not (V51_time = 2));
+
+  ArithExpr_1_FALSE_AT_V14_d_MCDC_FALSE_15 = (not (not (V51_time = 2)));
+
+  rlt__PRE2_TRUE_AT_V40_a_MCDC_FALSE_16 = (not (false -> rlt__PRE2));
+
+  rlt__PRE2_FALSE_AT_V40_a_MCDC_TRUE_17 = (not (false -> (not rlt__PRE2)));
+
+  rlt__PRE3_TRUE_AT_V41_b_MCDC_TRUE_18 = (not (false -> rlt__PRE3));
+
+  rlt__PRE3_FALSE_AT_V41_b_MCDC_FALSE_19 = (not (false -> (not rlt__PRE3)));
+
+  V40_a_TRUE_AT_rlt__PRE3_MCDC_TRUE_20 = (not (false -> (pre V40_a)));
+
+  V40_a_FALSE_AT_rlt__PRE3_MCDC_FALSE_21 = (not (false -> (pre (not V40_a))));
+
+  V41_b_TRUE_AT_rlt__PRE2_MCDC_TRUE_22 = (not (false -> (pre V41_b)));
+
+  V41_b_FALSE_AT_rlt__PRE2_MCDC_FALSE_23 = (not (false -> (pre (not V41_b))));
+
+  --%PROPERTY ArithExpr_0_TRUE_AT_gry_ite_MCDC_TRUE_0;
+  --%PROPERTY ArithExpr_0_FALSE_AT_gry_ite_MCDC_FALSE_1;
+  --%PROPERTY V13_b_TRUE_AT_OK_MCDC_TRUE_2;
+  --%PROPERTY V13_b_FALSE_AT_OK_MCDC_FALSE_3;
+  --%PROPERTY V14_d_TRUE_AT_OK_MCDC_TRUE_4;
+  --%PROPERTY V14_d_FALSE_AT_OK_MCDC_FALSE_5;
+  --%PROPERTY V13_b_TRUE_AT_OK_MCDC_FALSE_6;
+  --%PROPERTY V13_b_FALSE_AT_OK_MCDC_TRUE_7;
+  --%PROPERTY V14_d_TRUE_AT_OK_MCDC_FALSE_8;
+  --%PROPERTY V14_d_FALSE_AT_OK_MCDC_TRUE_9;
+  --%PROPERTY V40_a_TRUE_AT_V13_b_MCDC_TRUE_10;
+  --%PROPERTY V40_a_FALSE_AT_V13_b_MCDC_FALSE_11;
+  --%PROPERTY V41_b_TRUE_AT_V13_b_MCDC_TRUE_12;
+  --%PROPERTY V41_b_FALSE_AT_V13_b_MCDC_FALSE_13;
+  --%PROPERTY ArithExpr_1_TRUE_AT_V14_d_MCDC_TRUE_14;
+  --%PROPERTY ArithExpr_1_FALSE_AT_V14_d_MCDC_FALSE_15;
+  --%PROPERTY rlt__PRE2_TRUE_AT_V40_a_MCDC_FALSE_16;
+  --%PROPERTY rlt__PRE2_FALSE_AT_V40_a_MCDC_TRUE_17;
+  --%PROPERTY rlt__PRE3_TRUE_AT_V41_b_MCDC_TRUE_18;
+  --%PROPERTY rlt__PRE3_FALSE_AT_V41_b_MCDC_FALSE_19;
+  --%PROPERTY V40_a_TRUE_AT_rlt__PRE3_MCDC_TRUE_20;
+  --%PROPERTY V40_a_FALSE_AT_rlt__PRE3_MCDC_FALSE_21;
+  --%PROPERTY V41_b_TRUE_AT_rlt__PRE2_MCDC_TRUE_22;
+  --%PROPERTY V41_b_FALSE_AT_rlt__PRE2_MCDC_FALSE_23;
+
+tel;

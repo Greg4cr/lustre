@@ -1,0 +1,23 @@
+if [ $# -lt 2 ]
+then
+	echo "Bash script for automating OMCDC test obligation translation"
+  	echo "Usage: ./translate <filename> <outputFilename> <optional: oracle filename>"
+ 	exit 65
+fi
+
+java -jar antlr-3.4-complete.jar Lustre.g
+java -jar antlr-3.4-complete.jar Pretranslate.g
+javac PretranslatePass.java PretranslateParser.java PretranslateLexer.java LustreLexer.java LustreParser.java Translate.java
+
+#java PretranslatePass $1 > $2_intermediate_1.lus
+#java PretranslatePass $2_intermediate_1.lus > $2_intermediate_2.lus
+#java Translate $2_intermediate_2.lus $3 > $2
+java Translate $1 $3 > $2
+
+#rm $2_intermediate.lus
+rm *.class
+#rm *.tokens
+#rm LustreLexer.java
+#rm LustreParser.java
+#rm PretranslateLexer.java
+#rm PretranslateParser.java

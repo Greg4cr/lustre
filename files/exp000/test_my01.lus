@@ -1,0 +1,16 @@
+node NonInlined(in_1: int; in_2: bool; in_3: bool; in_4: bool)
+  returns(out: bool);
+
+var
+  expr1: int;
+  expr2: bool;
+  expr3: bool;
+  expr4: bool;
+
+let
+  expr1 = (if (in_1 <= 10) then (in_1 + 1) else (in_1 - 10));
+  expr2 = ((expr1 < 3) and (in_2 or in_3));
+  expr3 = ((expr2 xor in_3) or (not (in_2 and in_4)));
+  expr4 = (false -> pre expr2);
+  out = (expr3 -> pre expr2);
+tel;

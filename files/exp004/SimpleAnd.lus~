@@ -1,0 +1,20 @@
+node SimpleAnd(A: bool; B: bool; C: bool) returns(E: bool; F: bool);
+var
+	D: bool;
+let
+	D = (A or B);
+	E = (D and C);
+	F = (not (D or C));
+tel;
+
+node AnotherNode(H: bool; I: bool) returns(J: bool);
+var
+	L: bool;
+	M: bool;
+	N: bool;
+let
+	M = (false -> H);
+	N = (true -> I);
+	L = (M and N);
+	J = (not L -> pre L);
+tel;

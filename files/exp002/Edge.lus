@@ -1,0 +1,11 @@
+node Edge(X: bool) returns(E: bool);
+var
+	A: bool;
+	B: bool;
+
+let
+	A = (X xor (pre X));
+	B = ((A = X) and (pre A));
+	E = ((false -> B) and (not (pre B)));
+
+tel;
