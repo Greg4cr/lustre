@@ -219,6 +219,7 @@ public class AffectAtCaptureEquation {
 						if (!map.containsKey(lhs[k])) {
 							map.put(lhs[k], expr);
 						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+							// its value can pass via other nodes
 							continue;
 //							expr = new BinaryExpr(expr, BinaryOp.OR, map.get(lhs[k]));
 //							map.put(lhs[k], expr);
@@ -248,7 +249,7 @@ public class AffectAtCaptureEquation {
 		for (int i = 0; i < paths.size(); i++) {
 			// get find superToken if there is any
 			List<ObservedTreeNode> path = paths.get(i);
-			System.out.println("::: path :::\n\t" + path);
+//			System.out.println("::: path :::\n\t" + path);
 			root = path.get(0);
 			// get superRoot and superToken if there is any
 			// cases:	root -> nodeA -> nodeB -> ...
@@ -280,7 +281,6 @@ public class AffectAtCaptureEquation {
 					nonMasked[1] = new IdExpr(node + f + at + father.data + c + f);
 					
 					for (int k = 0; k < lhs.length; k++) {
-						
 						if (path.size() <= 2) {
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
 						} else {
@@ -301,18 +301,24 @@ public class AffectAtCaptureEquation {
 									rootToken = nodeToToken.get(superRoots.get(m).data);
 									Expr tmpExpr = new BinaryExpr(seqUsed, BinaryOp.AND, 
 														new BinaryExpr(token, BinaryOp.EQUAL, rootToken));
+									if (tokenExpr.toString().contains(tmpExpr.toString())) {
+//										System.out.println("YES YES YES!!!!\n\t" + tmpExpr);
+										continue;
+									}
 									tokenExpr = new BinaryExpr(tokenExpr, BinaryOp.OR, tmpExpr);
 								}
 							}
 							
+//							System.out.println(">>>> root: " + root.data + "; tokenExpr: " + tokenExpr);
+							
 							premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, tokenExpr);
 						}
 						
-						conclusion1 = premise;
+						//conclusion1 = premise;
 						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
 						
 						Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
-													new BinaryExpr(conclusion1, 
+													new BinaryExpr(premise, 
 															BinaryOp.OR, conclusion2));
 						if (!map.containsKey(lhs[k])) {
 							map.put(lhs[k], expr);
@@ -377,8 +383,8 @@ public class AffectAtCaptureEquation {
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
 			
 //			System.out.println(count + " token-to-node: " + tokens[count] + " - " + tokenToNode.get(tokens[count]));
-//			System.out.println(count + " node-to-token: " + treeRoot.id + " - " + nodeToToken.get(treeRoot.id));
-//			System.out.println(count + " dependency: " + treeRoot.id + " >>> " + rootToLeavesMap.get(treeRoot.id));
+			System.out.println(count + " node-to-token: " + treeRoot.id + " - " + nodeToToken.get(treeRoot.id));
+			System.out.println(count + " dependency: " + treeRoot.id + " >>> " + rootToLeavesMap.get(treeRoot.id));
 			count++;
 		}
 	}
