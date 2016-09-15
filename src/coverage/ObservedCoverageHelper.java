@@ -10,7 +10,7 @@ import jkind.lustre.Expr;
 import jkind.lustre.Node;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
-import main.LustreMain;
+
 /*
  * Parse nodes into trees.
  * 	- Dependency relationship of equation ids and variables.
@@ -52,14 +52,11 @@ public class ObservedCoverageHelper {
 	 *             C   D
 	 */
 	public HashMap<VarDecl, ObservedTree> buildRefTrees() {
-		List<VarDecl> roots = node.outputs;
-		
 		Map<String, Expr> expressions = getStrExprTable();
 		HashMap<VarDecl, ObservedTree> subTrees = new HashMap<VarDecl, ObservedTree>();
-		System.out.println("All ids in node \"" + node.id + "\":\n" + idList.toString() + "\n");
 		
 		// create one tree per output
-		for (VarDecl root : roots) {
+		for (VarDecl root : node.outputs) {
 			ObservedTreeNode treeRoot = new ObservedTreeNode(root.id, root.type);
 			buildTreeRecursively(treeRoot, expressions, true, 0);
 			subTrees.put(root, new ObservedTree(treeRoot));
@@ -75,12 +72,11 @@ public class ObservedCoverageHelper {
 		HashMap<VarDecl, ObservedTree> seqTrees = new HashMap<>();
 		HashMap<String, Expr> expressions = getStrExprTable();
 		HashMap<String, VarDecl> idMap = getIds();
-		ObservedTreeNode treeNode;
 		
 		for (String root : delayMap.keySet()) {
-			treeNode = buildTreeRecursively(new ObservedTreeNode(root, idMap.get(root).type), 
-											expressions, false, 0);
-			seqTrees.put(idMap.get(root), new ObservedTree(treeNode));
+			ObservedTreeNode treeRoot = new ObservedTreeNode(root, idMap.get(root).type);
+			buildTreeRecursively(treeRoot, expressions, false, 0);
+			seqTrees.put(idMap.get(root), new ObservedTree(treeRoot));
 		}
 		
 		return seqTrees;
@@ -99,9 +95,6 @@ public class ObservedCoverageHelper {
 		HashMap<String, Boolean> preNode = new HashMap<>();
 		String firstPreExpr = "";
 		HashMap<String, String> arithIds = new HashMap<>();
-		
-		LustreMain.log(">>>>>> Building tree for " + root);
-		LustreMain.log(">>>>>> Expression: " + root.data + " = " + exprs.get(root.data));
 		
 		if (buildRefTree) {
 			// build reference tree
@@ -130,7 +123,7 @@ public class ObservedCoverageHelper {
 					firstPreExpr = exprs.get(root.data).toString();
 					
 					List<String> delays = delayMap.get(root.data);
-					System.out.println(delays);
+
 					for (int i = 0; i < delays.size(); i++) {
 						children.put(delays.get(i), 1);
 						preNode.put(delays.get(i), true);
@@ -145,9 +138,6 @@ public class ObservedCoverageHelper {
 				for (String lhs : exprs.keySet()) {
 					if (exprs.get(root.data).toString().contains(lhs) && arithExpr.contains(lhs)) {
 						arithIds.put(lhs, Obligation.arithExprByExpr.get(arithExpr));
-						System.out.println(exprs.get(root.data).toString() +
-								"\n\tcontains arith expr:\n\t" + arithExpr +
-								"\n\tget arith-pair:\n\t" + lhs + " vs " + arithIds.get(lhs));
 					}
 				}
 				
@@ -201,9 +191,6 @@ public class ObservedCoverageHelper {
 			}
 		}
 		
-		System.out.println("children of " + root.toString()	+
-							"\t::::: " + children.keySet() + ", " + arithIds.keySet());
-		
 		// add children to current root
 		for (String child : children.keySet()) {
 			
@@ -215,9 +202,6 @@ public class ObservedCoverageHelper {
 				newTreeNode.setArithId(arithIds.get(child));
 			}
 			root.addChild(newTreeNode);
-			System.out.println("xxxxxxxx new node: " + newTreeNode);
-			System.out.println(exprs.get(child));
-			
 			
 			if (exprs.keySet().contains(child)) {
 				// build the tree recursively if next node is 
@@ -228,8 +212,7 @@ public class ObservedCoverageHelper {
 				continue;
 			}
 		}
-		System.out.println("(" + root.data + ") has " + root.getNumberOfChildren() 
-							+ " children: "+ root.children.toString());
+
 		return root;
 	}
 	
@@ -238,15 +221,11 @@ public class ObservedCoverageHelper {
 	 */
 	public List<VarDecl> getIdList() {
 		List<VarDecl> varList = new ArrayList<VarDecl>();
-		for (VarDecl output : node.outputs) {
-			varList.add(output);
-		}
-		for (VarDecl input : node.inputs) {
-			varList.add(input);
-		}
-		for (VarDecl local : node.locals) {
-			varList.add(local);
-		}
+		
+		varList.addAll(node.outputs);
+		varList.addAll(node.inputs);
+		varList.addAll(node.locals);
+
 		return varList;
 	}
 	
@@ -273,10 +252,14 @@ public class ObservedCoverageHelper {
 	}
 	
 	public HashMap<VarDecl, ObservedTreeNode> getSingleNodeTrees() {
+		/* mapping root variable to corresponding tree */
 		HashMap<VarDecl, ObservedTreeNode> trees = new HashMap<>();
 		ObservedTreeNode root = null;
+		/* mapping node name to occurrence of the node */
 		HashMap<String, Integer> children = new HashMap<>();
+		/* mapping var name to var variable */
 		HashMap<String, VarDecl> ids = getIds();
+		/* mapping lhs to corresponding expr (rhs) */
 		HashMap<String, Expr> expressions = getStrExprTable();
 		List<String> strIds = getStrIds();
 		
@@ -338,10 +321,6 @@ public class ObservedCoverageHelper {
 				this.singleNodeList.add(id);
 			}
 		}
-
-		System.out.println("####### all ids: " + idList.toString());
-		System.out.println("####### nodes in tree: " + treeNodeList.toString());
-		System.out.println("####### single nodes: " + singleNodeList.toString());
 		
 		return this.singleNodeList;
 	}	
@@ -358,9 +337,7 @@ public class ObservedCoverageHelper {
 		 */
 		for (Equation equation : equations) {
 			exprTable.put(equation.lhs.get(0).id, equation.expr);
-		}
-		
+		}	
 		return exprTable;
-	}
-	
+	}	
 }

@@ -1,7 +1,6 @@
 package coverage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -12,7 +11,6 @@ import jkind.lustre.UnaryOp;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
-import jkind.lustre.Node;
 import jkind.lustre.VarDecl;
 
 public class TokenAction {
@@ -101,10 +99,8 @@ public class TokenAction {
 		for (IdExpr sourceToken : tokens) {
 			IdExpr targetToken = null;
 			ObservedTreeNode sourceNode = tokenToNode.get(sourceToken);
-			System.out.println("building transition equation for " + sourceToken.id + " :: " + sourceNode);
+
 			for (ObservedTreeNode targetNode : rootToLeavesMap.get(sourceNode)) {
-				System.out.println("create transition ::: (" + sourceNode +") --> (" 
-											+ targetNode + ")");
 
 				for (IdExpr tokenId : tokenToNode.keySet()) {
 					if (tokenToNode.get(tokenId).data.equals(targetNode.data)) {
@@ -127,7 +123,6 @@ public class TokenAction {
 					id = sourceNode.data + observed;
 					outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, TOKEN_ERROR_STATE);
 				}
-				System.out.println(outputTrans[i]);
 			}
 				i++;
 		}
@@ -146,11 +141,9 @@ public class TokenAction {
 	
 	// build token-to-node, node-to-token, tokennode-dependency maps
 	private void drawMaps() {
-//		HashMap<VarDecl, ObservedTree> trees = sequentialTrees;
 		tokens = new IdExpr[sequentialTrees.size()];
 		count = 0;
 		
-//			System.out.println("============= drawing maps =============");
 		for (VarDecl tree : sequentialTrees.keySet()) {
 			tokens[count] = new IdExpr(prefix + (count + 1));
 			ObservedTreeNode node = sequentialTrees.get(tree).root;
@@ -159,10 +152,7 @@ public class TokenAction {
 			
 			ObservedTreeNode root = sequentialTrees.get(tree).root;
 			rootToLeavesMap.put(root, root.getAllLeafNodes());
-			
-//			System.out.println(count + " token-to-node: [" + tokens[count] + "] - " + tokenToNode.get(tokens[count]));
-//			System.out.println(count + " node-to-token: [" + node + "] - " + nodeToToken.get(node));
-//			System.out.println(count + " dependency: [" + node + "] >>> " + rootToLeavesMap.get(node));
+
 			count++;
 		}
 	}

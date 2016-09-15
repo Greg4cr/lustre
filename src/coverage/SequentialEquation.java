@@ -19,7 +19,6 @@ public class SequentialEquation {
 		ObservedTree tree;
 		
 		for (VarDecl root: sequantialTrees.keySet()) {
-			System.out.println("Generate delay dependency epxressions for [" + root + "]...");
 			tree = sequantialTrees.get(root);
 			generateObligationForTree(exprsMap, tree);
 		}
@@ -75,17 +74,13 @@ public class SequentialEquation {
 		if (!exprsMap.containsKey(lhs)) {
 			exprsMap.put(lhs, expr);
 		} else if (!exprsMap.get(lhs).toString().contains(expr.toString())) {
-//			System.out.println(">>>>>>>> " + exprsMap.get(lhs).toString());
-//			System.out.println(">>>>>>>>>>>>>>> " + expr.toString());
 			expr = new BinaryExpr(expr, BinaryOp.OR, exprsMap.get(lhs));
 			exprsMap.put(lhs, expr);
 		}
 		
-//		if (node.getChildren() != null) {
-			for (ObservedTreeNode child : node.children) {
-				generateObligation(exprsMap, child, root);
-			}
-//		}
+		for (ObservedTreeNode child : node.children) {
+			generateObligation(exprsMap, child, root);
+		}
 	}
 
 }
