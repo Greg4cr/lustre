@@ -31,26 +31,11 @@ public class ObservedTreeNode {
     	setIsPre(isPre);
     	setOccurrence(1);
     }
-    
-/*	public int getOccurrence() {
-		return occurrence;
-	}*/
 
 	public void setOccurrence(int occurrence) {
 		this.occurrence = occurrence;
 	}
-	
-//    public List<ObservedTreeNode> getChildren() {
-//        if (this.children == null) {
-//            return new ArrayList<ObservedTreeNode>();
-//        }
-//        return this.children;
-//    }
-// 
-//    public void setChildren(List<ObservedTreeNode> children) {
-//        this.children = children;
-//    }
- 
+	 
     public int getNumberOfChildren() {
         if (children == null) {
             return 0;
@@ -73,15 +58,7 @@ public class ObservedTreeNode {
     public void setType(Type type) {
     	this.type = type;
     }
-    
-    /*public Type getType() {
-    	return this.type;
-    }
-    
-    public ObservedTreeNode getParent() {
-    	return this.parent;
-    }*/
-    
+
     public void setIsPre(boolean isPre) {
     	this.isPre = isPre;
     }
@@ -94,20 +71,6 @@ public class ObservedTreeNode {
     	this.arithId = arithId;
     }
     
-//    // return all leaf nodes of specific node
-//    public List<String> getAllLeaves() {
-//    	List<String> leaves = new ArrayList<String>();
-//    	if (this.children == null) {
-//            leaves.add(this.data);
-//        } else {
-//            for (ObservedTreeNode child : this.children) {
-//                leaves.addAll(child.getAllLeaves());
-//            }
-//        }
-//    	
-//    	return leaves;
-//    }
-    
     // return all leaf nodes of specific node
     public List<ObservedTreeNode> getAllLeafNodes() {
     	List<ObservedTreeNode> leaves = new ArrayList<>();
@@ -118,7 +81,7 @@ public class ObservedTreeNode {
     			leaves.addAll(child.getAllLeafNodes());
     		}
     	}
-    	
+
     	return leaves;
     }
     
@@ -163,12 +126,25 @@ public class ObservedTreeNode {
     		// add one path (root -> node list -> leaf)
     		paths.add(new ArrayList<ObservedTreeNode>(path));
     	} else {
+    		// explore current path
     		for (ObservedTreeNode child : root.children) {
     			child.getPaths(child, paths, path);
     		}
     	}
     }
     
+    @Override
+    public boolean equals(Object node) {
+    	if (node == null) {
+    		return false;
+    	} else if (! (node instanceof ObservedTreeNode)) {
+    		throw new IllegalArgumentException("Wrong type of node!");
+    	} else {
+    		// node data is the only identifier
+    		return this.data.equals(((ObservedTreeNode)node).data);
+    	}
+    }
+        
     @Override
     public String toString() {
     	StringBuilder node = new StringBuilder();
