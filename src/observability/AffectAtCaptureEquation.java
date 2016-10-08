@@ -1,9 +1,12 @@
-package coverage;
+package observability;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
+
+import coverage.Obligation;
+
 import java.util.Iterator;
 
 import enums.Coverage;
@@ -15,6 +18,8 @@ import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
+import observability.tree.ObservedTree;
+import observability.tree.ObservedTreeNode;
 
 public class AffectAtCaptureEquation {
 	HashMap<String, Expr> map = new HashMap<>();

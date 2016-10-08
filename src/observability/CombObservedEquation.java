@@ -1,15 +1,18 @@
-package coverage;
+package observability;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.VarDecl;
+import observability.tree.ObservedTree;
+import observability.tree.ObservedTreeNode;
 
 public class CombObservedEquation {
 	List<VarDecl> singleNodeList;

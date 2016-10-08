@@ -1,9 +1,10 @@
-package coverage;
+package observability;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import coverage.Obligation;
 import enums.Coverage;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;

@@ -16,11 +16,17 @@ import jkind.lustre.Node;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
+import observability.AffectAtCaptureEquation;
+import observability.CombObservedEquation;
+import observability.ObservedCoverageObligation;
+import observability.SequentialEquation;
+import observability.TokenAction;
+import observability.tree.ObservedTree;
 
 /* Generate Observed Obligations for MC/DC, CONDITION, BRANCH, and DECISION coverage  */
-public class ObservedCoverageVisitor extends ConditionVisitor {
+public class ObservabilityVisitor extends ConditionVisitor {
 	Node node;
-	ObservedCoverageHelper obHelper;
+	ObservabilityHelper obHelper;
 	Coverage coverage; // OMCDC, OCONDITION, OBRANCH, ODECISION
 	
 	String addition = "_COMB_USED_BY_";
@@ -43,19 +49,19 @@ public class ObservedCoverageVisitor extends ConditionVisitor {
 	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
 	HashMap<String, HashMap<String, Integer>> obligationMap = new HashMap<>();
 		
-	public ObservedCoverageVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
+	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
 		super(exprTypeVisitor);
 		this.node = node; 
-		this.obHelper = new ObservedCoverageHelper(node);
+		this.obHelper = new ObservabilityHelper(node);
 		// default coverage: OMCDC
 		this.coverage = Coverage.OMCDC;
 	}
 	
-	public ObservedCoverageVisitor(ExprTypeVisitor exprTypeVisitor, 
+	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor, 
 									Node node, Coverage coverage) {
 		super(exprTypeVisitor);
 		this.node = node;
-		this.obHelper = new ObservedCoverageHelper(node);
+		this.obHelper = new ObservabilityHelper(node);
 		this.coverage = coverage;
 	}
 	

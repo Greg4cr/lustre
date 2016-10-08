@@ -111,7 +111,7 @@ public final class LustreCoverage {
 		case OBRANCH:
 		case OCONDITION:
 		case ODECISION:
-			coverageVisitor = new ObservedCoverageVisitor(exprTypeVisitor, 
+			coverageVisitor = new ObservabilityVisitor(exprTypeVisitor, 
 														node, coverage); 
 			break;
 		default:
@@ -141,9 +141,9 @@ public final class LustreCoverage {
 				if (equation.expr instanceof IdExpr
 						|| ((equation.expr instanceof UnaryExpr)
 								&& ((UnaryExpr)equation.expr).expr instanceof IdExpr)) {
-					((ObservedCoverageVisitor) coverageVisitor).setIsDef(true);
+					((ObservabilityVisitor) coverageVisitor).setIsDef(true);
 				} else {
-					((ObservedCoverageVisitor) coverageVisitor).setIsDef(false);
+					((ObservabilityVisitor) coverageVisitor).setIsDef(false);
 				}
 			}
 			
@@ -156,12 +156,12 @@ public final class LustreCoverage {
 					|| coverage == Coverage.ODECISION) {
 				// popular delay maps for observed coverage
 				List<String> delayedItems = new ArrayList<>(); 
-				delayedItems.addAll(((ObservedCoverageVisitor)coverageVisitor).getDelayList());
+				delayedItems.addAll(((ObservabilityVisitor)coverageVisitor).getDelayList());
 				
 				// populate delayMap for later usage
 				if (delayedItems != null && !delayedItems.isEmpty()) {
 					delayMap.put(id, delayedItems);
-					((ObservedCoverageVisitor)coverageVisitor).resetDelayList();
+					((ObservabilityVisitor)coverageVisitor).resetDelayList();
 				}
 
 				HashMap<String, Expr> map = new HashMap<>();
@@ -246,11 +246,11 @@ public final class LustreCoverage {
 			String property = "";
 			
 			// set delay mapping
-			((ObservedCoverageVisitor)coverageVisitor).setDelayMap(delayMap);
+			((ObservabilityVisitor)coverageVisitor).setDelayMap(delayMap);
 			
-			List<Obligation> obligations = ((ObservedCoverageVisitor) coverageVisitor).generate();
+			List<Obligation> obligations = ((ObservabilityVisitor) coverageVisitor).generate();
 			count += obligations.size();
-			upperbound = ((ObservedCoverageVisitor) coverageVisitor).getTokenRange();
+			upperbound = ((ObservabilityVisitor) coverageVisitor).getTokenRange();
 			StringBuilder subrange = new StringBuilder();
 			subrange.append("subrange");
 			

@@ -1,4 +1,4 @@
-package coverage;
+package observability.tree;
 
 import java.util.List;
 

@@ -10,6 +10,8 @@ import jkind.lustre.Expr;
 import jkind.lustre.Node;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
+import observability.tree.ObservedTree;
+import observability.tree.ObservedTreeNode;
 
 /*
  * Parse nodes into trees.
@@ -17,14 +19,14 @@ import jkind.lustre.VarDecl;
  *  - Delay dependency.
  *  - And any necessary dependencies.
  */
-public class ObservedCoverageHelper {
+public class ObservabilityHelper {
 	private Node node;
 	private List<VarDecl> idList = new ArrayList<>();
 	private boolean isPre = false;
 	private List<VarDecl> singleNodeList = new ArrayList<>();
 	private HashMap<String, List<String>> delayMap = new HashMap<>();
 	
-	public ObservedCoverageHelper(Node node) {
+	public ObservabilityHelper(Node node) {
 		this.node = node;
 		this.idList = getIdList();
 	}
