@@ -23,7 +23,7 @@ import observability.SequentialEquation;
 import observability.TokenAction;
 import observability.tree.ObservedTree;
 
-/* Generate Observed Obligations for MC/DC, CONDITION, BRANCH, and DECISION coverage  */
+/* Generate Observed Obligations for OMC/DC, OCONDITION, OBRANCH, and ODECISION coverage  */
 public class ObservabilityVisitor extends ConditionVisitor {
 	Node node;
 	ObservabilityHelper obHelper;

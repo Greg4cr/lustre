@@ -1,5 +1,6 @@
 package coverage;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import jkind.lustre.IntExpr;
 import jkind.lustre.NamedType;
 import jkind.lustre.Node;
 import jkind.lustre.Program;
+import jkind.lustre.SubrangeIntType;
 import jkind.lustre.Type;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
@@ -69,15 +71,17 @@ public final class LustreCoverage {
 			builder.addNode(this.generate(node));
 		}
 
-		if (coverage.equals(Coverage.OMCDC)) {
+		if (coverage == Coverage.OMCDC || coverage == Coverage.OBRANCH
+				|| coverage == Coverage.OCONDITION
+				|| coverage == Coverage.ODECISION) {
 			// add more constants for observed coverage
-			Type type = new NamedType("subrange[-2," + upperbound + "] of int");
-			builder.addConstant(new Constant("TOKEN_INIT_STATE", type, new IntExpr(-2)));
-			builder.addConstant(new Constant("TOKEN_ERROR_STATE", type, new IntExpr(-1)));
-			builder.addConstant(new Constant("TOKEN_OUTPUT_STATE", type, new IntExpr(-0)));
+			Type subrange = new SubrangeIntType(BigInteger.valueOf(-2), BigInteger.valueOf(upperbound));
+			builder.addConstant(new Constant("TOKEN_INIT_STATE", subrange, new IntExpr(-2)));
+			builder.addConstant(new Constant("TOKEN_ERROR_STATE", subrange, new IntExpr(-1)));
+			builder.addConstant(new Constant("TOKEN_OUTPUT_STATE", subrange, new IntExpr(0)));
 			
 			for (int i = 1; i < upperbound + 1; i++) {
-				builder.addConstant(new Constant("TOKEN_D" + i, type, new IntExpr(i)));
+				builder.addConstant(new Constant("TOKEN_D" + i, subrange, new IntExpr(i)));
 			}
 		}
 
@@ -251,23 +255,23 @@ public final class LustreCoverage {
 			List<Obligation> obligations = ((ObservabilityVisitor) coverageVisitor).generate();
 			count += obligations.size();
 			upperbound = ((ObservabilityVisitor) coverageVisitor).getTokenRange();
-			StringBuilder subrange = new StringBuilder();
-			subrange.append("subrange");
+			SubrangeIntType subrange = new SubrangeIntType(BigInteger.valueOf(1), 
+					BigInteger.valueOf(upperbound));
 			
 			if (upperbound > 0) {
 				// add local token definition if there is any
-				subrange.append("[").append("1,").append(upperbound).append("]");
-				builder.addInput(new VarDecl("token_nondet", new NamedType(subrange.toString() + " of int")));
+				builder.addInput(new VarDecl("token_nondet", subrange));
 				builder.addInput(new VarDecl("token_init", NamedType.BOOL));
-				subrange.delete(subrange.indexOf("["), subrange.length());
 			}
-			subrange.append("[").append("-2,").append(upperbound).append("] of int");
+			
+			subrange = new SubrangeIntType(BigInteger.valueOf(-2), 
+					BigInteger.valueOf(upperbound));
 			
 			for (Obligation obligation : obligations) {
 				property = obligation.condition;// + "_" + (count++);
 				builder.addEquation(new Equation(new IdExpr(property), obligation.obligation));
 				if (property.contains("token_")) {
-					builder.addLocal(new VarDecl(property, new NamedType(subrange.toString())));
+					builder.addLocal(new VarDecl(property, subrange));
 				} else if (!property.contains("token")){
 					builder.addLocal(new VarDecl(property, NamedType.BOOL));
 				}
@@ -278,9 +282,9 @@ public final class LustreCoverage {
 			}
 			
 			// token, token_first, and token_next should be added in all cases.
-			builder.addLocal(new VarDecl("token", new NamedType(subrange.toString())));
-			builder.addLocal(new VarDecl("token_first", new NamedType(subrange.toString())));
-			builder.addLocal(new VarDecl("token_next", new NamedType(subrange.toString())));
+			builder.addLocal(new VarDecl("token", subrange));
+//			builder.addLocal(new VarDecl("token_first", subrange));
+//			builder.addLocal(new VarDecl("token_next", subrange));
 			
 		}
 		
