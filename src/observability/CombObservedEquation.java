@@ -24,9 +24,7 @@ public class CombObservedEquation {
 		ObservedTree tree;
 		
 		for (VarDecl rootVar: referenceTrees.keySet()) {
-//			System.out.println("Generate comb observed expressions for [" + root + "]...");
 			tree = referenceTrees.get(rootVar);
-//			System.out.println("single node tree? " + tree.root.getChildren().isEmpty());
 			if (tree.root.children.isEmpty()) {
 				// for single-node tree
 				genereateForSingleNodes(map, tree.root);
