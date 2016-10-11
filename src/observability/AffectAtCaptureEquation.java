@@ -50,16 +50,23 @@ public class AffectAtCaptureEquation {
 	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
 	// tree node (root) to token, Map<Node, Token>
 	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
+	// id to condition & occurrence, Map<id, <condition, occurrence>>
+	HashMap<String, HashMap<String, Integer>> idToCondMap = new HashMap<>();
+	
+	List<String> handledList = new ArrayList<>();
 	
 	public AffectAtCaptureEquation(HashMap<VarDecl, ObservedTree> seqTrees,
 									HashMap<VarDecl, ObservedTree> combUsedTrees,
 									HashMap<String, List<String>> delayMap,
+									HashMap<String, HashMap<String, Integer>> idToCondMap,
 									Coverage coverage) {
 		this.sequentialTrees = seqTrees;
 		this.combUsedByTrees = combUsedTrees;
 		this.delayMap = delayMap;
+		this.idToCondMap = idToCondMap;
 		this.coverage = coverage;
 		populateMaps();
+		this.handledList = getHandledIds();
 	}
 	
 	public List<Obligation> generate() {
@@ -156,6 +163,10 @@ public class AffectAtCaptureEquation {
 					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
 					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 					for (int k = 0; k < lhs.length; k++) {
+						if (!handledList.contains(nonMasked[k])) {
+							continue;
+						}
+						
 						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
 						conclusion1 = premise;
 						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
@@ -217,6 +228,9 @@ public class AffectAtCaptureEquation {
 					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
 					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
 					for (int k = 0; k < lhs.length; k++) {
+						if (!handledList.contains(nonMasked[k])) {
+							continue;
+						}
 						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
 												new BoolExpr(false));
 						conclusion1 = premise;
@@ -239,7 +253,6 @@ public class AffectAtCaptureEquation {
 		}
 	}
 	
-	// refactor
 	private void generateForSeqDepTrees(HashMap<String, Expr> map) {
 		// <lhs, <nonMasked, list of <dependency, token>>>
 		TreeMap<String, TreeMap<String, List<TreeMap<String, String>>>> exprMap = buildSeqUsedMap();
@@ -251,10 +264,15 @@ public class AffectAtCaptureEquation {
 		String token = "token";
 		String rootToken;
 		
+		
 		for (String lhs : exprMap.keySet()) {
 			premisePairs = exprMap.get(lhs);
 			
 			for (String nonMasked : premisePairs.keySet()) {
+				if (!handledList.contains(nonMasked)) {
+					continue;
+				}
+				
 				List list = premisePairs.get(nonMasked);
 				Iterator<TreeMap<String, String>> iterator = list.iterator();
 				
@@ -387,6 +405,35 @@ public class AffectAtCaptureEquation {
 
 		return exprMap;
 	}
+	
+	private List<String> getHandledIds() {
+		List<String> handledList = new ArrayList<>();
+		
+		String at = "_AT_", cov = "_" + coverage.name();
+		String[] vals = {"_TRUE", "_FALSE"};
+		String condStr = "";
+				
+		for (String key : idToCondMap.keySet()) {
+			HashMap<String, Integer> conditions = idToCondMap.get(key);
+			for (String cond : conditions.keySet()) {
+				condStr = cond;
+				int occurence = conditions.get(cond) / 2;
+				for (int i = 0; i < occurence; i++) {
+					if (occurence > 1) {
+						condStr = cond + "_" + i;
+					}
+					for (int j = 0; j < vals.length; j++) {
+						String handled = condStr + vals[j] + at + key + cov + vals[j];
+						handledList.add(handled);
+					}
+				}
+			}
+		}
+		
+		return handledList;
+	}
+	
+	
 	
 	private void getList(List<TreeMap<String, String>> list,
 			List<TreeMap<String, String>> addedList) {

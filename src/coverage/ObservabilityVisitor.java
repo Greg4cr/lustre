@@ -47,7 +47,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	// delay dependency tree and reference dependency tree
 	HashMap<VarDecl, ObservedTree> delayDependencyTrees = new HashMap<>();
 	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
-	HashMap<String, HashMap<String, Integer>> obligationMap = new HashMap<>();
+	HashMap<String, HashMap<String, Integer>> idToCondMap = new HashMap<>();
 		
 	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
 		super(exprTypeVisitor);
@@ -461,7 +461,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			}
 			
 			// populate map
-			obligationMap.put(id, conditions);
+			idToCondMap.put(id, conditions);
 		}
 		
 		return obligations;
@@ -494,7 +494,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	// generate affecting_at_capture expressions
 	private List<Obligation> getAffectAtCaptureObligations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayDependencyTrees,
-				refDependencyTrees, delayMap, coverage);
+				refDependencyTrees, delayMap, idToCondMap, coverage);
 		affect.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
 		affect.setSingleNodeTrees(obHelper.getSingleNodeTrees());
 		return affect.generate();
@@ -502,7 +502,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	
 	// generate omcdc obligations for each expression
 	private List<Obligation> getObligations() {
-		ObservedCoverageObligation obligation = new ObservedCoverageObligation(obligationMap, coverage);
+		ObservedCoverageObligation obligation = new ObservedCoverageObligation(idToCondMap, coverage);
 		return obligation.generate();
 	}
 }

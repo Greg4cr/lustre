@@ -14,16 +14,16 @@ import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
 public class ObservedCoverageObligation {
-	private HashMap<String, HashMap<String, Integer>> obligationMap;
+	private HashMap<String, HashMap<String, Integer>> idToCondMap;
 	private Coverage coverage;
 	
 	public ObservedCoverageObligation(HashMap<String, 
-									HashMap<String, Integer>> obligationMap,
+									HashMap<String, Integer>> idToCondMap,
 									Coverage coverage) {
-		this.obligationMap = obligationMap;
+		this.idToCondMap = idToCondMap;
 		this.coverage = coverage;
 	}
-		
+	
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		
@@ -41,8 +41,8 @@ public class ObservedCoverageObligation {
 		Expr transition = new BinaryExpr(new IdExpr("token"), BinaryOp.EQUAL, 
 				new IdExpr("TOKEN_OUTPUT_STATE"));
 		
-		for (String key : obligationMap.keySet()) {
-			HashMap<String, Integer> conditions = obligationMap.get(key);
+		for (String key : idToCondMap.keySet()) {
+			HashMap<String, Integer> conditions = idToCondMap.get(key);
 			for (String cond : conditions.keySet()) {
 				condStr = cond;
 				int occurence = conditions.get(cond) / 2;

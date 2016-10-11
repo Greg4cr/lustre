@@ -5,9 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jkind.lustre.BinaryExpr;
+import jkind.lustre.BinaryOp;
 import jkind.lustre.Equation;
 import jkind.lustre.Expr;
+import jkind.lustre.IdExpr;
 import jkind.lustre.Node;
+import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 import observability.tree.ObservedTree;
@@ -25,7 +29,8 @@ public class ObservabilityHelper {
 	private boolean isPre = false;
 	private List<VarDecl> singleNodeList = new ArrayList<>();
 	private HashMap<String, List<String>> delayMap = new HashMap<>();
-	
+	private HashMap<String, HashMap<String, Integer>> idCondMap = new HashMap<>();
+		
 	public ObservabilityHelper(Node node) {
 		this.node = node;
 		this.idList = getIdList();
@@ -42,7 +47,7 @@ public class ObservabilityHelper {
 	public void setDelayMap(HashMap<String, List<String>> delayMap) {
 		this.delayMap = delayMap;
 	}
-	
+		
 	/*
 	 * Build referring trees for given node, one tree per output.
 	 * Example: A is an output variable, and A = (B and C); B = (C or D);
