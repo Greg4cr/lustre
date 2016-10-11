@@ -51,14 +51,14 @@ public class AffectAtCaptureEquation {
 	// tree node (root) to token, Map<Node, Token>
 	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
 	// id to condition & occurrence, Map<id, <condition, occurrence>>
-	HashMap<String, HashMap<String, Integer>> idToCondMap = new HashMap<>();
+	TreeMap<String, TreeMap<String, Integer>> idToCondMap = new TreeMap<>();
 	
 	List<String> handledList = new ArrayList<>();
 	
 	public AffectAtCaptureEquation(HashMap<VarDecl, ObservedTree> seqTrees,
 									HashMap<VarDecl, ObservedTree> combUsedTrees,
 									HashMap<String, List<String>> delayMap,
-									HashMap<String, HashMap<String, Integer>> idToCondMap,
+									TreeMap<String, TreeMap<String, Integer>> idToCondMap,
 									Coverage coverage) {
 		this.sequentialTrees = seqTrees;
 		this.combUsedByTrees = combUsedTrees;
@@ -130,10 +130,11 @@ public class AffectAtCaptureEquation {
 	
 	private void generateForSingleNodes(HashMap<String, Expr> map) {
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_" + coverage.name();
+		String at = "_AT_", c = "_" + coverage.name();
 		String node = "", father;
-		String[] lhs = new String[2];
-		IdExpr[] nonMasked = new IdExpr[2];
+		String[] vals = {"_TRUE", "_FALSE"};
+		String lhs = "";
+		String nonMasked = "";
 		Expr premise, conclusion1, conclusion2;
 		
 		if (this.singleNodeTrees.keySet() == null) {
@@ -158,25 +159,25 @@ public class AffectAtCaptureEquation {
 					if (child.occurrence > 1) {
 						node += "_" + i;
 					}
-					lhs[0] = node + t + at + father + affect;
-					lhs[1] = node + f + at + father + affect;
-					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
-					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
-					for (int k = 0; k < lhs.length; k++) {
-						if (!handledList.contains(nonMasked[k])) {
-							continue;
+					
+					for (int k = 0; k < vals.length; k++) {
+						nonMasked = node + vals[k] + at + father + c + vals[k];
+						if (!handledList.contains(nonMasked)) {
+							break;
 						}
 						
-						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, new BoolExpr(false));
+						lhs = node + vals[k] + at + father + affect;
+						
+						premise = new BinaryExpr(new IdExpr(nonMasked), BinaryOp.AND, new BoolExpr(false));
 						conclusion1 = premise;
-						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs));
 						
 						Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
 													new BinaryExpr(conclusion1, 
 															BinaryOp.OR, conclusion2));
-						if (!map.containsKey(lhs[k])) {
-							map.put(lhs[k], expr);
-						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
+						if (!map.containsKey(lhs)) {
+							map.put(lhs, expr);
+						} else if (!map.get(lhs).toString().contains(expr.toString())) {
 							continue;
 						}
 					}
@@ -188,63 +189,71 @@ public class AffectAtCaptureEquation {
 	private void generateForCombTrees(HashMap<String, Expr> map) {
 		List<List<ObservedTreeNode>> paths = drawPaths(combUsedByTrees, TYPE_COMB);
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String t = "_TRUE", f = "_FALSE", at = "_AT_", c = "_" + coverage.name();
-		String node = "", father;
-		String[] lhs = new String[2];
-		IdExpr[] nonMasked = new IdExpr[2];
+		String at = "_AT_", c = "_" + coverage.name();
+		String node = "", father, fNode;
+		ObservedTreeNode child = null;
+		String[] vals = {"_TRUE", "_FALSE"};
+		String lhs = "";
+		String nonMasked = "";
 		Expr premise, conclusion1, conclusion2;
 		
-		for (int i = 0; i < paths.size(); i++) {
+		for (int i = 0; i < paths.size(); ++i) {
 			List<ObservedTreeNode> path = paths.get(i);
 			
-			for (int j = path.size() - 1; j > 0; j--) {
-				int occurence = path.get(j).occurrence;
+			for (int j = path.size() - 1; j > 0; --j) {
+				child = path.get(j);
+				node = child.data;
+				father = path.get(j - 1).data;
 				
-				if (delayMap.containsKey(path.get(j).data)) {
+				if (delayMap.containsKey(node)) {
 					continue;
 				}
 				if ("int".equals(path.get(j - 1).type.toString())) {
 					continue;
 				}
+				if ("int".equals(child.type.toString()) && !child.isArithExpr) {
+					continue;
+				} else if (child.isArithExpr) {
+					node = child.arithId;
+				}
+				
+				if (!idToCondMap.containsKey(father) ||
+						!idToCondMap.get(father).containsKey(node)) {
+					continue;
+				}
+
+				int occurence = 0;
+				
+				if (child.isArithExpr) {
+					occurence = idToCondMap.get(father).get(node) / 2;
+				} else {
+					occurence = child.occurrence;
+				}
 				
 				for (int l = 0; l < occurence; l++) {
-					ObservedTreeNode child = path.get(j);
-					if ("int".equals(child.type.toString()) && !child.isArithExpr) {
-						continue;
-					} else if (child.isArithExpr) {
-						node = child.arithId;
-					} else {
-						node = child.data;
-					}
-										
+					fNode = node;
 					if (occurence > 1) {
-						node = node + "_" + l;
+						fNode = node + "_" + l;
 					}
 					
-					father = path.get(j - 1).data;
-					
-					lhs[0] = node + t + at + father + affect;
-					lhs[1] = node + f + at + father + affect;
-					nonMasked[0] = new IdExpr(node + t + at + father + c + t);
-					nonMasked[1] = new IdExpr(node + f + at + father + c + f);
-					for (int k = 0; k < lhs.length; k++) {
-						if (!handledList.contains(nonMasked[k])) {
-							continue;
-						}
-						premise = new BinaryExpr(nonMasked[k], BinaryOp.AND, 
+					for (int k = 0; k < vals.length; k++) {
+						nonMasked = fNode + vals[k] + at + father + c + vals[k];
+						lhs = fNode + vals[k] + at + father + affect;
+						
+						premise = new BinaryExpr(new IdExpr(nonMasked), BinaryOp.AND, 
 												new BoolExpr(false));
 						conclusion1 = premise;
-						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs[k]));
+						conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs));
 						
 						Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
 													new BinaryExpr(conclusion1, 
 															BinaryOp.OR, conclusion2));
-						if (!map.containsKey(lhs[k])) {
-							map.put(lhs[k], expr);
-							// otherwise, its value can pass via other path/nodes
+						if (!map.containsKey(lhs)) {
+							map.put(lhs, expr);
+							// otherwise, its value can be passed via other path/nodes
 							// through some path in seq_dependent tree(s)
-						} else if (!map.get(lhs[k]).toString().contains(expr.toString())) {
-							// its value can pass via other nodes
+						} else if (!map.get(lhs).toString().contains(expr.toString())) {
+							// its value can be passed via other nodes
 							continue;
 						}
 					}
@@ -269,10 +278,6 @@ public class AffectAtCaptureEquation {
 			premisePairs = exprMap.get(lhs);
 			
 			for (String nonMasked : premisePairs.keySet()) {
-				if (!handledList.contains(nonMasked)) {
-					continue;
-				}
-				
 				List list = premisePairs.get(nonMasked);
 				Iterator<TreeMap<String, String>> iterator = list.iterator();
 				
@@ -363,9 +368,15 @@ public class AffectAtCaptureEquation {
 					
 					List<TreeMap<String, String>> list = new ArrayList<>();
 					for (int k = 0; k < val.length; ++k) {
-						premisePairs.clear();
-						lhs = nodeStr + val[k] + at + father.data + affect;
 						nonMasked = nodeStr + val[k] + at + father.data + cov + val[k];
+						
+						if (!handledList.contains(nonMasked)) {
+							break;
+						}
+												
+						lhs = nodeStr + val[k] + at + father.data + affect;
+						premisePairs.clear();
+						
 						
 						TreeMap<String, String> tokenPairs = new TreeMap<>();
 						
@@ -414,7 +425,8 @@ public class AffectAtCaptureEquation {
 		String condStr = "";
 				
 		for (String key : idToCondMap.keySet()) {
-			HashMap<String, Integer> conditions = idToCondMap.get(key);
+			TreeMap<String, Integer> conditions = idToCondMap.get(key);
+			
 			for (String cond : conditions.keySet()) {
 				condStr = cond;
 				int occurence = conditions.get(cond) / 2;
@@ -432,9 +444,7 @@ public class AffectAtCaptureEquation {
 		
 		return handledList;
 	}
-	
-	
-	
+		
 	private void getList(List<TreeMap<String, String>> list,
 			List<TreeMap<String, String>> addedList) {
 		Iterator<TreeMap<String, String>> iterator = addedList.iterator();

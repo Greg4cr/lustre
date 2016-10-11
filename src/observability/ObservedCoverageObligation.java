@@ -3,6 +3,7 @@ package observability;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 import coverage.Obligation;
 import enums.Coverage;
@@ -14,11 +15,11 @@ import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
 public class ObservedCoverageObligation {
-	private HashMap<String, HashMap<String, Integer>> idToCondMap;
+	private TreeMap<String, TreeMap<String, Integer>> idToCondMap;
 	private Coverage coverage;
 	
-	public ObservedCoverageObligation(HashMap<String, 
-									HashMap<String, Integer>> idToCondMap,
+	public ObservedCoverageObligation(TreeMap<String, 
+								TreeMap<String, Integer>> idToCondMap,
 									Coverage coverage) {
 		this.idToCondMap = idToCondMap;
 		this.coverage = coverage;
@@ -42,7 +43,7 @@ public class ObservedCoverageObligation {
 				new IdExpr("TOKEN_OUTPUT_STATE"));
 		
 		for (String key : idToCondMap.keySet()) {
-			HashMap<String, Integer> conditions = idToCondMap.get(key);
+			TreeMap<String, Integer> conditions = idToCondMap.get(key);
 			for (String cond : conditions.keySet()) {
 				condStr = cond;
 				int occurence = conditions.get(cond) / 2;

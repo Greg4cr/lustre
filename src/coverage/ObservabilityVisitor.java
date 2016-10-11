@@ -3,6 +3,7 @@ package coverage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 import enums.Coverage;
 import types.ExprTypeVisitor;
@@ -47,7 +48,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	// delay dependency tree and reference dependency tree
 	HashMap<VarDecl, ObservedTree> delayDependencyTrees = new HashMap<>();
 	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
-	HashMap<String, HashMap<String, Integer>> idToCondMap = new HashMap<>();
+	TreeMap<String, TreeMap<String, Integer>> idToCondMap = new TreeMap<>();
 		
 	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
 		super(exprTypeVisitor);
@@ -407,7 +408,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			List<Obligation> obs = equation.expr.accept(coverageVisitor);
 			
 			String id = null;
-			HashMap<String, Integer> conditions = new HashMap<>();
+			TreeMap<String, Integer> conditions = new TreeMap<>();
 			
 			if (equation.lhs.isEmpty()) {
 				id = "EMPTY";
