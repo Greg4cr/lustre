@@ -29,11 +29,14 @@ public class ObservabilityHelper {
 	private boolean isPre = false;
 	private List<VarDecl> singleNodeList = new ArrayList<>();
 	private HashMap<String, List<String>> delayMap = new HashMap<>();
-	private HashMap<String, HashMap<String, Integer>> idCondMap = new HashMap<>();
-		
+	private HashMap<String, VarDecl> ids = new HashMap<>();	
+	private List<String> strIds = new ArrayList<>();
+	
 	public ObservabilityHelper(Node node) {
 		this.node = node;
 		this.idList = getIdList();
+		this.ids = getIds();
+		this.strIds = getStrIds();
 	}
 	
 	public List<String> getInStrList() {
@@ -78,12 +81,11 @@ public class ObservabilityHelper {
 	public HashMap<VarDecl, ObservedTree> buildSeqTrees() {
 		HashMap<VarDecl, ObservedTree> seqTrees = new HashMap<>();
 		HashMap<String, Expr> expressions = getStrExprTable();
-		HashMap<String, VarDecl> idMap = getIds();
 		
 		for (String root : delayMap.keySet()) {
-			ObservedTreeNode treeRoot = new ObservedTreeNode(root, idMap.get(root).type);
+			ObservedTreeNode treeRoot = new ObservedTreeNode(root, ids.get(root).type);
 			buildTreeRecursively(treeRoot, expressions, false, 0);
-			seqTrees.put(idMap.get(root), new ObservedTree(treeRoot));
+			seqTrees.put(ids.get(root), new ObservedTree(treeRoot));
 		}
 		
 		return seqTrees;
@@ -96,8 +98,6 @@ public class ObservabilityHelper {
 												Map<String, Expr> exprs, 
 												boolean buildRefTree,
 												int seqMode) {
-		List<String> strIds = getStrIds();
-		HashMap<String, VarDecl> ids = getIds();
 		HashMap<String, Integer> children = new HashMap<>();
 		HashMap<String, Boolean> preNode = new HashMap<>();
 		String firstPreExpr = "";
@@ -132,8 +132,26 @@ public class ObservabilityHelper {
 					List<String> delays = delayMap.get(root.data);
 
 					for (int i = 0; i < delays.size(); i++) {
-						children.put(delays.get(i), 1);
-						preNode.put(delays.get(i), true);
+						if (delays.get(i).indexOf(" ") > 0) {
+							String[] items = delays.get(i).replaceAll("[!<>=(){}]", " ").split(" ");
+//							System.out.println("1st items >>> " + items.toString());
+							for (String item : items) {
+								item = item.trim();
+								if (item.isEmpty() || !strIds.contains(item)) {
+									continue;
+								} else if (! children.containsKey(item)) {
+									children.put(item, 1);
+									preNode.put(item, true);
+								} else {
+									children.put(item, children.get(item) + 1);
+								}
+//								System.out.println("1st add ::: " + item + "; " + children.get(item));
+							}
+						} else {
+							children.put(delays.get(i), 1);
+							preNode.put(delays.get(i), true);
+//							System.out.println("1st add ::: " + delays.get(i) + "; " + children.get(delays.get(i)));
+						}
 					}
 				}
 			}
@@ -157,7 +175,8 @@ public class ObservabilityHelper {
 			seqMode = 1;
 		} else {
 			if (exprs.get(root.data).toString().indexOf(" ") > 0) {
-				String[] items = exprs.get(root.data).toString().replaceAll("[(){}]", " ").split(" ");
+				String[] items = exprs.get(root.data).toString().replaceAll("[!<>=(){}]", " ").split(" ");
+				System.out.println("items >>> " + items.toString());
 				for (String item : items) {				
 					item = item.trim();
 									
@@ -173,24 +192,29 @@ public class ObservabilityHelper {
 							continue;
 						}
 						children.put(item, children.get(item) + 1);
+						System.out.println("add ::: " + item + "; " + children.get(item));
 						isPre = false;
 					} else {
 						if (isPre && item.equals(root.data)) {
 							continue;
 						}
+						
 						children.put(item, 1);
+						System.out.println("add ::: " + item + "; " + children.get(item));
 						preNode.put(item, isPre);
 						isPre = false;
 					}
 				}
 			} else {
-				String item = exprs.get(root.data).toString().replaceAll("[ (){}]", "");
+				String item = exprs.get(root.data).toString().replaceAll("[ !<>=(){}]", "");
 				if (strIds.contains(item)) {
 					if (!children.containsKey(item)) {
 						children.put(item, 1);
+						System.out.println("add ::: " + item + "; " + children.get(item));
 						preNode.put(item, false);
 					} else {
 						children.put(item, children.get(item) + 1);
+						System.out.println("add ::: " + item + "; " + children.get(item));
 						preNode.put(item, false);
 					}
 					isPre = false;
@@ -198,9 +222,11 @@ public class ObservabilityHelper {
 			}
 		}
 		
+		System.out.println("****** children list ******");
+		System.out.println(children);
 		// add children to current root
 		for (String child : children.keySet()) {
-			
+			System.out.println("for child: " + child);
 			ObservedTreeNode newTreeNode = new ObservedTreeNode(child, ids.get(child).type);
 			newTreeNode.setOccurrence(children.get(child));
 			newTreeNode.setIsPre(preNode.get(child));
@@ -236,7 +262,7 @@ public class ObservabilityHelper {
 		return varList;
 	}
 	
-	public HashMap<String, VarDecl> getIds() {
+	private HashMap<String, VarDecl> getIds() {
 		HashMap<String, VarDecl> idMap = new HashMap<String, VarDecl>();
 		for (VarDecl output : node.outputs) {
 			idMap.put(output.id, output);
@@ -247,6 +273,8 @@ public class ObservabilityHelper {
 		for (VarDecl local : node.locals) {
 			idMap.put(local.id, local);
 		}
+		System.out.println("****** idMAP ******");
+		System.out.println(idMap);
 		return idMap;
 	}
 	
@@ -264,8 +292,6 @@ public class ObservabilityHelper {
 		ObservedTreeNode root = null;
 		/* mapping node name to occurrence of the node */
 		HashMap<String, Integer> children = new HashMap<>();
-		/* mapping var name to var variable */
-		HashMap<String, VarDecl> ids = getIds();
 		/* mapping lhs to corresponding expr (rhs) */
 		HashMap<String, Expr> expressions = getStrExprTable();
 		List<String> strIds = getStrIds();
