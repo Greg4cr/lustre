@@ -35,7 +35,7 @@ public class AffectAtCaptureEquation {
 	
 	List<List<String>> leavesToRoots = new ArrayList<>();
 	List<List<String>> rootToLeaves = new ArrayList<>();
-	
+	// 200 iterations; 60 minutes
 	final String TYPE_SEQ = "SEQ";
 	final String TYPE_COMB = "COMB";
 	
