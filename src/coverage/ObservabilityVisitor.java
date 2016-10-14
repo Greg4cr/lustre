@@ -49,6 +49,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	HashMap<VarDecl, ObservedTree> delayDependencyTrees = new HashMap<>();
 	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
 	TreeMap<String, TreeMap<String, Integer>> idToCondMap = new TreeMap<>();
+	HashMap<String, List<String>> affectPairs = new HashMap<>();
 		
 	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
 		super(exprTypeVisitor);
@@ -498,12 +499,20 @@ public class ObservabilityVisitor extends ConditionVisitor {
 				refDependencyTrees, delayMap, idToCondMap, coverage);
 		affect.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
 		affect.setSingleNodeTrees(obHelper.getSingleNodeTrees());
-		return affect.generate();
+		
+		List<Obligation> affectObligations = new ArrayList<>();
+		affectObligations.addAll(affect.generate());
+		
+		// get affect pairs for final obligations generation
+		affectPairs = affect.getAffectPairs();
+		
+		return affectObligations;
 	}
 	
-	// generate omcdc obligations for each expression
+	// generate observability obligations for each expression
 	private List<Obligation> getObligations() {
-		ObservedCoverageObligation obligation = new ObservedCoverageObligation(idToCondMap, coverage);
+		ObservedCoverageObligation obligation = new ObservedCoverageObligation(idToCondMap, 
+																affectPairs, coverage);
 		return obligation.generate();
 	}
 }

@@ -2,7 +2,9 @@ package observability;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 import coverage.Obligation;
@@ -23,6 +25,7 @@ import observability.tree.ObservedTreeNode;
 
 public class AffectAtCaptureEquation {
 	HashMap<String, Expr> map = new HashMap<>();
+	HashMap<String, List<String>> affectPairs = new HashMap<>();
 	
 	HashMap<VarDecl, ObservedTree> sequentialTrees;
 	HashMap<VarDecl, ObservedTree> combUsedByTrees;
@@ -47,9 +50,9 @@ public class AffectAtCaptureEquation {
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
 	HashMap<ObservedTreeNode, List<ObservedTreeNode>> rootToLeavesMap = new HashMap<>();
 	// token to tree node (root), Map<Token, Node>
-	HashMap<IdExpr, String> tokenToNode = new HashMap<IdExpr, String>();
+	HashMap<IdExpr, String> tokenToNode = new HashMap<>();
 	// tree node (root) to token, Map<Node, Token>
-	HashMap<String, IdExpr> nodeToToken = new HashMap<String, IdExpr>();
+	HashMap<String, IdExpr> nodeToToken = new HashMap<>();
 	// id to condition & occurrence, Map<id, <condition, occurrence>>
 	TreeMap<String, TreeMap<String, Integer>> idToCondMap = new TreeMap<>();
 	
@@ -176,6 +179,8 @@ public class AffectAtCaptureEquation {
 													new BinaryExpr(conclusion1, 
 															BinaryOp.OR, conclusion2));
 						if (!map.containsKey(lhs)) {
+//							System.out.print("single node:\t");
+							trackAffectPairs(node, father);
 							map.put(lhs, expr);
 						} else if (!map.get(lhs).toString().contains(expr.toString())) {
 							continue;
@@ -249,7 +254,10 @@ public class AffectAtCaptureEquation {
 													new BinaryExpr(conclusion1, 
 															BinaryOp.OR, conclusion2));
 						if (!map.containsKey(lhs)) {
+//							System.out.print("comb tree:\t");
+							trackAffectPairs(fNode, father);
 							map.put(lhs, expr);
+							
 							// otherwise, its value can be passed via other path/nodes
 							// through some path in seq_dependent tree(s)
 						} else if (!map.get(lhs).toString().contains(expr.toString())) {
@@ -377,7 +385,6 @@ public class AffectAtCaptureEquation {
 						lhs = nodeStr + val[k] + at + father.data + affect;
 						premisePairs.clear();
 						
-						
 						TreeMap<String, String> tokenPairs = new TreeMap<>();
 						
 						if (path.size() <= 2) {
@@ -385,6 +392,10 @@ public class AffectAtCaptureEquation {
 								tokenPairs.put("FALSE", "FALSE");
 							}
 						} else {
+//							System.out.print("seq tree:\t");
+							// track affecting_at_capture pairs
+							trackAffectPairs(nodeStr, father.data);
+							
 							for (int m = 0; m < superRoots.size(); ++m) {
 								list.clear();
 								seqUsed = father.data + seq + superRoots.get(m).data;
@@ -415,6 +426,29 @@ public class AffectAtCaptureEquation {
 		}
 
 		return exprMap;
+	}
+	
+	public HashMap<String, List<String>> getAffectPairs() {
+		return affectPairs;
+	}
+	
+	private void trackAffectPairs(String affecter, String affectee) {
+//		System.out.println(affecter + ", " + affectee);
+		List<String> affectingList = new ArrayList<>();
+		
+		if (! affectPairs.containsKey(affecter)) {
+			affectingList.clear();
+			affectingList.add(affectee);
+			affectPairs.put(affecter, affectingList);
+		} else {
+			affectingList.clear();
+			affectingList.addAll(affectPairs.get(affecter));
+			
+			if (!affectingList.contains(affectee)) {
+				affectingList.add(affectee);
+				affectPairs.put(affecter, affectingList);
+			}
+		}
 	}
 	
 	private List<String> getHandledIds() {

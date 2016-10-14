@@ -5,13 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jkind.lustre.BinaryExpr;
-import jkind.lustre.BinaryOp;
 import jkind.lustre.Equation;
 import jkind.lustre.Expr;
-import jkind.lustre.IdExpr;
 import jkind.lustre.Node;
-import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import jkind.lustre.VarDecl;
 import observability.tree.ObservedTree;
@@ -176,7 +172,7 @@ public class ObservabilityHelper {
 		} else {
 			if (exprs.get(root.data).toString().indexOf(" ") > 0) {
 				String[] items = exprs.get(root.data).toString().replaceAll("[!<>=(){}]", " ").split(" ");
-				System.out.println("items >>> " + items.toString());
+//				System.out.println("items >>> " + items.toString());
 				for (String item : items) {				
 					item = item.trim();
 									
@@ -192,7 +188,7 @@ public class ObservabilityHelper {
 							continue;
 						}
 						children.put(item, children.get(item) + 1);
-						System.out.println("add ::: " + item + "; " + children.get(item));
+//						System.out.println("add ::: " + item + "; " + children.get(item));
 						isPre = false;
 					} else {
 						if (isPre && item.equals(root.data)) {
@@ -200,7 +196,7 @@ public class ObservabilityHelper {
 						}
 						
 						children.put(item, 1);
-						System.out.println("add ::: " + item + "; " + children.get(item));
+//						System.out.println("add ::: " + item + "; " + children.get(item));
 						preNode.put(item, isPre);
 						isPre = false;
 					}
@@ -210,11 +206,11 @@ public class ObservabilityHelper {
 				if (strIds.contains(item)) {
 					if (!children.containsKey(item)) {
 						children.put(item, 1);
-						System.out.println("add ::: " + item + "; " + children.get(item));
+//						System.out.println("add ::: " + item + "; " + children.get(item));
 						preNode.put(item, false);
 					} else {
 						children.put(item, children.get(item) + 1);
-						System.out.println("add ::: " + item + "; " + children.get(item));
+//						System.out.println("add ::: " + item + "; " + children.get(item));
 						preNode.put(item, false);
 					}
 					isPre = false;
@@ -222,11 +218,11 @@ public class ObservabilityHelper {
 			}
 		}
 		
-		System.out.println("****** children list ******");
-		System.out.println(children);
+//		System.out.println("****** children list ******");
+//		System.out.println(children);
 		// add children to current root
 		for (String child : children.keySet()) {
-			System.out.println("for child: " + child);
+//			System.out.println("for child: " + child);
 			ObservedTreeNode newTreeNode = new ObservedTreeNode(child, ids.get(child).type);
 			newTreeNode.setOccurrence(children.get(child));
 			newTreeNode.setIsPre(preNode.get(child));
@@ -273,8 +269,8 @@ public class ObservabilityHelper {
 		for (VarDecl local : node.locals) {
 			idMap.put(local.id, local);
 		}
-		System.out.println("****** idMAP ******");
-		System.out.println(idMap);
+//		System.out.println("****** idMAP ******");
+//		System.out.println(idMap);
 		return idMap;
 	}
 	

@@ -9,6 +9,7 @@ import coverage.Obligation;
 import enums.Coverage;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
+import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
@@ -17,11 +18,13 @@ import jkind.lustre.UnaryOp;
 public class ObservedCoverageObligation {
 	private TreeMap<String, TreeMap<String, Integer>> idToCondMap;
 	private Coverage coverage;
+	private HashMap<String, List<String>> affectPairs = new HashMap<>();
 	
-	public ObservedCoverageObligation(TreeMap<String, 
-								TreeMap<String, Integer>> idToCondMap,
+	public ObservedCoverageObligation(TreeMap<String, TreeMap<String, Integer>> idToCondMap,
+									HashMap<String, List<String>> affectPairs,
 									Coverage coverage) {
 		this.idToCondMap = idToCondMap;
+		this.affectPairs = affectPairs;
 		this.coverage = coverage;
 	}
 	
@@ -35,7 +38,7 @@ public class ObservedCoverageObligation {
 		String property = "property";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};
-		IdExpr[] nonMaskedExpr = new IdExpr[2], affectExpr = new IdExpr[2];
+		Expr[] nonMaskedExpr = new Expr[2], affectExpr = new Expr[2];
 		Expr leftOperand, rightOperand;
 		Obligation obligation;
 		String condStr = "";
@@ -54,10 +57,29 @@ public class ObservedCoverageObligation {
 					for (int j = 0; j < vals.length; j++) {
 						lhs = new IdExpr(property + "_" + count++);
 						nonMaskedExpr[j] = new IdExpr(condStr + vals[j] + at + key + cov + vals[j]);
-						affectExpr[j] = new IdExpr(condStr + vals[j] + at + key + affect);
 						
 						leftOperand = new BinaryExpr(nonMaskedExpr[j], BinaryOp.AND, 
 												new IdExpr(key + observed));
+						
+//						if (affectPairs.containsKey(condStr)) {
+//							if (affectPairs.get(condStr).contains(key)) {
+//								System.out.println("[v] <" + condStr + ", " + key + ">");
+//							} else {
+//								System.out.println("[-] <" + condStr + ", ***>");
+//							}
+//						} else {
+//							System.out.println("[x] " + condStr);
+//						}
+						
+						if (affectPairs.containsKey(condStr)
+								&& affectPairs.get(condStr).contains(key)) {
+							affectExpr[j] = new IdExpr(condStr + vals[j] + at + key + affect);
+						} else {
+							affectExpr[j] = new BoolExpr(true);
+						}
+						
+//						System.out.println("affecting pair:\n\t" + affectExpr[j]);
+						
 						rightOperand = new BinaryExpr(affectExpr[j], BinaryOp.AND,
 												transition);
 						Expr condition = new UnaryExpr(UnaryOp.NOT, (new BinaryExpr(
