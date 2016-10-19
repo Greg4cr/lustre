@@ -75,7 +75,7 @@ public class ObservedCoverageObligation {
 								&& affectPairs.get(condStr).contains(key)) {
 							affectExpr[j] = new IdExpr(condStr + vals[j] + at + key + affect);
 						} else {
-							affectExpr[j] = new BoolExpr(true);
+							affectExpr[j] = new BoolExpr(false);
 						}
 						
 //						System.out.println("affecting pair:\n\t" + affectExpr[j]);
