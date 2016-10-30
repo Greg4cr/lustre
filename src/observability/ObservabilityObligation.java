@@ -3,7 +3,7 @@ package observability;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 
 import coverage.Obligation;
 import enums.Coverage;
@@ -15,15 +15,15 @@ import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
-public class ObservedCoverageObligation {
-	private TreeMap<String, TreeMap<String, Integer>> idToCondMap;
+public class ObservabilityObligation {
+	private Map<String, Map<String, Integer>> affectAtCaptureMap;
 	private Coverage coverage;
-	private HashMap<String, List<String>> affectPairs = new HashMap<>();
+	private Map<String, List<String>> affectPairs = new HashMap<>();
 	
-	public ObservedCoverageObligation(TreeMap<String, TreeMap<String, Integer>> idToCondMap,
-									HashMap<String, List<String>> affectPairs,
+	public ObservabilityObligation(Map<String, Map<String, Integer>> idToCondMap,
+									Map<String, List<String>> affectPairs,
 									Coverage coverage) {
-		this.idToCondMap = idToCondMap;
+		this.affectAtCaptureMap = idToCondMap;
 		this.affectPairs = affectPairs;
 		this.coverage = coverage;
 	}
@@ -45,8 +45,8 @@ public class ObservedCoverageObligation {
 		Expr transition = new BinaryExpr(new IdExpr("token"), BinaryOp.EQUAL, 
 				new IdExpr("TOKEN_OUTPUT_STATE"));
 		
-		for (String key : idToCondMap.keySet()) {
-			TreeMap<String, Integer> conditions = idToCondMap.get(key);
+		for (String key : affectAtCaptureMap.keySet()) {
+			Map<String, Integer> conditions = affectAtCaptureMap.get(key);
 			for (String cond : conditions.keySet()) {
 				condStr = cond;
 				int occurence = conditions.get(cond) / 2;

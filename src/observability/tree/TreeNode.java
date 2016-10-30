@@ -1,41 +1,37 @@
 package observability.tree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jkind.lustre.Type;
 
-public class ObservedTreeNode {
-    public String data;
+public class TreeNode {
+    public String rawId;
     public Type type;
     public boolean isPre;
-    public ObservedTreeNode parent;
-    public List<ObservedTreeNode> children;
-    public int occurrence;
+    public TreeNode parent;
+    public List<TreeNode> children;
     public boolean isArithExpr;
-    public String arithId;
+    /* <renamedId, timeSeen> */
+    public Map<String, Integer> renamedIds;
     
-    public ObservedTreeNode(String data, Type type) {
-    	setName(data);
+    public TreeNode(String rawId, Type type) {
+    	setId(rawId);
     	setType(type);
     	setIsPre(false);
-    	setArithId(null);
-    	setOccurrence(1);
+    	setRenamedIds(new HashMap<String, Integer>());
     	this.parent = null;
     	children = new ArrayList<>();
     }
     
-    public ObservedTreeNode(String data, Type type, boolean isPre) {
-    	setName(data);
+    public TreeNode(String rawId, Type type, boolean isPre) {
+    	setId(rawId);
     	setType(type);
     	setIsPre(isPre);
-    	setOccurrence(1);
     }
 
-	public void setOccurrence(int occurrence) {
-		this.occurrence = occurrence;
-	}
-	 
     public int getNumberOfChildren() {
         if (children == null) {
             return 0;
@@ -43,16 +39,16 @@ public class ObservedTreeNode {
         return children.size();
     }
      
-    public void addChild(ObservedTreeNode child) {
+    public void addChild(TreeNode child) {
         if (children == null) {
-            children = new ArrayList<ObservedTreeNode>();
+            children = new ArrayList<TreeNode>();
         }
         child.parent = this;
         this.children.add(child);
     }
 
-    public void setName(String data) {
-        this.data = data;
+    public void setId(String id) {
+        this.rawId = id;
     }
     
     public void setType(Type type) {
@@ -67,17 +63,18 @@ public class ObservedTreeNode {
     	this.isArithExpr = isArithExpr;
     }
     
-    public void setArithId(String arithId) {
-    	this.arithId = arithId;
+    public void setRenamedIds(Map<String, Integer> renamedIds) {
+    	this.renamedIds = renamedIds;
+//    	System.out.println(this.data + " recieved " + renamedIds);
     }
     
     // return all leaf nodes of specific node
-    public List<ObservedTreeNode> getAllLeafNodes() {
-    	List<ObservedTreeNode> leaves = new ArrayList<>();
+    public List<TreeNode> getAllLeafNodes() {
+    	List<TreeNode> leaves = new ArrayList<>();
     	if (this.children == null || this.children.isEmpty()) {
     		leaves.add(this);
     	} else {
-    		for (ObservedTreeNode child : this.children) {
+    		for (TreeNode child : this.children) {
     			leaves.addAll(child.getAllLeafNodes());
     		}
     	}
@@ -85,32 +82,65 @@ public class ObservedTreeNode {
     	return leaves;
     }
     
-    public List<ObservedTreeNode> convertToList() {
-    	List<ObservedTreeNode> list = new ArrayList<>();
+    public boolean containsChild(String id) {
+    	for (TreeNode child : this.children) {
+    		if (id.equals(child.rawId)) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
+    }
+    
+    public TreeNode getChild(String id) {
+		for (TreeNode child : this.children) {
+			if (id.equals(child.rawId)) {
+				return child;
+			}
+		}
+		
+		return null;
+    }
+    
+    public List<TreeNode> convertToList() {
+    	List<TreeNode> list = new ArrayList<>();
     	convertToList(this, list);
     	return list;
     }
     
-    private void convertToList(ObservedTreeNode root, List<ObservedTreeNode> list) {
+    private void convertToList(TreeNode root, List<TreeNode> list) {
     	if (root == null) {
     		return;
     	}
     	list.add(root);
     	if (root.children != null) {
-	    	for (ObservedTreeNode child : root.children) {
+	    	for (TreeNode child : root.children) {
 	    		convertToList(child, list);
 	    	}
     	}
     }
     
+    public boolean containsNode(String id) {
+    	List<TreeNode> list = new ArrayList<>();
+    	convertToList(this, list);
+    	
+    	for (TreeNode node : list) {
+    		if (node.rawId.equals(id)) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
+    }
+    
     // return paths from current node to leaf nodes
-    public void getPaths(List<List<ObservedTreeNode>> paths) {
-    	this.getPaths(this, paths, new ArrayList<ObservedTreeNode>());
+    public void getPaths(List<List<TreeNode>> paths) {
+    	this.getPaths(this, paths, new ArrayList<TreeNode>());
     }
     
     // return paths from given node to each leaf node in the subtree
-    private void getPaths(ObservedTreeNode root, List<List<ObservedTreeNode>> paths,
-    							List<ObservedTreeNode> path) {
+    private void getPaths(TreeNode root, List<List<TreeNode>> paths,
+    							List<TreeNode> path) {
     	if (root == null) {
     		return;
     	}
@@ -124,10 +154,10 @@ public class ObservedTreeNode {
     	
     	if (root.children == null || root.children.isEmpty()) {
     		// add one path (root -> node list -> leaf)
-    		paths.add(new ArrayList<ObservedTreeNode>(path));
+    		paths.add(new ArrayList<TreeNode>(path));
     	} else {
     		// explore current path
-    		for (ObservedTreeNode child : root.children) {
+    		for (TreeNode child : root.children) {
     			child.getPaths(child, paths, path);
     		}
     	}
@@ -137,11 +167,11 @@ public class ObservedTreeNode {
     public boolean equals(Object node) {
     	if (node == null) {
     		return false;
-    	} else if (! (node instanceof ObservedTreeNode)) {
+    	} else if (! (node instanceof TreeNode)) {
     		throw new IllegalArgumentException("Wrong type of node!");
     	} else {
     		// node data is the only identifier
-    		return this.data.equals(((ObservedTreeNode)node).data);
+    		return this.rawId.equals(((TreeNode)node).rawId);
     	}
     }
         
@@ -150,13 +180,10 @@ public class ObservedTreeNode {
     	StringBuilder node = new StringBuilder();
     	
     	node.append("(");
-    	node.append("data=").append(this.data).append(", ");
+    	node.append("data=").append(this.rawId).append(", ");
     	node.append("type=").append(this.type.toString()).append(", ");
-    	node.append("occur=").append(this.occurrence).append(", ");
     	node.append("isPre=").append(this.isPre);
-    	if (this.isArithExpr) {
-    		node.append(", ").append("arithId=").append(this.arithId);
-    	}
+		node.append(", ").append("arithIds=").append(this.renamedIds);
     	node.append(")");
     	
     	return node.toString();

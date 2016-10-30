@@ -3,6 +3,7 @@ package observability;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
@@ -12,44 +13,50 @@ import jkind.lustre.UnaryOp;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
-import jkind.lustre.VarDecl;
-import observability.tree.ObservedTree;
-import observability.tree.ObservedTreeNode;
+import observability.tree.Tree;
+import observability.tree.TreeNode;
 
 public class TokenAction {
 	// token states
-	final IdExpr token_first = new IdExpr("token_first"); 
-	final IdExpr token_init = new IdExpr("token_init");
-	final IdExpr token_next = new IdExpr("token_next");
-	final IdExpr token = new IdExpr("token");
-	final IdExpr token_nondet = new IdExpr("token_nondet");
+	private final IdExpr token_first = new IdExpr("token_first"); 
+	private final IdExpr token_init = new IdExpr("token_init");
+	private final IdExpr token_next = new IdExpr("token_next");
+	private final IdExpr token = new IdExpr("token");
+	private final IdExpr token_nondet = new IdExpr("token_nondet");
 	
-	final IdExpr TOKEN_INIT_STATE = new IdExpr("TOKEN_INIT_STATE");
-	final IdExpr TOKEN_ERROR_STATE = new IdExpr("TOKEN_ERROR_STATE");
-	final IdExpr TOKEN_OUTPUT_STATE = new IdExpr("TOKEN_OUTPUT_STATE");
+	private final IdExpr TOKEN_INIT_STATE = new IdExpr("TOKEN_INIT_STATE");
+	private final IdExpr TOKEN_ERROR_STATE = new IdExpr("TOKEN_ERROR_STATE");
+	private final IdExpr TOKEN_OUTPUT_STATE = new IdExpr("TOKEN_OUTPUT_STATE");
 	
-	List<String> inList = new ArrayList<>();
 	// dynamic tokens
-	String prefix = "TOKEN_D";
-	IdExpr[] tokens;
-	int count;
-	boolean hasDynamicTokens = false;
+	private String prefix = "TOKEN_D";
+	private IdExpr[] tokens;
 	
 	// token generator assistants
 	// sequential trees (one token to one tree / root)
-	HashMap<VarDecl, ObservedTree> sequentialTrees;
+	private Map<String, Tree> delayTrees;
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
-	HashMap<ObservedTreeNode, List<ObservedTreeNode>> rootToLeavesMap = new HashMap<>();
+	private Map<TreeNode, List<TreeNode>> tokenDepTable = new HashMap<>();
 	// token to tree node (root), Map<Token, Node>
-	HashMap<IdExpr, ObservedTreeNode> tokenToNode = new HashMap<>();
+	private Map<IdExpr, TreeNode> tokenToNode = new HashMap<>();
 	// tree node (root) to token, Map<Node, Token>
-	HashMap<ObservedTreeNode, IdExpr> nodeToToken = new HashMap<>();
+	private Map<TreeNode, IdExpr> nodeToToken = new HashMap<>();
 	
-	public TokenAction(HashMap<VarDecl, ObservedTree> seqTrees) {
-		this.sequentialTrees = seqTrees;
-		drawMaps();
+	public TokenAction(Map<String, Tree> delayTrees,
+			Map<TreeNode, List<TreeNode>> tokenDepTable,
+			Map<IdExpr, TreeNode> tokenToNode,
+			Map<TreeNode, IdExpr> nodeToToken,
+			IdExpr[] tokens) {
+		this.delayTrees = delayTrees;
+		this.tokenDepTable = tokenDepTable;
+		this.tokenToNode = tokenToNode;
+		this.nodeToToken = nodeToToken;
+		this.tokens = tokens;
+		
+//		drawTokenMaps();
+//		drawTokenDependantTable();
 	}
-	
+		
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		Obligation currentOb;
@@ -61,8 +68,8 @@ public class TokenAction {
 							new IfThenElseExpr(token_init, token_nondet, TOKEN_INIT_STATE));
 		obligations.add(currentOb);
 		
-		// transitions between dynamic tokens
-		if (hasDynamicTokens) {
+		// build transitions between dynamic tokens
+		if (! delayTrees.keySet().isEmpty()) {
 			transitionExpr = transitions();
 			preFinalExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
 					BinaryOp.EQUAL, TOKEN_OUTPUT_STATE), TOKEN_OUTPUT_STATE, transitionExpr);
@@ -85,49 +92,55 @@ public class TokenAction {
 		
 		return obligations;
 	}
-	
-	public void setHasDynamic(boolean hasDynamicTokens) {
-		this.hasDynamicTokens = hasDynamicTokens;
-	}
-	
+		
 	private Expr transitions() {
 		int len = tokens.length;
 		Expr[] transExprs = new Expr[len];
 		Expr[] outputTrans = new Expr[len];
-		Expr errTrans;
+		
 		String observed = "_COMB_OBSERVED", seq = "_SEQ_USED_BY_";
-		String id;
+		String id = "";
 		int i = 0;
 		
 		for (IdExpr sourceToken : tokens) {
 			IdExpr targetToken = null;
-			ObservedTreeNode sourceNode = tokenToNode.get(sourceToken);
+			TreeNode sourceNode = tokenToNode.get(sourceToken);
 
-			for (ObservedTreeNode targetNode : rootToLeavesMap.get(sourceNode)) {
-
-				for (IdExpr tokenId : tokenToNode.keySet()) {
-					if (tokenToNode.get(tokenId).data.equals(targetNode.data)) {
-						targetToken = tokenId;
-						break;
-					}
+//			System.out.println("possible target of (" + sourceNode + "):\n\t" + tokenDepTable.get(sourceNode));
+			
+			if (tokenDepTable.get(sourceNode).isEmpty()) {
+				id = sourceNode.rawId + observed;
+				outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, TOKEN_ERROR_STATE);
+			} else {
+				Expr[] condExpr = new Expr[tokenDepTable.get(sourceNode).size()];
+				Expr[] elseExpr = new Expr[tokenDepTable.get(sourceNode).size()];
+				Expr[] targetTk = new Expr[tokenDepTable.get(sourceNode).size()];
+				
+				int index = 0;
+				for (TreeNode targetNode : tokenDepTable.get(sourceNode)) {
+					targetToken = this.nodeToToken.get(targetNode);
+					id = sourceNode.rawId + seq + targetNode.rawId;
+					
+					targetTk[index] = targetToken;
+					condExpr[index++] = new BinaryExpr(
+							new BinaryExpr(token_nondet, BinaryOp.EQUAL, targetToken),
+							BinaryOp.AND, new IdExpr(id));
 				}
 				
-				if (targetToken != null) {
-					id = targetNode.data + seq + sourceNode.data;
-
-					errTrans = new IfThenElseExpr(new BinaryExpr(
-										new BinaryExpr(token_nondet, BinaryOp.EQUAL, targetToken),
-										BinaryOp.AND, new IdExpr(id)), targetToken,
-										TOKEN_ERROR_STATE);
-					
-					id = sourceNode.data + observed;
-					outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, errTrans);
-				} else {
-					id = sourceNode.data + observed;
-					outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, TOKEN_ERROR_STATE);
+				for (int j = 0; j < index; ++j) {
+					if (j == 0) {
+						elseExpr[j] = new IfThenElseExpr(condExpr[j], targetTk[j],
+								TOKEN_ERROR_STATE);
+					} else {
+						elseExpr[j] = new IfThenElseExpr(condExpr[j], targetTk[j],
+								elseExpr[j - 1]);
+					}
 				}
+				id = sourceNode.rawId + observed;
+				outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, elseExpr[elseExpr.length - 1]);
 			}
-				i++;
+			
+			i++;
 		}
 		
 		// combine expressions (nesting)
@@ -141,26 +154,5 @@ public class TokenAction {
 		
 		return transExprs[0];
 	}
-	
-	// build token-to-node, node-to-token, tokennode-dependency maps
-	private void drawMaps() {
-		tokens = new IdExpr[sequentialTrees.size()];
-		count = 0;
-		
-		for (VarDecl tree : sequentialTrees.keySet()) {
-			tokens[count] = new IdExpr(prefix + (count + 1));
-			ObservedTreeNode node = sequentialTrees.get(tree).root;
-			tokenToNode.put(tokens[count], node);
-			nodeToToken.put(node, tokens[count]);
-			
-			ObservedTreeNode root = sequentialTrees.get(tree).root;
-			rootToLeavesMap.put(root, root.getAllLeafNodes());
 
-			count++;
-		}
-	}
-	
-	public void setInIdList(List<String> inputs) {
-		inList = inputs;
-	}
 }

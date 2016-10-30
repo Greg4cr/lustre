@@ -3,6 +3,7 @@ package observability;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
@@ -10,29 +11,35 @@ import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
-import jkind.lustre.VarDecl;
-import observability.tree.ObservedTree;
-import observability.tree.ObservedTreeNode;
+import observability.tree.Tree;
+import observability.tree.TreeNode;
 
 public class CombObservedEquation {
-	List<VarDecl> singleNodeList;
-	HashMap<String, Expr> map = new HashMap<>();
+	List<String> deadNodes;
+	Map<String, Expr> map = new HashMap<>();
+	Map<String, Map<String, Map<String, Integer>>> observerTable = new HashMap<>();
+	Map<String, Tree> observerTrees;
 	
-	public List<Obligation> generate(HashMap<VarDecl, ObservedTree> referenceTrees,
-											List<VarDecl> idList) {
+	public CombObservedEquation(Map<String, Tree> observerTrees,
+								List<String> deadNodes) {
+		this.observerTrees = observerTrees;
+		this.deadNodes = deadNodes;
+	}
+	
+	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
-		ObservedTree tree;
+		Tree tree;
 		
-		for (VarDecl rootVar: referenceTrees.keySet()) {
-			tree = referenceTrees.get(rootVar);
+		for (String rootStr : observerTrees.keySet()) {
+			tree = observerTrees.get(rootStr);
 			if (tree.root.children.isEmpty()) {
-				// for single-node tree
+				// single-node
 				genereateForSingleNodes(map, tree.root);
 			} else {
-				// for nodes in reference trees
+				// for nodes in observer trees
 				generateForTree(map, tree.root);
 				
-				// for single nodes
+				// for dead nodes
 				genereateForSingleNodes(map, tree.root);
 			}
 		}
@@ -40,8 +47,8 @@ public class CombObservedEquation {
 		
 		return obligations;
 	}
-	
-	private List<Obligation> getObligations(HashMap<String, Expr> map) {
+		
+	private List<Obligation> getObligations(Map<String, Expr> map) {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		for (String lhs : map.keySet()) {
@@ -51,20 +58,16 @@ public class CombObservedEquation {
 		}
 		return obligations;
 	}
-	
-	public void setSingleNodeList(List<VarDecl> singleNodeList) {
-		this.singleNodeList = singleNodeList;
-	}
 
-	private void genereateForSingleNodes(HashMap<String, Expr> map,
-										ObservedTreeNode root) {
+	private void genereateForSingleNodes(Map<String, Expr> map,
+										TreeNode root) {
 		String combObs = "_COMB_OBSERVED";
 		String lhs;
 		
-		for (VarDecl id : singleNodeList) {
-			lhs = id.id + combObs;
+		for (String node : deadNodes) {
+			lhs = node + combObs;
 
-			if (id.id.equals(root.data)) {
+			if (node.equals(root.rawId)) {
 				map.put(lhs, new BoolExpr(true));
 			} else {
 				map.put(lhs, new BoolExpr(false));
@@ -72,18 +75,18 @@ public class CombObservedEquation {
 		}
 	}
 	
-	private void generateForTree(HashMap<String, Expr> map, ObservedTreeNode root) {
+	private void generateForTree(Map<String, Expr> map, TreeNode root) {
 		String combObs = "_COMB_OBSERVED";
-		String lhs = root.data + combObs;
+		String lhs = root.rawId + combObs;
 		// COMB_OBSERVED for root
 		map.put(lhs, new BoolExpr(true));
 		
-		for (ObservedTreeNode node : root.children) {
+		for (TreeNode node : root.children) {
 			generateForNode(map, node);
 		}
 	}
 	
-	private void generateForNode(HashMap<String, Expr> map, ObservedTreeNode node) {
+	private void generateForNode(Map<String, Expr> map, TreeNode node) {
 		if (node == null) {
 			return;
 		}
@@ -91,9 +94,9 @@ public class CombObservedEquation {
 		String lhs;
 		String combObs = "_COMB_OBSERVED";
 		String combUsedBy = "_COMB_USED_BY_";
-		lhs = node.data + combObs;
-		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.parent.data);
-		IdExpr opr2 = new IdExpr(node.parent.data + combObs);
+		lhs = node.rawId + combObs;
+		IdExpr opr1 = new IdExpr(node.rawId + combUsedBy + node.parent.rawId);
+		IdExpr opr2 = new IdExpr(node.parent.rawId + combObs);
 		BinaryExpr expr = new BinaryExpr(opr1, BinaryOp.AND, opr2);
 		
 		if (!map.containsKey(lhs)) {
@@ -103,7 +106,7 @@ public class CombObservedEquation {
 			map.put(lhs, expr);
 		}
 		
-		for (ObservedTreeNode child : node.children) {
+		for (TreeNode child : node.children) {
 			generateForNode(map, child);
 		}
 	}

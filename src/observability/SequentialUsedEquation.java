@@ -3,6 +3,7 @@ package observability;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
@@ -10,19 +11,23 @@ import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
-import jkind.lustre.VarDecl;
-import observability.tree.ObservedTree;
-import observability.tree.ObservedTreeNode;
+import observability.tree.Tree;
+import observability.tree.TreeNode;
 
-public class SequentialEquation {
-	HashMap<String, Expr> exprsMap = new HashMap<>();
+public class SequentialUsedEquation {
+	private Map<String, Tree> delayTrees;
+	private Map<String, Expr> exprsMap = new HashMap<>();
 	
-	public List<Obligation> generate(HashMap<VarDecl, ObservedTree> sequantialTrees) {
+	public SequentialUsedEquation(Map<String, Tree> delayTrees) {
+		this.delayTrees = delayTrees;
+	}
+	
+	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
-		ObservedTree tree;
+		Tree tree;
 		
-		for (VarDecl root: sequantialTrees.keySet()) {
-			tree = sequantialTrees.get(root);
+		for (String root: delayTrees.keySet()) {
+			tree = delayTrees.get(root);
 			generateObligationForTree(exprsMap, tree);
 		}
 		
@@ -31,7 +36,7 @@ public class SequentialEquation {
 	}
 
 	
-	private List<Obligation> getObligations(HashMap<String, Expr> map) {
+	private List<Obligation> getObligations(Map<String, Expr> map) {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		
 		for (String lhs : map.keySet()) {
@@ -41,26 +46,26 @@ public class SequentialEquation {
 		return obligations;
 	}
 	
-	private void generateObligationForTree(HashMap<String, Expr> exprsMap, 
-												ObservedTree tree) {
-		ObservedTreeNode root = tree.root;
-		List<ObservedTreeNode> firstLevel = root.children;
+	private void generateObligationForTree(Map<String, Expr> exprsMap, 
+												Tree tree) {
+		TreeNode root = tree.root;
+		List<TreeNode> firstLevel = root.children;
 		String seqUsedBy = "_SEQ_USED_BY_";
 		String lhs;
 		
-		for (ObservedTreeNode node : firstLevel) {
-			lhs = node.data + seqUsedBy + root.data;
+		for (TreeNode node : firstLevel) {
+			lhs = node.rawId + seqUsedBy + root.rawId;
 			exprsMap.put(lhs, new BoolExpr(true));
 			
-			for (ObservedTreeNode child : node.children) {
+			for (TreeNode child : node.children) {
 				generateObligation(exprsMap, child, root);
 			}
 		}
 	}
 	
-	private void generateObligation(HashMap<String, Expr> exprsMap,
-									ObservedTreeNode node,
-									ObservedTreeNode root) {
+	private void generateObligation(Map<String, Expr> exprsMap,
+									TreeNode node,
+									TreeNode root) {
 		if (node == null) {
 			return;
 		}
@@ -69,9 +74,9 @@ public class SequentialEquation {
 		String seqUsedBy = "_SEQ_USED_BY_";
 		String combUsedBy = "_COMB_USED_BY_";
 		
-		lhs = node.data + seqUsedBy + root.data;
-		IdExpr opr1 = new IdExpr(node.data + combUsedBy + node.parent.data);
-		IdExpr opr2 = new IdExpr(node.parent.data + seqUsedBy + root.data);
+		lhs = node.rawId + seqUsedBy + root.rawId;
+		IdExpr opr1 = new IdExpr(node.rawId + combUsedBy + node.parent.rawId);
+		IdExpr opr2 = new IdExpr(node.parent.rawId + seqUsedBy + root.rawId);
 		BinaryExpr expr = new BinaryExpr(opr1, BinaryOp.AND, opr2);
 		
 		if (!exprsMap.containsKey(lhs)) {
@@ -81,7 +86,7 @@ public class SequentialEquation {
 			exprsMap.put(lhs, expr);
 		}
 		
-		for (ObservedTreeNode child : node.children) {
+		for (TreeNode child : node.children) {
 			generateObligation(exprsMap, child, root);
 		}
 	}

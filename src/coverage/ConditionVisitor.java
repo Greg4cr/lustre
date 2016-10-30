@@ -75,7 +75,6 @@ public class ConditionVisitor extends CoverageVisitor {
 		// Add conditions
 		currentObs.addAll(this.addConditions(expr));
 		currentObs.addAll(super.visit(expr));
-
 		return currentObs;
 	}
 
