@@ -8,7 +8,6 @@ import java.util.Map;
 import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
-import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import observability.tree.Tree;
@@ -17,6 +16,8 @@ import observability.tree.TreeNode;
 public class SequentialUsedEquation {
 	private Map<String, Tree> delayTrees;
 	private Map<String, Expr> exprsMap = new HashMap<>();
+	private final String seqUsedBy = "_SEQ_USED_BY_";
+	private final String combUsedBy = "_COMB_USED_BY_";
 	
 	public SequentialUsedEquation(Map<String, Tree> delayTrees) {
 		this.delayTrees = delayTrees;
@@ -50,12 +51,12 @@ public class SequentialUsedEquation {
 												Tree tree) {
 		TreeNode root = tree.root;
 		List<TreeNode> firstLevel = root.children;
-		String seqUsedBy = "_SEQ_USED_BY_";
-		String lhs;
+		String lhs, rhs;
 		
 		for (TreeNode node : firstLevel) {
 			lhs = node.rawId + seqUsedBy + root.rawId;
-			exprsMap.put(lhs, new BoolExpr(true));
+			rhs = node.rawId + combUsedBy + root.rawId;
+			exprsMap.put(lhs, new IdExpr(rhs));
 			
 			for (TreeNode child : node.children) {
 				generateObligation(exprsMap, child, root);
@@ -71,8 +72,6 @@ public class SequentialUsedEquation {
 		}
 		
 		String lhs;
-		String seqUsedBy = "_SEQ_USED_BY_";
-		String combUsedBy = "_COMB_USED_BY_";
 		
 		lhs = node.rawId + seqUsedBy + root.rawId;
 		IdExpr opr1 = new IdExpr(node.rawId + combUsedBy + node.parent.rawId);
