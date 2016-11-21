@@ -20,10 +20,10 @@ public class ObservabilityObligation {
 	private Coverage coverage;
 	private Map<String, List<String>> affectPairs = new HashMap<>();
 	
-	public ObservabilityObligation(Map<String, Map<String, Integer>> idToCondMap,
+	public ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
 									Map<String, List<String>> affectPairs,
 									Coverage coverage) {
-		this.affectAtCaptureMap = idToCondMap;
+		this.affectAtCaptureMap = affectAtCaptureMap;
 		this.affectPairs = affectPairs;
 		this.coverage = coverage;
 	}

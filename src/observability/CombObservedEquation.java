@@ -15,14 +15,17 @@ import observability.tree.Tree;
 import observability.tree.TreeNode;
 
 public class CombObservedEquation {
-	List<String> deadNodes;
-	Map<String, Expr> map = new HashMap<>();
-	Map<String, Map<String, Map<String, Integer>>> observerTable = new HashMap<>();
-	Map<String, Tree> observerTrees;
+	private List<String> deadNodes;
+	private Map<String, Expr> combObservedMap = new HashMap<>();
+//	private Map<String, Map<String, Map<String, Integer>>> observerTable = new HashMap<>();
+	private Map<String, Tree> observerTrees;
+	private List<String> nonCombObservedSeqRoots;
 	
 	public CombObservedEquation(Map<String, Tree> observerTrees,
+								List<String> nonCombObservedSeqRoots,
 								List<String> deadNodes) {
 		this.observerTrees = observerTrees;
+		this.nonCombObservedSeqRoots = nonCombObservedSeqRoots;
 		this.deadNodes = deadNodes;
 	}
 	
@@ -32,39 +35,47 @@ public class CombObservedEquation {
 		
 		for (String rootStr : observerTrees.keySet()) {
 			tree = observerTrees.get(rootStr);
+			
 			if (tree.root.children.isEmpty()) {
 				// single-node
-				genereateForSingleNodes(map, tree.root);
+				genereateForSingleNodes(combObservedMap, deadNodes, tree.root);
 			} else {
 				// for nodes in observer trees
-				generateForTree(map, tree.root);
+				generateForTree(combObservedMap, tree.root);
+				
+				if (!this.nonCombObservedSeqRoots.isEmpty()) {
+					genereateForSingleNodes(combObservedMap, this.nonCombObservedSeqRoots, tree.root);
+				}
 				
 				// for dead nodes
-				genereateForSingleNodes(map, tree.root);
+				if (!this.deadNodes.isEmpty()) {
+					genereateForSingleNodes(combObservedMap, this.deadNodes, tree.root);
+				}
 			}
 		}
-		obligations.addAll(getObligations(map));
+		obligations.addAll(getObligations(combObservedMap));
 		
 		return obligations;
 	}
 		
-	private List<Obligation> getObligations(Map<String, Expr> map) {
+	private List<Obligation> getObligations(Map<String, Expr> combObservedMap) {
 		List<Obligation> obligations = new ArrayList<>();
 		
-		for (String lhs : map.keySet()) {
+		for (String lhs : combObservedMap.keySet()) {
 			Obligation obligation = new Obligation(new IdExpr(lhs), true,
-											map.get(lhs));
+											combObservedMap.get(lhs));
 			obligations.add(obligation);
 		}
 		return obligations;
 	}
 
 	private void genereateForSingleNodes(Map<String, Expr> map,
+										List<String> nonObservedNodes,
 										TreeNode root) {
 		String combObs = "_COMB_OBSERVED";
 		String lhs;
 		
-		for (String node : deadNodes) {
+		for (String node : nonObservedNodes) {
 			lhs = node + combObs;
 
 			if (node.equals(root.rawId)) {

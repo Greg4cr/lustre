@@ -29,7 +29,6 @@ public class TokenAction {
 	private final IdExpr TOKEN_OUTPUT_STATE = new IdExpr("TOKEN_OUTPUT_STATE");
 	
 	// dynamic tokens
-	private String prefix = "TOKEN_D";
 	private IdExpr[] tokens;
 	
 	// token generator assistants
@@ -70,7 +69,7 @@ public class TokenAction {
 		
 		// build transitions between dynamic tokens
 		if (! delayTrees.keySet().isEmpty()) {
-			transitionExpr = transitions();
+			transitionExpr = generateTransitions();
 			preFinalExpr = new IfThenElseExpr(new BinaryExpr(new UnaryExpr(UnaryOp.PRE, token),
 					BinaryOp.EQUAL, TOKEN_OUTPUT_STATE), TOKEN_OUTPUT_STATE, transitionExpr);
 		} else {
@@ -93,7 +92,7 @@ public class TokenAction {
 		return obligations;
 	}
 		
-	private Expr transitions() {
+	private Expr generateTransitions() {
 		int len = tokens.length;
 		Expr[] transExprs = new Expr[len];
 		Expr[] outputTrans = new Expr[len];
@@ -127,14 +126,11 @@ public class TokenAction {
 							BinaryOp.AND, new IdExpr(id));
 				}
 				
-				for (int j = 0; j < index; ++j) {
-					if (j == 0) {
-						elseExpr[j] = new IfThenElseExpr(condExpr[j], targetTk[j],
-								TOKEN_ERROR_STATE);
-					} else {
-						elseExpr[j] = new IfThenElseExpr(condExpr[j], targetTk[j],
-								elseExpr[j - 1]);
-					}
+				elseExpr[0] = new IfThenElseExpr(condExpr[0], targetTk[0], TOKEN_ERROR_STATE);
+				// embed elseExprs
+				for (int j = 1; j < index; ++j) {
+					elseExpr[j] = new IfThenElseExpr(condExpr[j], targetTk[j],
+							elseExpr[j - 1]);
 				}
 				id = sourceNode.rawId + observed;
 				outputTrans[i] = new IfThenElseExpr(new IdExpr(id), TOKEN_OUTPUT_STATE, elseExpr[elseExpr.length - 1]);

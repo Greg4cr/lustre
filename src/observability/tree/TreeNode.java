@@ -10,7 +10,6 @@ import jkind.lustre.Type;
 public class TreeNode {
     public String rawId;
     public Type type;
-    public boolean isPre;
     public TreeNode parent;
     public List<TreeNode> children;
     public boolean isArithExpr;
@@ -20,7 +19,6 @@ public class TreeNode {
     public TreeNode(String rawId, Type type) {
     	setId(rawId);
     	setType(type);
-    	setIsPre(false);
     	setRenamedIds(new HashMap<String, Integer>());
     	this.parent = null;
     	children = new ArrayList<>();
@@ -29,7 +27,6 @@ public class TreeNode {
     public TreeNode(String rawId, Type type, boolean isPre) {
     	setId(rawId);
     	setType(type);
-    	setIsPre(isPre);
     }
 
     public int getNumberOfChildren() {
@@ -53,14 +50,6 @@ public class TreeNode {
     
     public void setType(Type type) {
     	this.type = type;
-    }
-
-    public void setIsPre(boolean isPre) {
-    	this.isPre = isPre;
-    }
-    
-    public void setIsArithExpr(boolean isArithExpr) {
-    	this.isArithExpr = isArithExpr;
     }
     
     public void setRenamedIds(Map<String, Integer> renamedIds) {
@@ -182,8 +171,8 @@ public class TreeNode {
     	node.append("(");
     	node.append("data=").append(this.rawId).append(", ");
     	node.append("type=").append(this.type.toString()).append(", ");
-    	node.append("isPre=").append(this.isPre);
-		node.append(", ").append("arithIds=").append(this.renamedIds);
+    	node.append("isArithExpr=").append(this.isArithExpr).append(", ");
+		node.append("arithIds=").append(this.renamedIds);
     	node.append(")");
     	
     	return node.toString();

@@ -18,7 +18,7 @@ public class TreeBuilder {
 	private Map<String, VarDecl> ids = new HashMap<>();
 	private List<String> outputs = new ArrayList<>();
 	
-	private final String ARITH_PREFIX = "ArithExpr";
+	private final String ARITH_PREFIX = "ArithExpr_";
 	
 	public TreeBuilder(Map<String, Map<String, Map<String, Integer>>> observerArithTable,
 			Map<String, Map<String, Map<String, Integer>>> delayArithTable,
@@ -75,9 +75,9 @@ public class TreeBuilder {
 				for (String varStr : renamedVars.keySet()) {
 					arithNode.put(varStr, renamedVars.get(varStr));
 					if (varStr.startsWith(ARITH_PREFIX)) {
-						child.setIsArithExpr(true);
+						child.isArithExpr = true;
 					} else {
-						child.setIsArithExpr(false);
+						child.isArithExpr = false;
 					}
 				}
 				
@@ -94,9 +94,9 @@ public class TreeBuilder {
 		return trees;
 	}
 
-	private TreeNode buildSubTree(TreeNode root) {
+	private void buildSubTree(TreeNode root) {
 		if (observerArithTable.get(root.rawId) == null) {
-			return null;
+			return;
 		}
 		Map<String, Map<String, Integer>> variableTable = observerArithTable.get(root.rawId);
 		for (String rawVar : variableTable.keySet()) {
@@ -107,9 +107,9 @@ public class TreeBuilder {
 			for (String varStr : renamedVars.keySet()) {
 				arithNode.put(varStr, renamedVars.get(varStr));
 				if (varStr.startsWith(ARITH_PREFIX)) {
-					child.setIsArithExpr(true);
+					child.isArithExpr = true;
 				} else {
-					child.setIsArithExpr(false);
+					child.isArithExpr = false;
 				}
 			}
 			
@@ -122,7 +122,5 @@ public class TreeBuilder {
 		for (TreeNode subRoot : root.children) {
 			buildSubTree(subRoot);
 		}
-		
-		return root;
 	}
 }

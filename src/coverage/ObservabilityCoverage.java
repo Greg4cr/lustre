@@ -55,7 +55,7 @@ public final class ObservabilityCoverage {
 	private Map<String, Tree> deadNodeTrees = new HashMap<>();
 	private List<String> deadNodes = new ArrayList<>();
 	private Map<String, Map<String, Integer>> affectAtCaptureTable = new TreeMap<>();
-	
+	private List<String> nonCombObservedSeqRoots = new ArrayList<>();
 	
 	// dynamic tokens
 	private final String prefix = "TOKEN_D";
@@ -75,33 +75,32 @@ public final class ObservabilityCoverage {
 		this.coverage = coverage;
 		this.polarity = polarity;
 		this.exprTypeVisitor = exprTypeVisitor;
-		observabilityVisitor = new ObservabilityVisitor(exprTypeVisitor);
-		count = 0;
+		this.observabilityVisitor = new ObservabilityVisitor(exprTypeVisitor);
+		this.count = 0;
 		populateMaps();
 	}
 
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		
-		obligations.addAll(generateNonObservedObligations());
-		obligations.addAll(generateObservabilityObligations());
+		obligations.addAll(generateNonObservedEquations());
+		obligations.addAll(generateObservedEquations());
 		
 		buildTrees();
-//		populateArithMaps();
 		drawTokenMaps();
 		drawTokenDependantTable();
 		
-		obligations.addAll(generateCombObervedObligations());
-		obligations.addAll(generateSeqUsedByObligations());
+		obligations.addAll(generateCombObervedEquations());
+		obligations.addAll(generateSeqUsedByEquations());
 		obligations.addAll(generateTokenActions());
-		obligations.addAll(generateAffectAtCaptureObligations()); 
+		obligations.addAll(generateAffectAtCaptureEquations()); 
 		obligations.addAll(generateObligations());
 		
 		return obligations;
 	}
 		
 	// generate obligations for observability coverage
-	private List<Obligation> generateObservabilityObligations() {
+	private List<Obligation> generateObservedEquations() {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		// Start generating obligations
@@ -167,7 +166,7 @@ public final class ObservabilityCoverage {
 		return obligations;
 	}
 
-	private List<Obligation> generateNonObservedObligations() {
+	private List<Obligation> generateNonObservedEquations() {
 		CoverageVisitor coverageVisitor = null;
 		List<Obligation> obligations = new ArrayList<>();
 		String property;
@@ -193,7 +192,7 @@ public final class ObservabilityCoverage {
 			List<Obligation> obs = equation.expr.accept(coverageVisitor);
 			
 			String id = null;
-			/* for rename: <id, occurrence>*/
+			/* for rename: <renamedId, timeSeen>*/
 			Map<String, Integer> conditions = new TreeMap<>();
 			
 			if (equation.lhs.isEmpty()) {
@@ -207,8 +206,7 @@ public final class ObservabilityCoverage {
 				id += "_" + equation.lhs.get(i);
 			}
 			
-			// count occurrence of each var (ob.condition)
-			// in the equation for renaming
+			// count occurrence of each var (ob.condition) in the equation, for renaming
 			for (Obligation ob : obs) {
 				if (conditions.containsKey(ob.condition)) {
 					conditions.put(ob.condition, conditions.get(ob.condition) + 1);
@@ -246,6 +244,7 @@ public final class ObservabilityCoverage {
 			}
 			
 			// populate map
+//			System.out.println(id + " vs " + conditions);
 			affectAtCaptureTable.put(id, conditions);
 		}
 //		System.out.println("\naffectAtCaptureTable ::: \n" + affectAtCaptureTable);
@@ -254,13 +253,14 @@ public final class ObservabilityCoverage {
 	}
 		
 	// generate COMB_OBSERVED expressions
-	private List<Obligation> generateCombObervedObligations() {
-		CombObservedEquation combObsEquation = new CombObservedEquation(observerTrees, deadNodes);
+	private List<Obligation> generateCombObervedEquations() {
+		CombObservedEquation combObsEquation = new CombObservedEquation(this.observerTrees, 
+												this.nonCombObservedSeqRoots, this.deadNodes);
 		return combObsEquation.generate();
 	}
 	
 	// generate SEQ_USED_BY expressions
-	private List<Obligation> generateSeqUsedByObligations() {
+	private List<Obligation> generateSeqUsedByEquations() {
 		SequentialUsedEquation delayDepdnEquation = new SequentialUsedEquation(delayTrees);
 		return delayDepdnEquation.generate();
 	}
@@ -274,7 +274,7 @@ public final class ObservabilityCoverage {
 	}
 	
 	// generate affecting_at_capture expressions
-	private List<Obligation> generateAffectAtCaptureObligations() {
+	private List<Obligation> generateAffectAtCaptureEquations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayTrees,
 							observerTrees, delayTable, affectAtCaptureTable,
 							coverage, tokenDepTable, nodeToToken);
@@ -286,6 +286,8 @@ public final class ObservabilityCoverage {
 		
 		// get affect pairs for final obligations generation
 		affectPairs = affect.getAffectPairs();
+//		System.out.println("::: AffectPairs :::");
+//		System.out.println(affectPairs);
 		
 		return affectObligations;
 	}
@@ -335,6 +337,10 @@ public final class ObservabilityCoverage {
 //			System.out.println(delayTrees.get(root).convertToList());
 //		}
 		
+		populateNonCombObservedSeqRoots();
+//		System.out.println("::: non-combObserved sequential roots :::");
+//		System.out.println(this.nonCombObservedSeqRoots);
+		
 		populateDeadNodes(deadNodes);
 		deadNodeTrees = builder.buildDeadRootTree(deadNodes);
 //		System.out.println("::: dead trees :::");
@@ -343,6 +349,20 @@ public final class ObservabilityCoverage {
 //		}
 	}
 	
+	private void populateNonCombObservedSeqRoots() {
+		for (String seqRoot : delayTrees.keySet()) {
+			
+			for (String obsRoot : observerTrees.keySet()) {
+				Tree obsTree = observerTrees.get(obsRoot);
+				
+				if (!obsTree.equals(seqRoot) && !obsTree.containsNode(seqRoot)) {
+					this.nonCombObservedSeqRoots.add(seqRoot);
+				}
+			}
+		}
+		
+	}
+
 	private void populateDeadNodes(List<String> deadNodes) {
 		List<String> reachedList = new ArrayList<>();
 		
@@ -415,12 +435,15 @@ public final class ObservabilityCoverage {
 		
 		for (Equation equation : node.equations) {
 			String rhs = equation.expr.toString();
+//			System.out.println(equation);
 			
 			if (rhs.contains("pre ") ||
 					rhs.contains("PRE ")) {
-				List<String> list = equation.expr.accept(visitor);
+				List<String> list = new ArrayList();
+				list.addAll(equation.expr.accept(visitor));
+//				System.out.println("list >>> " + list);
 				if (list != null && !list.isEmpty()) {
-					delayTable.put(equation.lhs.get(0).id, equation.expr.accept(visitor));
+					delayTable.put(equation.lhs.get(0).id, list);
 				}
 			}
 		}
@@ -434,7 +457,7 @@ public final class ObservabilityCoverage {
 		}
 	}
 	
-	public Map<String, String> getExprTable() {
+	private Map<String, String> getExprTable() {
 		Map<String, String> exprTable = new HashMap<>();
 		
 		for (Equation equation : node.equations) {

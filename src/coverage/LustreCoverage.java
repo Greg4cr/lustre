@@ -148,14 +148,13 @@ public final class LustreCoverage {
 					continue;
 				}
 				
-				String property = "";
-				// keep the rest in original pattern.
-				property = obligation.condition;
+				String property = obligation.condition;
 				if (property.startsWith("property_")) {
 					builder.addProperty(property);
 				}
 				
 				if (! property.contains("token")) {
+					// tokens have been handled
 					builder.addLocal(new VarDecl(property, NamedType.BOOL));
 				}
 				
@@ -165,6 +164,8 @@ public final class LustreCoverage {
 		} else {
 			// Start generating obligations
 			// for MCDC, BRANCH, CONDITION, DECISION
+			System.out.println("coverage: " + coverage.name());
+			
 			for (Equation equation : node.equations) {
 				String id = null;
 				
@@ -195,13 +196,13 @@ public final class LustreCoverage {
 					}
 	
 					String property = "";
-					// keep the rest in original pattern.
 					property = obligation.condition + "_"
 						+ (obligation.polarity ? "TRUE" : "FALSE") + "_AT_"
 						+ id + "_" + coverage.name() + "_"
 						+ (obligation.expressionPolarity ? "TRUE" : "FALSE")
 						+ "_" + (count++);
 					
+					builder.addLocal(new VarDecl(property, NamedType.BOOL));
 					builder.addProperty(property);
 					
 					builder.addEquation(new Equation(new IdExpr(property),

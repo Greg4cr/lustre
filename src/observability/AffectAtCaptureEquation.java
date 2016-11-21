@@ -5,12 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import coverage.Obligation;
-
 import java.util.Iterator;
 
-import enums.Coverage;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
@@ -18,6 +14,9 @@ import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
+
+import enums.Coverage;
+import coverage.Obligation;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
@@ -30,7 +29,7 @@ public class AffectAtCaptureEquation {
 	private Map<String, List<String>> delayTable = new HashMap<>();
 	private Coverage coverage;
 	
-	private List<String> deadNodes;
+	private List<String> deadNodes = new ArrayList<>();
 	private Map<String, Tree> deadNodeTrees = new HashMap<>();
 	
 	private final String TYPE_SEQ = "SEQ";
@@ -64,8 +63,8 @@ public class AffectAtCaptureEquation {
 	
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
-		generateForSeqDepTrees(map);
-		generateForCombTrees(map);
+		generateEquationsForDelayTrees(map);
+		generateEquationsForObserverTrees(map);
 		generateForSingleNodes(map);
 		obligations.addAll(getObligations(map));
 		return obligations;
@@ -123,7 +122,15 @@ public class AffectAtCaptureEquation {
 					}
 					
 					father = root.rawId;
-					for (int i = 0; i < child.renamedIds.get(childStr); i++) {
+					
+					int occurence = 0;
+					if (affectAtCaptureTable.get(father).containsKey(node)) {
+						occurence = this.affectAtCaptureTable.get(father).get(child.rawId) / 2;
+					} else {
+						occurence = child.renamedIds.get(child.rawId);
+					}
+					
+					for (int i = 0; i < occurence; i++) {
 						if (child.renamedIds.get(childStr) > 1) {
 							node += "_" + i;
 						}
@@ -157,7 +164,7 @@ public class AffectAtCaptureEquation {
 		}
 	}
 	
-	private void generateForCombTrees(Map<String, Expr> map) {
+	private void generateEquationsForObserverTrees(Map<String, Expr> map) {
 		List<List<TreeNode>> paths = drawPaths(observerTrees, TYPE_COMB);
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String at = "_AT_", c = "_" + coverage.name();
@@ -195,8 +202,8 @@ public class AffectAtCaptureEquation {
 					}
 					
 					int occurence = 0;
-					if (child.isArithExpr) {
-						occurence = affectAtCaptureTable.get(father).get(node) / 2;
+					if (affectAtCaptureTable.get(father).containsKey(node)) {
+						occurence = this.affectAtCaptureTable.get(father).get(node) / 2;
 					} else {
 						occurence = child.renamedIds.get(renamedId);
 					}
@@ -236,9 +243,9 @@ public class AffectAtCaptureEquation {
 		}
 	}
 	
-	private void generateForSeqDepTrees(Map<String, Expr> map) {
+	private void generateEquationsForDelayTrees(Map<String, Expr> map) {
 		// <lhs, <nonMasked, list of <dependency, token>>>
-		Map<String, Map<String, List<Map<String, String>>>> exprMap = buildSeqUsedMap();
+		Map<String, Map<String, List<Map<String, String>>>> exprMap = buildDelayTraceMap();
 		// <nonMasked, list of <dependency, token>>
 		Map<String, List<Map<String, String>>> premisePairs = new TreeMap<>();
 		// <seqUsed, token>
@@ -246,7 +253,6 @@ public class AffectAtCaptureEquation {
 		
 		String token = "token";
 		String rootToken;
-		
 		
 		for (String lhs : exprMap.keySet()) {
 			premisePairs = exprMap.get(lhs);
@@ -262,17 +268,23 @@ public class AffectAtCaptureEquation {
 					tokenPairs = iterator.next();
 					
 					for (String seqUsed : tokenPairs.keySet()) {
-						rootToken = tokenPairs.get(seqUsed);
-						
-						tokenExpr = new BinaryExpr(new IdExpr(token),
-											BinaryOp.EQUAL, new IdExpr(rootToken));
-						
-						if (seqExpr == null) {
-							seqExpr = new BinaryExpr(new IdExpr(seqUsed),
-									BinaryOp.AND, tokenExpr);
+						if ("true".equalsIgnoreCase(seqUsed)) {
+							seqExpr = new BoolExpr(true);
+						} else if ("false".equalsIgnoreCase(seqUsed)) {
+							seqExpr = new BoolExpr(false);
 						} else {
-							seqExpr = new BinaryExpr(seqExpr, BinaryOp.OR, 
-									new BinaryExpr(new IdExpr(seqUsed), BinaryOp.AND,tokenExpr));
+							rootToken = tokenPairs.get(seqUsed);
+							
+							tokenExpr = new BinaryExpr(new IdExpr(token),
+												BinaryOp.EQUAL, new IdExpr(rootToken));
+							
+							if (seqExpr == null) {
+								seqExpr = new BinaryExpr(new IdExpr(seqUsed),
+										BinaryOp.AND, tokenExpr);
+							} else {
+								seqExpr = new BinaryExpr(seqExpr, BinaryOp.OR, 
+										new BinaryExpr(new IdExpr(seqUsed), BinaryOp.AND,tokenExpr));
+							}
 						}
 					}
 					
@@ -287,9 +299,9 @@ public class AffectAtCaptureEquation {
 		}
 	}
 	
-	private Map<String, Map<String, List<Map<String, String>>>> buildSeqUsedMap() {
+	private Map<String, Map<String, List<Map<String, String>>>> buildDelayTraceMap() {
 		// <lhs, <nonMasked, list of <dependency, token>>>
-		Map<String, Map<String, List<Map<String, String>>>> exprMap = new TreeMap<>();
+		Map<String, Map<String, List<Map<String, String>>>> traceMap = new TreeMap<>();
 		// <nonMasked, list of <dependency, token>>
 		Map<String, List<Map<String, String>>> premisePairs = new TreeMap<>();
 		Map<String, List<Map<String, String>>> addedNonMaskeds = new TreeMap<>();
@@ -315,8 +327,19 @@ public class AffectAtCaptureEquation {
 			for (int index = path.size() - 1; index > 0; --index) {
 				TreeNode child = path.get(index);
 				
+//				System.out.print(root.rawId + " >>> " + child.rawId);
+				
 				for (String childStr : child.renamedIds.keySet()) {
-					for (int j = 0; j < child.renamedIds.get(childStr); ++j) {
+					int occ = 0;
+					if (affectAtCaptureTable.get(root.rawId).containsKey(child.rawId)) {
+						occ = this.affectAtCaptureTable.get(root.rawId).get(child.rawId) / 2;
+					} else {
+						occ = child.renamedIds.get(childStr);
+					}
+					
+//					System.out.println(", " + occ);
+					
+					for (int j = 0; j < occ; ++j) {
 						if ("int".equals(child.type.toString())
 								&& ! child.isArithExpr) {
 							continue;
@@ -324,7 +347,8 @@ public class AffectAtCaptureEquation {
 							nodeStr = childStr;
 						}
 						
-						if (child.renamedIds.get(childStr) > 1) {
+//						if (child.renamedIds.get(childStr) > 1) {
+						if (occ > 1) {
 							nodeStr = nodeStr + "_" + j;
 						}
 						
@@ -333,6 +357,7 @@ public class AffectAtCaptureEquation {
 						superRoots.clear();
 						if (index == 1) {
 							superRoots.addAll(tokenDepTable.get(father));
+							
 						} else {
 							superRoots.add(root);
 						}
@@ -352,20 +377,27 @@ public class AffectAtCaptureEquation {
 							
 							if (path.size() <= 2) {
 								if (!tokenPairs.containsKey("FALSE")) {
+									list.clear();
 									tokenPairs.put("FALSE", "FALSE");
+									list.add(tokenPairs);
 								}
 							} else {
 								// track affecting_at_capture pairs
 								trackAffectPairs(nodeStr, father.rawId);
-								
-								for (int m = 0; m < superRoots.size(); ++m) {
+								if (superRoots.isEmpty()) {
 									list.clear();
-									seqUsed = father.rawId + seq + superRoots.get(m).rawId;
-									rootToken = nodeToToken.get(superRoots.get(m)).id;
-									
-									if (!tokenPairs.containsKey(seqUsed)) {
-										tokenPairs.put(seqUsed, rootToken);
-										list.add(tokenPairs);
+									tokenPairs.put("TRUE", "TRUE");
+									list.add(tokenPairs);
+								} else {
+									for (int m = 0; m < superRoots.size(); ++m) {
+										list.clear();
+										seqUsed = father.rawId + seq + superRoots.get(m).rawId;
+										rootToken = nodeToToken.get(superRoots.get(m)).id;
+										
+										if (!tokenPairs.containsKey(seqUsed)) {
+											tokenPairs.put(seqUsed, rootToken);
+											list.add(tokenPairs);
+										}
 									}
 								}
 							}
@@ -380,14 +412,15 @@ public class AffectAtCaptureEquation {
 								addedNonMaskeds.put(nonMasked, list);
 							}
 							
-							exprMap.put(lhs, new TreeMap(premisePairs));
+							traceMap.put(lhs, new TreeMap(premisePairs));
 						}
 					}
 				}
 			}
 		}
-
-		return exprMap;
+//		System.out.println("traceMap :::");
+//		System.out.println(traceMap);
+		return traceMap;
 	}
 	
 	public Map<String, List<String>> getAffectPairs() {
@@ -397,13 +430,12 @@ public class AffectAtCaptureEquation {
 	private void trackAffectPairs(String affecter, String affectee) {
 //		System.out.println(affecter + ", " + affectee);
 		List<String> affectingList = new ArrayList<>();
+		affectingList.clear();
 		
 		if (! affectPairs.containsKey(affecter)) {
-			affectingList.clear();
 			affectingList.add(affectee);
 			affectPairs.put(affecter, affectingList);
 		} else {
-			affectingList.clear();
 			affectingList.addAll(affectPairs.get(affecter));
 			
 			if (!affectingList.contains(affectee)) {
@@ -438,6 +470,8 @@ public class AffectAtCaptureEquation {
 			}
 		}
 		
+//		System.out.println("::: handledList :::");
+//		System.out.println(handledList);
 		return handledList;
 	}
 		
@@ -468,22 +502,22 @@ public class AffectAtCaptureEquation {
 			root.getPaths(paths);
 		}
 		
-		if (type.equals(TYPE_COMB)) {
-			for (int i = 0; i < paths.size(); i++) {
-				int len = paths.get(i).size();
-				
-				TreeNode leaf = paths.get(i).get(len -1);
-				if (leaf.isPre) {
-					// remove leaf in a path only if it's in form of "pre leaf"
-					paths.get(i).remove(len - 1);
-					if (i > 0 && (paths.get(i).equals(paths.get(i - 1)))) {
-						paths.remove(i);
-					}
-				} else {
-					continue;
-				}
-			}
-		}
+//		if (type.equals(TYPE_COMB)) {
+//			for (int i = 0; i < paths.size(); i++) {
+//				int len = paths.get(i).size();
+//				
+//				TreeNode leaf = paths.get(i).get(len -1);
+//				if (leaf.isPre) {
+//					// remove leaf in a path only if it's in form of "pre leaf"
+//					paths.get(i).remove(len - 1);
+//					if (i > 0 && (paths.get(i).equals(paths.get(i - 1)))) {
+//						paths.remove(i);
+//					}
+//				} else {
+//					continue;
+//				}
+//			}
+//		}
 		
 //		System.out.println("paths :::\n\t" + paths);
 		return paths;

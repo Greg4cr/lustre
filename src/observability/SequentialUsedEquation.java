@@ -32,16 +32,16 @@ public class SequentialUsedEquation {
 			generateObligationForTree(exprsMap, tree);
 		}
 		
-		obligations.addAll(getObligations(exprsMap));
+		obligations.addAll(getObligations());
 		return obligations;
 	}
 
 	
-	private List<Obligation> getObligations(Map<String, Expr> map) {
+	private List<Obligation> getObligations() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		
-		for (String lhs : map.keySet()) {
-			obligations.add(new Obligation(new IdExpr(lhs), true, map.get(lhs)));
+		for (String lhs : exprsMap.keySet()) {
+			obligations.add(new Obligation(new IdExpr(lhs), true, exprsMap.get(lhs)));
 		}
 		
 		return obligations;

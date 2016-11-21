@@ -3,23 +3,18 @@ package coverage;
 import java.util.ArrayList;
 import java.util.List;
 
-import enums.Coverage;
 import types.ExprTypeVisitor;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
-import jkind.lustre.Node;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
 /* Generate COMB_USED equations */
 public class ObservabilityVisitor extends ConditionVisitor {
-	Node node;
-	Coverage coverage; // OMCDC, OCONDITION, OBRANCH, ODECISION
-	
-	boolean isDef = false;
+	private boolean isDef = false;
 	
 	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);
@@ -65,7 +60,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 							rightOb.obligation);
 				}
 			}
-			
 		}
 		// or
 		// for one opr not be masked, the other one must be false
@@ -124,8 +118,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			for (Obligation rightOb : rightObs) {
 				rightOb.obligation = new BoolExpr(true);
 			}
-			
-//			obligations.add(new Obligation(expr, true, new BoolExpr(true)));
 		}
 		
 		// a => b
@@ -238,7 +230,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
 		for (Obligation thenOb : thenObs) {
-			
 			if ((expr.thenExpr instanceof IdExpr)
 					|| (expr.thenExpr instanceof UnaryExpr
 						&& ((UnaryExpr)expr.thenExpr).op.equals(UnaryOp.NOT)

@@ -18,11 +18,10 @@ public final class DelayVisitor extends VariableVisitor {
 	@Override
 	public List<String> visit(IdExpr expr) {
 		List<String> nodes = new ArrayList<>();
-//		System.out.println("IdExpr ::: " + expr.toString());
 		
 		if (isImpacted) {
-			isImpacted = false;
 			nodes.add(expr.id);
+//			System.out.println("IdExpr ::: " + nodes);
 		}
 		
 		return nodes;
@@ -37,7 +36,11 @@ public final class DelayVisitor extends VariableVisitor {
 			isImpacted = true;
 			List<String> unaryNodes = expr.expr.accept(this);
 			nodes.addAll(unaryNodes);
-		}
+			isImpacted = false;
+		} else {
+			List<String> unaryNodes = expr.expr.accept(this);
+			nodes.addAll(unaryNodes);
+		} 
 		
 		return nodes;
 	}
