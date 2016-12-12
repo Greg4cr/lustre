@@ -44,7 +44,7 @@ public final class LustreProcessing {
 			String outputFile = this.nameNoExtension + "." + settings.coverage
 					+ ".lus";
 			LustreMain.log("------------Printing obligations to file");
-			LustreMain.log(outputFile);
+			LustreMain.log("output file:\t" +  outputFile);
 			printToFile(outputFile, programTranslated.toString());
 		}
 

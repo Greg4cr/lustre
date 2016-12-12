@@ -44,7 +44,8 @@ public final class LustreArgumentParser {
 		Options options = new Options();
 		options.addOption(HELP, false, "print this message");
 		options.addOption(COVERAGE, true,
-				"generate coverage obligations (mcdc, branch, condition, decision)");
+				"generate coverage obligations (mcdc, branch, condition, decision, "
+				+ "obranch, ocondition, odecision, omcdc)");
 		options.addOption(POLARITY, true,
 				"polarity of generated coverage obligations (all, true, false)");
 		options.addOption(GENERATE, true,

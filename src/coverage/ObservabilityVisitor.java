@@ -1,106 +1,29 @@
 package coverage;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import enums.Coverage;
 import types.ExprTypeVisitor;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
-import jkind.lustre.Equation;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
-import jkind.lustre.Node;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
-import jkind.lustre.VarDecl;
 
-/* Generate Observed Obligations for MC/DC, CONDITION, BRANCH, and DECISION coverage  */
-public class ObservedCoverageVisitor extends ConditionVisitor {
-	Node node;
-	ObservedCoverageHelper obHelper;
-	Coverage coverage; // OMCDC, OCONDITION, OBRANCH, ODECISION
+/* Generate COMB_USED equations */
+public class ObservabilityVisitor extends ConditionVisitor {
+	private boolean isDef = false;
 	
-	String addition = "_COMB_USED_BY_";
-	String property = "";
-	IdExpr parent;
-	boolean isDef = false;
-	HashMap<String, VarDecl> idList;
-	List<String> properties = new ArrayList<String>();
-	
-	// variables for delays
-	Boolean isDelay = false;
-	Boolean assignToDelay = false;
-	List<String> impactedByDelay = new ArrayList<>();
-	HashMap<String, Integer> timesSeen = new HashMap<>();
-	// root vs. first-level nodes
-	HashMap<String, List<String>> delayMap = new HashMap<>();
-	
-	// delay dependency tree and reference dependency tree
-	HashMap<VarDecl, ObservedTree> delayDependencyTrees = new HashMap<>();
-	HashMap<VarDecl, ObservedTree> refDependencyTrees = new HashMap<>();
-	HashMap<String, HashMap<String, Integer>> obligationMap = new HashMap<>();
-		
-	public ObservedCoverageVisitor(ExprTypeVisitor exprTypeVisitor, Node node) {
+	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);
-		this.node = node; 
-		this.obHelper = new ObservedCoverageHelper(node);
-		// default coverage: OMCDC
-		this.coverage = Coverage.OMCDC;
-	}
-	
-	public ObservedCoverageVisitor(ExprTypeVisitor exprTypeVisitor, 
-									Node node, Coverage coverage) {
-		super(exprTypeVisitor);
-		this.node = node;
-		this.obHelper = new ObservedCoverageHelper(node);
-		this.coverage = coverage;
-	}
-	
-	// main entrance to get observed obligations
-	public List<Obligation> generate() {
-		List<Obligation> obligations = new ArrayList<>();
-		// need info from Obligation.arithExprByExpr 
-		// and Obligation.arithExprById to build trees, 
-		// which will be filled by the four coverage Visitors,
-		// therefore, get non-observed obligations first.
-		obligations.addAll(getCoverageObligation(exprTypeVisitor));
-
-		obHelper.setDelayMap(delayMap);
-		delayDependencyTrees = obHelper.buildSeqTrees();
-		refDependencyTrees = obHelper.buildRefTrees();
-		
-		obligations.addAll(getCombObervedObligations());
-		obligations.addAll(getSeqUsedByObligations());
-		obligations.addAll(getTokenActions());
-		obligations.addAll(getAffectAtCaptureObligations()); 
-		obligations.addAll(getObligations());
-		
-		return obligations;
-	}
-	
-	public int getTokenRange() {
-		return obHelper.getTokenNumber();
 	}
 	
 	public void setIsDef(boolean isDef) {
 		this.isDef = isDef;
 	}
 	
-	public void resetDelayList() {
-		this.impactedByDelay.clear();
-	}
-	
-	public List<String> getDelayList() {
-		return this.impactedByDelay;
-	}
-	
-	public void setDelayMap(HashMap<String, List<String>> delayMap) {
-		this.delayMap = delayMap;
-	}
-
 	@Override
 	public List<Obligation> visit(BinaryExpr expr) {
 		List<Obligation> obligations = new ArrayList<>();
@@ -137,7 +60,6 @@ public class ObservedCoverageVisitor extends ConditionVisitor {
 							rightOb.obligation);
 				}
 			}
-			
 		}
 		// or
 		// for one opr not be masked, the other one must be false
@@ -300,6 +222,7 @@ public class ObservedCoverageVisitor extends ConditionVisitor {
 		} else {
 			setIsDef(false);
 		}
+		
 		obligations.addAll(expr.cond.accept(this));
 		setIsDef(false);
 		
@@ -307,7 +230,6 @@ public class ObservedCoverageVisitor extends ConditionVisitor {
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
 		for (Obligation thenOb : thenObs) {
-			
 			if ((expr.thenExpr instanceof IdExpr)
 					|| (expr.thenExpr instanceof UnaryExpr
 						&& ((UnaryExpr)expr.thenExpr).op.equals(UnaryOp.NOT)
@@ -348,7 +270,6 @@ public class ObservedCoverageVisitor extends ConditionVisitor {
 			} else {
 				if (expr.op.equals(UnaryOp.PRE)) {
 					unaryOb.obligation = new BoolExpr(false);
-					impactedByDelay.add(expr.expr.toString());
 				}
 				else { // NOT
 					// keep original value
@@ -372,131 +293,5 @@ public class ObservedCoverageVisitor extends ConditionVisitor {
 		}
 		
 		return obligations;
-	}
-	
-	// get coverage obligations (without prefix NOTs), using original APIs
-	// and populate obligationMap for coverage obligation generation
-	private List<Obligation> getCoverageObligation(ExprTypeVisitor exprTypeVisitor) {
-		CoverageVisitor coverageVisitor = null;
-		List<Obligation> obligations = new ArrayList<>();
-		
-		switch (coverage) {
-		case OMCDC:
-			coverageVisitor = new MCDCVisitor(exprTypeVisitor);
-			break;
-		case OCONDITION:
-			coverageVisitor = new ConditionVisitor(exprTypeVisitor);
-			break;
-		case OBRANCH:
-			coverageVisitor = new BranchVisitor(exprTypeVisitor);
-			break;
-		case ODECISION:
-			coverageVisitor = new DecisionVisitor(exprTypeVisitor);
-			break;
-		default:
-			throw new IllegalArgumentException("Incorrect coverage: " + coverage);
-		}
-		
-		for (Equation equation : node.equations) {
-			List<Obligation> obs = equation.expr.accept(coverageVisitor);
-			
-			String id = null;
-			HashMap<String, Integer> conditions = new HashMap<>();
-			
-			if (equation.lhs.isEmpty()) {
-				id = "EMPTY";
-			} else {
-				id = equation.lhs.get(0).id;
-			}
-
-			// Concatenate IDs with more than one left-hand variables
-			for (int i = 1; i < equation.lhs.size(); i++) {
-				id += "_" + equation.lhs.get(i);
-			}
-			
-			property = "";
-			
-			// count occurrence of each var (ob.condition)
-			// in the equation for the usage of rename
-			for (Obligation ob : obs) {
-				if (conditions.containsKey(ob.condition)) {
-					conditions.put(ob.condition, conditions.get(ob.condition) + 1);
-				} else {
-					conditions.put(ob.condition, 1);
-				}
-			}
-			
-			HashMap<String, Integer> handled = new HashMap<>();
-			int i;
-			
-			// generate obligations
-			for (Obligation ob : obs) {
-				i = 0;
-				
-				int occ = conditions.get(ob.condition);
-					String property = ob.condition;
-				
-					if (occ > 2) {
-						if (handled.containsKey(ob.condition)) {
-							i = handled.get(ob.condition) + 1;
-						}
-						property = property + "_" + (i / 2);
-					}
-					
-					handled.put(ob.condition, i);
-										
-					property = property + "_"
-							+ (ob.polarity ? "TRUE" : "FALSE") + "_AT_"
-							+ id + "_" + coverage.name() + "_"
-							+ (ob.polarity ? "TRUE" : "FALSE");
-					
-					Obligation currentOb = new Obligation(new IdExpr(property), true, ob.obligation);
-					obligations.add(currentOb);
-			}
-			
-			// populate map
-			obligationMap.put(id, conditions);
-		}
-		
-		return obligations;
-	}
-		
-	// generate COMB_OBSERVED expressions
-	private List<Obligation> getCombObervedObligations() {
-		CombObservedEquation combObsEquation = new CombObservedEquation();
-		combObsEquation.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
-		return combObsEquation.generate(refDependencyTrees, obHelper.getIdList());
-		
-	}
-	// generate SEQ_USED_BY expressions
-	private List<Obligation> getSeqUsedByObligations() {
-		SequentialEquation delayDepdnEquation = new SequentialEquation();
-		return delayDepdnEquation.generate(delayDependencyTrees);
-	}
-	
-	// generate TOKEN Actions
-	private List<Obligation> getTokenActions() {
-		TokenAction tokenAction = new TokenAction(delayDependencyTrees);
-		tokenAction.setInIdList(obHelper.getInStrList());
-		
-		boolean dynamic = (delayDependencyTrees.size() > 0);
-		tokenAction.setHasDynamic(dynamic);
-		
-		return tokenAction.generate();
-	}
-	
-	// generate affecting_at_capture expressions
-	private List<Obligation> getAffectAtCaptureObligations() {
-		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayDependencyTrees,
-				refDependencyTrees, delayMap, coverage);
-		affect.setSingleNodeList(obHelper.getSingleNodeList(refDependencyTrees));
-		affect.setSingleNodeTrees(obHelper.getSingleNodeTrees());
-		return affect.generate();
-	}
-	
-	// generate omcdc obligations for each expression
-	private List<Obligation> getObligations() {
-		ObservedCoverageObligation obligation = new ObservedCoverageObligation(obligationMap, coverage);
-		return obligation.generate();
 	}
 }
