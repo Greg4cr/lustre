@@ -121,11 +121,12 @@ public final class LustreCoverage {
 			// for OMCDC, OBRANCH, OCONDITION, ODECISION
 			List<Obligation> obligations = observabilityCoverage.generate();
 			upperbound = observabilityCoverage.getTokenRange();
-			SubrangeIntType subrange = new SubrangeIntType(BigInteger.valueOf(1), 
-					BigInteger.valueOf(upperbound));
+			SubrangeIntType subrange = null;
 			
 			if (upperbound > 0) {
 				// add local token definition if there is any
+				subrange = new SubrangeIntType(BigInteger.valueOf(1), 
+						BigInteger.valueOf(upperbound));
 				builder.addInput(new VarDecl("token_nondet", subrange));
 				builder.addInput(new VarDecl("token_init", NamedType.BOOL));
 			}
