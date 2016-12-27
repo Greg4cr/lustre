@@ -120,7 +120,7 @@ public final class LustreCoverage {
 			// Start generating obligations
 			// for OMCDC, OBRANCH, OCONDITION, ODECISION
 			List<Obligation> obligations = observabilityCoverage.generate();
-			upperbound = observabilityCoverage.getTokenRange();
+			upperbound = Math.max(upperbound, observabilityCoverage.getTokenRange());
 			SubrangeIntType subrange = null;
 			
 			if (upperbound > 0) {
