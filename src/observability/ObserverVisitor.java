@@ -14,10 +14,8 @@ public final class ObserverVisitor extends VariableVisitor {
 
 	@Override
 	public List<String> visit(UnaryExpr expr) {
-//		System.out.println("UnaryExpr ::: " + expr.toString());
 		
 		if (expr.op.equals(UnaryOp.PRE)) {
-//			System.out.println("Skip pre expressions");
 			return new ArrayList<String>();
 		}
 		

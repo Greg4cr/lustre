@@ -316,8 +316,6 @@ public class AffectAtCaptureEquation {
 			for (int index = path.size() - 1; index > 0; --index) {
 				TreeNode child = path.get(index);
 				
-//				System.out.print(root.rawId + " >>> " + child.rawId);
-				
 				for (String childStr : child.renamedIds.keySet()) {
 					int occ = 0;
 					if (affectAtCaptureTable.get(root.rawId).containsKey(child.rawId)) {
@@ -325,8 +323,6 @@ public class AffectAtCaptureEquation {
 					} else {
 						occ = child.renamedIds.get(childStr);
 					}
-					
-//					System.out.println(", " + occ);
 					
 					for (int j = 0; j < occ; ++j) {
 						if ("int".equals(child.type.toString())
@@ -407,8 +403,7 @@ public class AffectAtCaptureEquation {
 				}
 			}
 		}
-//		System.out.println("traceMap :::");
-//		System.out.println(traceMap);
+
 		return traceMap;
 	}
 	
@@ -417,7 +412,6 @@ public class AffectAtCaptureEquation {
 	}
 	
 	private void trackAffectPairs(String affecter, String affectee) {
-//		System.out.println(affecter + ", " + affectee);
 		List<String> affectingList = new ArrayList<>();
 		affectingList.clear();
 		
@@ -457,8 +451,6 @@ public class AffectAtCaptureEquation {
 			}
 		}
 		
-//		System.out.println("::: handledList :::");
-//		System.out.println(handledList);
 		return handledList;
 	}
 		
@@ -488,25 +480,7 @@ public class AffectAtCaptureEquation {
 			TreeNode root = trees.get(node).root;
 			root.getPaths(paths);
 		}
-		
-//		if (type.equals(TYPE_COMB)) {
-//			for (int i = 0; i < paths.size(); i++) {
-//				int len = paths.get(i).size();
-//				
-//				TreeNode leaf = paths.get(i).get(len -1);
-//				if (leaf.isPre) {
-//					// remove leaf in a path only if it's in form of "pre leaf"
-//					paths.get(i).remove(len - 1);
-//					if (i > 0 && (paths.get(i).equals(paths.get(i - 1)))) {
-//						paths.remove(i);
-//					}
-//				} else {
-//					continue;
-//				}
-//			}
-//		}
-		
-//		System.out.println("paths :::\n\t" + paths);
+
 		return paths;
 	}
 }

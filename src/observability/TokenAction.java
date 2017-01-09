@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import coverage.Obligation;
-import enums.Token;
+import enums.TokenState;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.UnaryExpr;
@@ -18,22 +18,15 @@ import observability.tree.Tree;
 import observability.tree.TreeNode;
 
 public class TokenAction {
-	// token states
-//	private final IdExpr token_first = new IdExpr(Token.TOKEN_FIRST.toString()); 
-//	private final IdExpr token_init = new IdExpr(Token.TOKEN_INIT.toString());
-//	private final IdExpr token_next = new IdExpr(Token.TOKEN_NEXT.toString());
-//	private final IdExpr token = new IdExpr(Token.TOKEN.toString());
-//	private final IdExpr token_nondet = new IdExpr(Token.TOKEN_NONDET.toString());
-	
 	private final IdExpr token_first = new IdExpr("token_first");
 	private final IdExpr token_init = new IdExpr("token_init");
 	private final IdExpr token_next = new IdExpr("token_next");
 	private final IdExpr token = new IdExpr("token");
 	private final IdExpr token_nondet = new IdExpr("token_nondet");
 	
-	private final IdExpr TOKEN_INIT_STATE = new IdExpr(Token.TOKEN_INIT_STATE.toString());
-	private final IdExpr TOKEN_ERROR_STATE = new IdExpr(Token.TOKEN_ERROR_STATE.toString());
-	private final IdExpr TOKEN_OUTPUT_STATE = new IdExpr(Token.TOKEN_OUTPUT_STATE.toString());
+	private final IdExpr TOKEN_INIT_STATE = new IdExpr(TokenState.TOKEN_INIT_STATE.toString());
+	private final IdExpr TOKEN_ERROR_STATE = new IdExpr(TokenState.TOKEN_ERROR_STATE.toString());
+	private final IdExpr TOKEN_OUTPUT_STATE = new IdExpr(TokenState.TOKEN_OUTPUT_STATE.toString());
 	
 	// dynamic tokens
 	private IdExpr[] tokens;
@@ -123,8 +116,6 @@ public class TokenAction {
 		for (IdExpr sourceToken : tokens) {
 			IdExpr targetToken = null;
 			TreeNode sourceNode = tokenToNode.get(sourceToken);
-
-//			System.out.println("possible target of (" + sourceNode + "):\n\t" + tokenDepTable.get(sourceNode));
 			
 			if (tokenDepTable.get(sourceNode).isEmpty()) {
 				id = sourceNode.rawId + observed;

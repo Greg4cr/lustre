@@ -168,8 +168,6 @@ public final class ObservabilityCoverage {
 			for (String lhs : map.keySet()) {
 				obligations.add(new Obligation(new IdExpr(lhs), true, map.get(lhs)));
 			}
-			
-//			System.out.println(obligations);
 		}
 				
 		return obligations;
@@ -263,10 +261,8 @@ public final class ObservabilityCoverage {
 			}
 			
 			// populate map
-			System.out.println(id + " vs " + conditions);
 			affectAtCaptureTable.put(id, conditions);
 		}
-//		System.out.println("\naffectAtCaptureTable ::: \n" + affectAtCaptureTable);
 		
 		return obligations;
 	}
@@ -302,8 +298,6 @@ public final class ObservabilityCoverage {
 		
 		// get affect pairs for final obligations generation
 		affectPairs = affect.getAffectPairs();
-//		System.out.println("::: AffectPairs :::");
-//		System.out.println(affectPairs);
 		
 		return affectObligations;
 	}
@@ -330,16 +324,11 @@ public final class ObservabilityCoverage {
 	
 	private void getNodeCallList() {
 		this.nodecalls.putAll(NodeCallVisitor.get(exprTypeVisitor, node));
-//		System.out.println("0. NODE CALLS :::\n" + this.nodecalls);
 	}
 
 	private void buildTrees() {
 		populateDelayTable(delayTable);
-		System.out.println("::: delayTable :::");
-		System.out.println(delayTable);
 		populateObserverTable(observerTable);
-		System.out.println("::: observerTable :::");
-		System.out.println(observerTable);
 		
 		populateArithMaps();
 		
@@ -349,23 +338,10 @@ public final class ObservabilityCoverage {
 											this.nodecalls, this.ids, this.outputs);
 		
 		observerTrees = builder.buildObserverTree();
-		System.out.println("::: observer trees :::");
-		for (String root : observerTrees.keySet()) {
-			System.out.println(observerTrees.get(root).convertToList());
-		}
-		
 		delayTrees = builder.buildDelayTree();
-		System.out.println("::: delay trees :::");
-		for (String root : delayTrees.keySet()) {
-			System.out.println(delayTrees.get(root).convertToList());
-		}
 		
 		populateDeadNodes(this.deadNodes);
 		deadNodeTrees = builder.buildDeadRootTree(this.deadNodes);
-		System.out.println("::: dead trees :::");
-		for (String root : deadNodeTrees.keySet()) {
-			System.out.println(deadNodeTrees.get(root).convertToList());
-		}
 	}
 	
 	private void populateDeadNodes(List<String> deadNodes) {
@@ -444,12 +420,10 @@ public final class ObservabilityCoverage {
 		
 		for (Equation equation : node.equations) {
 			String rhs = equation.expr.toString().toLowerCase();
-//			System.out.println(equation);
 			
 			if (rhs.contains("pre ")) {
 				List<String> list = new ArrayList();
 				list.addAll(equation.expr.accept(visitor));
-//				System.out.println("list >>> " + list);
 				if (list != null && !list.isEmpty()) {
 					delayTable.put(equation.lhs.get(0).id, list);
 				}
@@ -550,8 +524,6 @@ public final class ObservabilityCoverage {
 			delayArithMap.put(lhs, map);
 		}
 		
-		System.out.println("::: observer map :::\n" + observerArithMap);
-		System.out.println("::: delay map :::\n" + delayArithMap);
 	}
 	
 	public int getTokenRange() {
@@ -571,8 +543,6 @@ public final class ObservabilityCoverage {
 
 			count++;
 		}
-		
-//		System.out.println("token to node:\n" + tokenToNode);
 	}
 		
 	public void drawTokenDependantTable() {

@@ -30,8 +30,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(BinaryExpr expr) {
-//		System.out.println("be ::: \n\t" + expr);
-		
 		List<Obligation> obligations = new ArrayList<>();
 		
 		List<Obligation> leftObs = expr.left.accept(this);
@@ -228,8 +226,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(IfThenElseExpr expr) {
-//		System.out.println("ie ::: \n\t" + expr);
-		
 		List<Obligation> obligations = new ArrayList<>();
 		
 		if (expr.cond instanceof IdExpr
@@ -282,8 +278,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(UnaryExpr expr) {
-//		System.out.println("ue ::: " + expr);
-		
 		List<Obligation> obligations = new ArrayList<>();
 		List<Obligation> unaryObs = expr.expr.accept(this);
 		
@@ -306,8 +300,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 	
 	@Override
 	public List<Obligation> visit(IdExpr expr) {
-//		System.out.println("id ::: " + expr);
-		
 		List<Obligation> obligations = new ArrayList<>();
 		
 		if (isDef) {
@@ -316,18 +308,12 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		} else {
 			obligations.add(new Obligation(expr, true, expr));
 		}
-		
-//		for (Obligation ob : obligations) {
-//			System.out.println("\t" + ob.condition + "; " + ob.obligation);
-//		}
-		
+
 		return obligations;
 	}
 	
 	@Override
 	public List<Obligation> visit(NodeCallExpr expr) {
-//		System.out.println("ne ::: " + expr);
-		
 		List<Obligation> currentObs = new ArrayList<Obligation>();
 
 		// Add conditions
@@ -335,7 +321,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		
 		for (Expr e : expr.args) {
 			if (e.toString().toLowerCase().startsWith(prefix)) {
-//				System.out.println("skipping ::: " + e.toString());
 				continue;
 			}
 			
@@ -352,8 +337,6 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		// Add conditions for booleans
 		if (expr.accept(this.exprTypeVisitor).equals(NamedType.BOOL)) {
 			currentObs.add(new Obligation(expr, true, expr));
-			/*currentObs.add(new Obligation(expr, false, new UnaryExpr(
-					UnaryOp.NOT, expr)));*/
 		}
 
 		return currentObs;

@@ -154,8 +154,6 @@ public class TreeBuilder {
 			root.addChild(child);
 		}
 		
-//		System.out.println(root.data + " ^^^ " + root.children);
-		
 		for (TreeNode subRoot : root.children) {
 			buildSubTree(subRoot);
 		}

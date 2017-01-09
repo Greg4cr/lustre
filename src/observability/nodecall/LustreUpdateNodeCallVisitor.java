@@ -26,7 +26,10 @@ public class LustreUpdateNodeCallVisitor extends AstMapVisitor {
 	private final ExprTypeVisitor exprTypeVisitor;
 	private Map<String, Integer> delayMap;
 	private int maxTokens = 0;
-
+	
+	private final String tokenNondet = "token_nondet";
+	private final String tokenInit = "token_init";
+	
 	public static Program program(Program program, Map<String, Integer> delayMap) {
 		return new LustreUpdateNodeCallVisitor(program, delayMap).visit(program);
 	}
@@ -49,27 +52,41 @@ public class LustreUpdateNodeCallVisitor extends AstMapVisitor {
 	@Override
 	public Node visit(Node node) {
 		this.exprTypeVisitor.setNodeContext(node);
-		// Only visit equations
+		// node calls could be in equations and assertions
+		
+		// translate equations
 		List<Equation> equations = visitEquations(node.equations);
+		// translate assertions
+		List<Expr> assertions = visitAssertions(node.assertions);
+		
 		List<VarDecl> inputs = new ArrayList<>();
 		
 		inputs.addAll(node.inputs);
-//		System.out.println("Node ::: " + node.id);
 		
 		if (delayMap.get(node.id) > 0) {
 			// add local token definition if there is any
 			SubrangeIntType subrange = new SubrangeIntType(BigInteger.valueOf(1), 
 					BigInteger.valueOf(this.maxTokens));
-			inputs.add(new VarDecl("token_nondet", subrange));
-			inputs.add(new VarDecl("token_init", NamedType.BOOL));
+			inputs.add(new VarDecl(tokenNondet, subrange));
+			inputs.add(new VarDecl(tokenInit, NamedType.BOOL));
 		}
 		
-//		System.out.println("inputs ::: " + inputs);
-		// Get rid of e.realizabilityInputs
+		// return translate node
 		return new Node(node.location, node.id, inputs, node.outputs, node.locals,
-				equations, node.properties, node.assertions, null, null, null);
+				equations, node.properties, assertions, null, null, null);
 	}
-
+	
+	@Override
+	public List<Expr> visitAssertions(List<Expr> exprs) {
+		List<Expr> assertions = new ArrayList<>();
+		
+		for (Expr expr : exprs) {
+			assertions.add(expr.accept(this));
+		}
+		
+		return assertions;
+	}
+	
 	@Override
 	public Expr visit(NodeCallExpr expr) {
 		List<Expr> args = new ArrayList<>();
@@ -79,14 +96,12 @@ public class LustreUpdateNodeCallVisitor extends AstMapVisitor {
 		}
 		
 		if (this.delayMap.get(expr.node) > 0) {
-			Expr token_nondet = new IdExpr("token_nondet");
-			Expr token_init = new IdExpr("token_init");
+			Expr token_nondet = new IdExpr(tokenNondet);
+			Expr token_init = new IdExpr(tokenInit);
 			
 			args.add(token_nondet);
 			args.add(token_init);
 		}
-		
-//		System.out.println("updated: " + args.toString());
 		
 		return new NodeCallExpr(expr.location, expr.node, args);
 	}

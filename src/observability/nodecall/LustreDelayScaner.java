@@ -31,7 +31,6 @@ public class LustreDelayScaner {
 			delaysInNode.put(node.id, delayNum);
 		}
 		
-//		System.out.println("<Node, DelayNumber> ::: " + delayInNode);
 		return delaysInNode;
 	}
 }

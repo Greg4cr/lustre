@@ -6,7 +6,7 @@ import java.util.Map;
 
 import enums.Coverage;
 import enums.Polarity;
-import enums.Token;
+import enums.TokenState;
 import main.LustreMain;
 import observability.nodecall.LustreDelayScaner;
 import observability.nodecall.LustreUpdateNodeCallVisitor;
@@ -89,9 +89,9 @@ public final class LustreCoverage {
 				|| coverage == Coverage.ODECISION) {
 			// add more constants for observed coverage
 			Type subrange = new SubrangeIntType(BigInteger.valueOf(-2), BigInteger.valueOf(upperbound));
-			builder.addConstant(new Constant(Token.TOKEN_INIT_STATE.toString(), subrange, new IntExpr(-2)));
-			builder.addConstant(new Constant(Token.TOKEN_ERROR_STATE.toString(), subrange, new IntExpr(-1)));
-			builder.addConstant(new Constant(Token.TOKEN_OUTPUT_STATE.toString(), subrange, new IntExpr(0)));
+			builder.addConstant(new Constant(TokenState.TOKEN_INIT_STATE.toString(), subrange, new IntExpr(-2)));
+			builder.addConstant(new Constant(TokenState.TOKEN_ERROR_STATE.toString(), subrange, new IntExpr(-1)));
+			builder.addConstant(new Constant(TokenState.TOKEN_OUTPUT_STATE.toString(), subrange, new IntExpr(0)));
 			
 			for (int i = 1; i < upperbound + 1; i++) {
 				builder.addConstant(new Constant(token_prefix + i, subrange, new IntExpr(i)));
@@ -142,11 +142,11 @@ public final class LustreCoverage {
 			// Start generating obligations
 			List<Obligation> obligations = observabilityCoverage.generate();
 			upperbound = Math.max(upperbound, observabilityCoverage.getTokenRange());
-			int numTokens = observabilityCoverage.getTokenRange();
+//			int numTokens = observabilityCoverage.getTokenRange();
 			SubrangeIntType subrange = null;
 						
 			subrange = new SubrangeIntType(BigInteger.valueOf(-2), 
-					BigInteger.valueOf(numTokens));
+					BigInteger.valueOf(upperbound));
 			builder.addLocal(new VarDecl(token, subrange));
 			builder.addLocal(new VarDecl(token_first, subrange));
 			builder.addLocal(new VarDecl(token_next, subrange));
@@ -179,7 +179,6 @@ public final class LustreCoverage {
 		} else {
 			// Start generating obligations
 			// for MCDC, BRANCH, CONDITION, DECISION
-			System.out.println("coverage: " + coverage.name());
 			
 			for (Equation equation : node.equations) {
 				String id = null;

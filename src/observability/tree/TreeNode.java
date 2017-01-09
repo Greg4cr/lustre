@@ -49,7 +49,6 @@ public class TreeNode {
     
     public void setRenamedIds(Map<String, Integer> renamedIds) {
     	this.renamedIds = renamedIds;
-//    	System.out.println(this.data + " received " + renamedIds);
     }
     
     // return all leaf nodes under specific node

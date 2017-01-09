@@ -24,7 +24,6 @@ public final class DelayVisitor extends VariableVisitor {
 		
 		if (isImpacted) {
 			nodes.add(expr.id);
-//			System.out.println("IdExpr ::: " + nodes);
 		}
 		
 		return nodes;
@@ -44,14 +43,12 @@ public final class DelayVisitor extends VariableVisitor {
 				nodes.addAll(e.accept(this));
 			}
 		}
-//		System.out.println("delayed ncexpr nodes ::: " + nodes);
 		
 		return nodes;
 	}
 	
 	@Override
 	public List<String> visit(UnaryExpr expr) {
-//		System.out.println("UnaryExpr ::: " + expr.toString());
 		List<String> nodes = new ArrayList<>();
 		
 		if (expr.op.equals(UnaryOp.PRE)) {

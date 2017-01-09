@@ -103,8 +103,7 @@ public class LustreDelayCounter implements ExprVisitor<Integer> {
 	@Override
 	public Integer visit(IfThenElseExpr expr) {
 		Integer delayNum = 0;
-//		System.out.println("IfThenElseExpr ::: " + expr.toString());
-		
+
 		delayNum = Math.max(delayNum, expr.cond.accept(this));
 		delayNum = Math.max(delayNum, expr.thenExpr.accept(this));
 		delayNum = Math.max(delayNum, expr.elseExpr.accept(this));
@@ -174,8 +173,6 @@ public class LustreDelayCounter implements ExprVisitor<Integer> {
 
 	@Override
 	public Integer visit(UnaryExpr expr) {
-//		System.out.println("UnaryExpr ::: " + expr.toString());
-		
 		if (expr.op.equals(UnaryOp.PRE)) {
 			return 1;
 		} else {

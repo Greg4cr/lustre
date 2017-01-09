@@ -7,7 +7,7 @@ import java.util.Map;
 
 import coverage.Obligation;
 import enums.Coverage;
-import enums.Token;
+import enums.TokenState;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
@@ -52,7 +52,7 @@ public class ObservabilityObligation {
 		Obligation obligation;
 		String condStr = "";
 		Expr transition = new BinaryExpr(new IdExpr(token), 
-				BinaryOp.EQUAL, new IdExpr(Token.TOKEN_OUTPUT_STATE.name()));
+				BinaryOp.EQUAL, new IdExpr(TokenState.TOKEN_OUTPUT_STATE.name()));
 		
 		for (String key : affectAtCaptureMap.keySet()) {
 			Map<String, Integer> conditions = affectAtCaptureMap.get(key);
@@ -69,25 +69,13 @@ public class ObservabilityObligation {
 						
 						leftOperand = new BinaryExpr(nonMaskedExpr[j], BinaryOp.AND, 
 												new IdExpr(key + observed));
-						
-//						if (affectPairs.containsKey(condStr)) {
-//							if (affectPairs.get(condStr).contains(key)) {
-//								System.out.println("[v] <" + condStr + ", " + key + ">");
-//							} else {
-//								System.out.println("[-] <" + condStr + ", ***>");
-//							}
-//						} else {
-//							System.out.println("[x] " + condStr);
-//						}
-						
+
 						if (affectPairs.containsKey(condStr)
 								&& affectPairs.get(condStr).contains(key)) {
 							affectExpr[j] = new IdExpr(condStr + vals[j] + at + key + affect);
 						} else {
 							affectExpr[j] = new BoolExpr(false);
 						}
-						
-//						System.out.println("affecting pair:\n\t" + affectExpr[j]);
 						
 						rightOperand = new BinaryExpr(affectExpr[j], BinaryOp.AND,
 												transition);

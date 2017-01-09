@@ -67,7 +67,6 @@ public class VariableVisitor implements ExprVisitor<List<String>> {
 	@Override
 	public List<String> visit(BinaryExpr expr) {
 		List<String> nodes = new ArrayList<>();
-//		System.out.println("BinaryExpr ::: " + expr.toString());
 		
 		List<String> leftNodes = expr.left.accept(this);
 		List<String> rightNodes = expr.right.accept(this);
@@ -105,7 +104,6 @@ public class VariableVisitor implements ExprVisitor<List<String>> {
 	@Override
 	public List<String> visit(IdExpr expr) {
 		List<String> nodes = new ArrayList<>();
-//		System.out.println("IdExpr ::: " + expr.toString());
 		nodes.add(expr.id);
 		
 		return nodes;
@@ -114,7 +112,6 @@ public class VariableVisitor implements ExprVisitor<List<String>> {
 	@Override
 	public List<String> visit(IfThenElseExpr expr) {
 		List<String> nodes = new ArrayList<>();
-//		System.out.println("IfThenElseExpr ::: " + expr.toString());
 		
 		nodes.addAll(expr.cond.accept(this));
 		List<String> thenNodes = expr.thenExpr.accept(this);
@@ -138,14 +135,12 @@ public class VariableVisitor implements ExprVisitor<List<String>> {
 		nodes.add(expr.toString());
 		
 		for (Expr e : expr.args) {
-//			System.out.println("argument >>> " + e);
 			if (e.toString().toLowerCase().startsWith(prefix)) {
 				continue;
 			}
 			nodes.addAll(e.accept(this));
 		}
 		
-//		System.out.println("ncexpr nodes ::: " + nodes);
 		return nodes;
 	}
 
@@ -196,7 +191,6 @@ public class VariableVisitor implements ExprVisitor<List<String>> {
 
 	@Override
 	public List<String> visit(UnaryExpr expr) {
-//		System.out.println("UnaryExpr ::: " + expr.toString());
 		List<String> nodes = new ArrayList<>();
 		List<String> unaryNodes = expr.expr.accept(this);
 		nodes.addAll(unaryNodes);
