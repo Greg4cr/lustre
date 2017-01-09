@@ -3,13 +3,16 @@ package observability;
 import java.util.ArrayList;
 import java.util.List;
 
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
+import jkind.lustre.NodeCallExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 import types.ExprTypeVisitor;
 
 public final class DelayVisitor extends VariableVisitor {
 	private boolean isImpacted = false;
+	private String prefix = "token_";
 	
 	public DelayVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);
@@ -27,6 +30,25 @@ public final class DelayVisitor extends VariableVisitor {
 		return nodes;
 	}
 
+	@Override
+	public List<String> visit(NodeCallExpr expr) {
+		List<String> nodes = new ArrayList<>();
+		
+		if (isImpacted) {
+			nodes.add(expr.toString());
+			
+			for (Expr e : expr.args) {
+				if (e.toString().toLowerCase().startsWith(prefix)) {
+					continue;
+				}
+				nodes.addAll(e.accept(this));
+			}
+		}
+//		System.out.println("delayed ncexpr nodes ::: " + nodes);
+		
+		return nodes;
+	}
+	
 	@Override
 	public List<String> visit(UnaryExpr expr) {
 //		System.out.println("UnaryExpr ::: " + expr.toString());

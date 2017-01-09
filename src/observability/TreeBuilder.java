@@ -81,12 +81,14 @@ public class TreeBuilder {
 				TreeNode child;
 				
 				if (ids.get(rawVar) == null) {
+					// child is not an input/variable/expression
 					if (! nodecalls.containsKey(rawVar)) {
 						continue;
 					} else {
 						child = new TreeNode(arithExprById.get(rawVar), nodecalls.get(rawVar));
 					}
 				} else {
+					// child is an input/variable/expression
 					child = new TreeNode(rawVar, ids.get(rawVar).type);
 				}
 				
