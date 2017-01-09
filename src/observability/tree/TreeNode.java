@@ -24,11 +24,6 @@ public class TreeNode {
     	children = new ArrayList<>();
     }
     
-    public TreeNode(String rawId, Type type, boolean isPre) {
-    	setId(rawId);
-    	setType(type);
-    }
-
     public int getNumberOfChildren() {
         if (children == null) {
             return 0;
@@ -54,10 +49,10 @@ public class TreeNode {
     
     public void setRenamedIds(Map<String, Integer> renamedIds) {
     	this.renamedIds = renamedIds;
-//    	System.out.println(this.data + " recieved " + renamedIds);
+//    	System.out.println(this.data + " received " + renamedIds);
     }
     
-    // return all leaf nodes of specific node
+    // return all leaf nodes under specific node
     public List<TreeNode> getAllLeafNodes() {
     	List<TreeNode> leaves = new ArrayList<>();
     	if (this.children == null || this.children.isEmpty()) {

@@ -26,8 +26,6 @@ public final class Obligation {
 			this.condition = condition.toString();
 		} else {
 			this.condition = this.createArithVar(condition);
-//			System.out.println(">>> " + condition.toString() + " >>> {" 
-//					+ this.condition + ", " + obligation + "}");
 		}
 		this.polarity = polarity;
 		this.obligation = obligation;
@@ -35,10 +33,6 @@ public final class Obligation {
 		
 		
 	}
-	
-//	public Obligation(Expr condition) {
-//		this.condition = condition.toString();
-//	}
 
 	// Create a variable for an arithmetic expression
 	private String createArithVar(Expr expr) {

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jkind.lustre.Type;
 import jkind.lustre.VarDecl;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
@@ -14,17 +15,22 @@ public class TreeBuilder {
 	private Map<String, Map<String, Map<String, Integer>>> observerArithTable = new HashMap<>();
 	/* <lhs_of_equation, <raw_var_in_rhs, <renamed_var, time_seen>>> */
 	private Map<String, Map<String, Map<String, Integer>>> delayArithTable = new HashMap<>();
-	
+	// Mapping from a name to an arithmetic expression
+	private Map<String, String> arithExprById = new HashMap<String, String>();
+		
 	private Map<String, VarDecl> ids = new HashMap<>();
 	private List<String> outputs = new ArrayList<>();
-	
-	private final String ARITH_PREFIX = "ArithExpr_";
+	private Map<String, Type> nodecalls = new HashMap<>();
 	
 	public TreeBuilder(Map<String, Map<String, Map<String, Integer>>> observerArithTable,
 			Map<String, Map<String, Map<String, Integer>>> delayArithTable,
+			Map<String, String> arithExprById, 
+			Map<String, Type> nodecalls,
 			Map<String, VarDecl> ids, List<String> outputs) {
 		this.observerArithTable = observerArithTable;
 		this.delayArithTable = delayArithTable;
+		this.arithExprById = arithExprById;
+		this.nodecalls = nodecalls;
 		this.ids = ids;
 		this.outputs = outputs;
 	}
@@ -68,13 +74,29 @@ public class TreeBuilder {
 			Map<String, Map<String, Integer>> variableTable = delayArithTable.get(rootStr);
 			
 			for (String rawVar : variableTable.keySet()) {
+				if (ids.get(rawVar) == null && ! nodecalls.containsKey(rawVar)) {
+					continue;
+				}
+				
+				TreeNode child;
+				
+				if (ids.get(rawVar) == null) {
+					if (! nodecalls.containsKey(rawVar)) {
+						continue;
+					} else {
+						child = new TreeNode(arithExprById.get(rawVar), nodecalls.get(rawVar));
+					}
+				} else {
+					child = new TreeNode(rawVar, ids.get(rawVar).type);
+				}
+				
 				Map<String, Integer> renamedVars = variableTable.get(rawVar);
-				TreeNode child = new TreeNode(rawVar, ids.get(rawVar).type);
 				Map<String, Integer> arithNode = new HashMap<>();
 				
 				for (String varStr : renamedVars.keySet()) {
 					arithNode.put(varStr, renamedVars.get(varStr));
-					if (varStr.startsWith(ARITH_PREFIX)) {
+
+					if (arithExprById.containsKey(varStr)) {
 						child.isArithExpr = true;
 					} else {
 						child.isArithExpr = false;
@@ -99,14 +121,27 @@ public class TreeBuilder {
 			return;
 		}
 		Map<String, Map<String, Integer>> variableTable = observerArithTable.get(root.rawId);
+
 		for (String rawVar : variableTable.keySet()) {
+			TreeNode child;
+			
+			if (ids.get(rawVar) == null) {
+				if (! nodecalls.containsKey(rawVar)) {
+					continue;
+				} else {
+					child = new TreeNode(rawVar, nodecalls.get(rawVar));
+				}
+			} else {
+				child = new TreeNode(rawVar, ids.get(rawVar).type);
+			}
+			
 			Map<String, Integer> renamedVars = variableTable.get(rawVar);
-			TreeNode child = new TreeNode(rawVar, ids.get(rawVar).type);
 			Map<String, Integer> arithNode = new HashMap<>();
 			
 			for (String varStr : renamedVars.keySet()) {
 				arithNode.put(varStr, renamedVars.get(varStr));
-				if (varStr.startsWith(ARITH_PREFIX)) {
+				
+				if (arithExprById.containsKey(varStr)) {
 					child.isArithExpr = true;
 				} else {
 					child.isArithExpr = false;

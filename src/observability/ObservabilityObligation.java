@@ -7,6 +7,7 @@ import java.util.Map;
 
 import coverage.Obligation;
 import enums.Coverage;
+import enums.Token;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
@@ -20,7 +21,7 @@ public class ObservabilityObligation {
 	private Coverage coverage;
 	private Map<String, List<String>> affectPairs = new HashMap<>();
 	
-	public ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
+	private ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
 									Map<String, List<String>> affectPairs,
 									Coverage coverage) {
 		this.affectAtCaptureMap = affectAtCaptureMap;
@@ -28,7 +29,14 @@ public class ObservabilityObligation {
 		this.coverage = coverage;
 	}
 	
-	public List<Obligation> generate() {
+	public static List<Obligation> generate(Map<String, Map<String, Integer>> affectAtCaptureMap,
+			Map<String, List<String>> affectPairs,
+			Coverage coverage) {
+		return new ObservabilityObligation(affectAtCaptureMap, 
+				affectPairs, coverage).generate();
+	}
+	
+	private List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		String affect = "_AFFECTING_AT_CAPTURE";
@@ -36,14 +44,15 @@ public class ObservabilityObligation {
 		String observed = "_COMB_OBSERVED";
 		int count = 0;
 		String property = "property";
+		String token = "token";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};
 		Expr[] nonMaskedExpr = new Expr[2], affectExpr = new Expr[2];
 		Expr leftOperand, rightOperand;
 		Obligation obligation;
 		String condStr = "";
-		Expr transition = new BinaryExpr(new IdExpr("token"), BinaryOp.EQUAL, 
-				new IdExpr("TOKEN_OUTPUT_STATE"));
+		Expr transition = new BinaryExpr(new IdExpr(token), 
+				BinaryOp.EQUAL, new IdExpr(Token.TOKEN_OUTPUT_STATE.name()));
 		
 		for (String key : affectAtCaptureMap.keySet()) {
 			Map<String, Integer> conditions = affectAtCaptureMap.get(key);
@@ -88,7 +97,6 @@ public class ObservabilityObligation {
 						obligation = new Obligation(lhs, false, condition);
 						obligations.add(obligation);
 					}
-					
 				}
 			}
 		}

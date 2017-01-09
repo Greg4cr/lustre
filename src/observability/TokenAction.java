@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import coverage.Obligation;
+import enums.Token;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.UnaryExpr;
@@ -18,15 +19,21 @@ import observability.tree.TreeNode;
 
 public class TokenAction {
 	// token states
-	private final IdExpr token_first = new IdExpr("token_first"); 
+//	private final IdExpr token_first = new IdExpr(Token.TOKEN_FIRST.toString()); 
+//	private final IdExpr token_init = new IdExpr(Token.TOKEN_INIT.toString());
+//	private final IdExpr token_next = new IdExpr(Token.TOKEN_NEXT.toString());
+//	private final IdExpr token = new IdExpr(Token.TOKEN.toString());
+//	private final IdExpr token_nondet = new IdExpr(Token.TOKEN_NONDET.toString());
+	
+	private final IdExpr token_first = new IdExpr("token_first");
 	private final IdExpr token_init = new IdExpr("token_init");
 	private final IdExpr token_next = new IdExpr("token_next");
 	private final IdExpr token = new IdExpr("token");
 	private final IdExpr token_nondet = new IdExpr("token_nondet");
 	
-	private final IdExpr TOKEN_INIT_STATE = new IdExpr("TOKEN_INIT_STATE");
-	private final IdExpr TOKEN_ERROR_STATE = new IdExpr("TOKEN_ERROR_STATE");
-	private final IdExpr TOKEN_OUTPUT_STATE = new IdExpr("TOKEN_OUTPUT_STATE");
+	private final IdExpr TOKEN_INIT_STATE = new IdExpr(Token.TOKEN_INIT_STATE.toString());
+	private final IdExpr TOKEN_ERROR_STATE = new IdExpr(Token.TOKEN_ERROR_STATE.toString());
+	private final IdExpr TOKEN_OUTPUT_STATE = new IdExpr(Token.TOKEN_OUTPUT_STATE.toString());
 	
 	// dynamic tokens
 	private IdExpr[] tokens;
@@ -41,7 +48,7 @@ public class TokenAction {
 	// tree node (root) to token, Map<Node, Token>
 	private Map<TreeNode, IdExpr> nodeToToken = new HashMap<>();
 	
-	public TokenAction(Map<String, Tree> delayTrees,
+	private TokenAction(Map<String, Tree> delayTrees,
 			Map<TreeNode, List<TreeNode>> tokenDepTable,
 			Map<IdExpr, TreeNode> tokenToNode,
 			Map<TreeNode, IdExpr> nodeToToken,
@@ -51,20 +58,32 @@ public class TokenAction {
 		this.tokenToNode = tokenToNode;
 		this.nodeToToken = nodeToToken;
 		this.tokens = tokens;
-		
-//		drawTokenMaps();
-//		drawTokenDependantTable();
 	}
-		
-	public List<Obligation> generate() {
+	
+	public static List<Obligation> generate(Map<String, Tree> delayTrees,
+			Map<TreeNode, List<TreeNode>> tokenDepTable,
+			Map<IdExpr, TreeNode> tokenToNode,
+			Map<TreeNode, IdExpr> nodeToToken,
+			IdExpr[] tokens) {
+		return new TokenAction(delayTrees, tokenDepTable, 
+				tokenToNode, nodeToToken, tokens).generate();
+	}
+	
+	private List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		Obligation currentOb;
 		Expr preInitExpr, preErrExpr, preFinalExpr;
 		Expr transitionExpr = null;
 		
 		// initialization
-		currentOb = new Obligation(token_first, true, 
+		if (this.tokens.length > 0) {
+			currentOb = new Obligation(token_first, true, 
 							new IfThenElseExpr(token_init, token_nondet, TOKEN_INIT_STATE));
+		} else {
+			// if no delay dependenies in current node
+			currentOb = new Obligation(token_first, true, TOKEN_INIT_STATE);
+		}
+		
 		obligations.add(currentOb);
 		
 		// build transitions between dynamic tokens

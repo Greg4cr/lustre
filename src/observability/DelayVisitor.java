@@ -14,7 +14,7 @@ public final class DelayVisitor extends VariableVisitor {
 	public DelayVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);
 	}
-	
+		
 	@Override
 	public List<String> visit(IdExpr expr) {
 		List<String> nodes = new ArrayList<>();

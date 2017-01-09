@@ -19,11 +19,15 @@ public class SequentialUsedEquation {
 	private final String seqUsedBy = "_SEQ_USED_BY_";
 	private final String combUsedBy = "_COMB_USED_BY_";
 	
-	public SequentialUsedEquation(Map<String, Tree> delayTrees) {
+	private SequentialUsedEquation(Map<String, Tree> delayTrees) {
 		this.delayTrees = delayTrees;
 	}
 	
-	public List<Obligation> generate() {
+	public static List<Obligation> generate(Map<String, Tree> delayTrees) {
+		return new SequentialUsedEquation(delayTrees).generate();
+	}
+	
+	private List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<Obligation>();
 		Tree tree;
 		

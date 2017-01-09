@@ -28,12 +28,17 @@ public class AffectAtCaptureEquation {
 	private Map<String, Tree> observerTrees;
 	private Map<String, List<String>> delayTable = new HashMap<>();
 	private Coverage coverage;
+	private String cov;
 	
-	private List<String> deadNodes = new ArrayList<>();
+	private final List<String> deadNodes = new ArrayList<>();
 	private Map<String, Tree> deadNodeTrees = new HashMap<>();
 	
 	private final String TYPE_SEQ = "SEQ";
 	private final String TYPE_COMB = "COMB";
+	private final String seq = "_SEQ_USED_BY_";
+	private final String affect = "_AFFECTING_AT_CAPTURE";
+	private final String at = "_AT_";
+	private final String[] vals = {"_TRUE", "_FALSE"};
 	
 	// relationship of tokens (in sequential trees), Map<Root, Leaves>
 	private Map<TreeNode, List<TreeNode>> tokenDepTable = new HashMap<>();
@@ -56,6 +61,7 @@ public class AffectAtCaptureEquation {
 		this.delayTable = delayTable;
 		this.affectAtCaptureTable = affectAtCaptureTable;
 		this.coverage = coverage;
+		this.cov = "_" + coverage.name();
 		this.tokenDepTable = tokenDepTable;
 		this.nodeToToken = nodeToToken;
 		this.handledList = getHandledIds();
@@ -97,10 +103,8 @@ public class AffectAtCaptureEquation {
 	}
 	
 	private void generateForSingleNodes(Map<String, Expr> map) {
-		String affect = "_AFFECTING_AT_CAPTURE";
-		String at = "_AT_", c = "_" + coverage.name();
 		String node = "", father;
-		String[] vals = {"_TRUE", "_FALSE"};
+		
 		String lhs = "";
 		String nonMasked = "";
 		Expr premise, conclusion1, conclusion2;
@@ -136,7 +140,7 @@ public class AffectAtCaptureEquation {
 						}
 						
 						for (int k = 0; k < vals.length; k++) {
-							nonMasked = node + vals[k] + at + father + c + vals[k];
+							nonMasked = node + vals[k] + at + father + cov + vals[k];
 							if (!handledList.contains(nonMasked)) {
 								break;
 							}
@@ -158,7 +162,6 @@ public class AffectAtCaptureEquation {
 							}
 						}
 					}
-					
 				}
 			}
 		}
@@ -166,11 +169,8 @@ public class AffectAtCaptureEquation {
 	
 	private void generateEquationsForObserverTrees(Map<String, Expr> map) {
 		List<List<TreeNode>> paths = drawPaths(observerTrees, TYPE_COMB);
-		String affect = "_AFFECTING_AT_CAPTURE";
-		String at = "_AT_", c = "_" + coverage.name();
 		String node = "", father, fNode;
 		TreeNode child = null;
-		String[] vals = {"_TRUE", "_FALSE"};
 		String lhs = "";
 		String nonMasked = "";
 		Expr premise, conclusion1, conclusion2;
@@ -181,13 +181,9 @@ public class AffectAtCaptureEquation {
 			for (int j = path.size() - 1; j > 0; --j) {
 				child = path.get(j);
 				
-				if (delayTable.containsKey(child.rawId)) {
-					continue;
-				}
 				if ("int".equals(path.get(j - 1).type.toString())) {
 					continue;
 				}
-				
 				if ("int".equals(child.type.toString()) && !child.isArithExpr) {
 					continue;
 				} 
@@ -215,7 +211,7 @@ public class AffectAtCaptureEquation {
 						}
 						
 						for (int k = 0; k < vals.length; k++) {
-							nonMasked = fNode + vals[k] + at + father + c + vals[k];
+							nonMasked = fNode + vals[k] + at + father + cov + vals[k];
 							lhs = fNode + vals[k] + at + father + affect;
 							
 							premise = new BinaryExpr(new IdExpr(nonMasked), BinaryOp.AND, 
@@ -251,7 +247,6 @@ public class AffectAtCaptureEquation {
 		// <seqUsed, token>
 		Map<String, String> tokenPairs = new TreeMap<>();
 		
-		String token = "token";
 		String rootToken;
 		
 		for (String lhs : exprMap.keySet()) {
@@ -275,7 +270,7 @@ public class AffectAtCaptureEquation {
 						} else {
 							rootToken = tokenPairs.get(seqUsed);
 							
-							tokenExpr = new BinaryExpr(new IdExpr(token),
+							tokenExpr = new BinaryExpr(new IdExpr("token"),
 												BinaryOp.EQUAL, new IdExpr(rootToken));
 							
 							if (seqExpr == null) {
@@ -308,15 +303,11 @@ public class AffectAtCaptureEquation {
 		
 		List<List<TreeNode>> paths = drawPaths(delayTrees, TYPE_SEQ);
 		
-		String seq = "_SEQ_USED_BY_";
-		String affect = "_AFFECTING_AT_CAPTURE";
-		String at = "_AT_", cov = "_" + coverage.name();
 		String nodeStr;
 		TreeNode father, root;
 		List<TreeNode> superRoots = new ArrayList<>();
 		String seqUsed = "", rootToken = "";
 		
-		String[] val = {"_TRUE", "_FALSE"};
 		String lhs = "";
 		String nonMasked = "";
 		
@@ -347,7 +338,6 @@ public class AffectAtCaptureEquation {
 							nodeStr = childStr;
 						}
 						
-//						if (child.renamedIds.get(childStr) > 1) {
 						if (occ > 1) {
 							nodeStr = nodeStr + "_" + j;
 						}
@@ -363,14 +353,14 @@ public class AffectAtCaptureEquation {
 						}
 						
 						List<Map<String, String>> list = new ArrayList<>();
-						for (int k = 0; k < val.length; ++k) {
-							nonMasked = nodeStr + val[k] + at + father.rawId + cov + val[k];
+						for (int k = 0; k < vals.length; ++k) {
+							nonMasked = nodeStr + vals[k] + at + father.rawId + cov + vals[k];
 							
 							if (!handledList.contains(nonMasked)) {
 								break;
 							}
 													
-							lhs = nodeStr + val[k] + at + father.rawId + affect;
+							lhs = nodeStr + vals[k] + at + father.rawId + affect;
 							premisePairs.clear();
 							
 							Map<String, String> tokenPairs = new TreeMap<>();
@@ -383,7 +373,7 @@ public class AffectAtCaptureEquation {
 								}
 							} else {
 								// track affecting_at_capture pairs
-								trackAffectPairs(nodeStr, father.rawId);
+//								trackAffectPairs(nodeStr, father.rawId);
 								if (superRoots.isEmpty()) {
 									list.clear();
 									tokenPairs.put("TRUE", "TRUE");
@@ -401,6 +391,9 @@ public class AffectAtCaptureEquation {
 									}
 								}
 							}
+							
+							// track affecting_at_capture pairs
+							trackAffectPairs(nodeStr, father.rawId);
 
 							if (!addedNonMaskeds.containsKey(nonMasked)) {
 								addedNonMaskeds.put(nonMasked, list);
@@ -448,8 +441,6 @@ public class AffectAtCaptureEquation {
 	private List<String> getHandledIds() {
 		List<String> handledList = new ArrayList<>();
 		
-		String at = "_AT_", cov = "_" + coverage.name();
-		String[] vals = {"_TRUE", "_FALSE"};
 		String condStr = "";
 				
 		for (String key : affectAtCaptureTable.keySet()) {
@@ -494,7 +485,7 @@ public class AffectAtCaptureEquation {
 	}
 	
 	private List<List<TreeNode>> drawPaths(Map<String, Tree> trees, 
-													String type) {
+											String type) {
 		List<List<TreeNode>> paths = new ArrayList<>();
 		
 		for (String node : trees.keySet()) {
