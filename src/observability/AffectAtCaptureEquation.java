@@ -30,7 +30,7 @@ public class AffectAtCaptureEquation {
 	private Coverage coverage;
 	private String cov;
 	
-	private final List<String> deadNodes = new ArrayList<>();
+	private List<String> deadNodes = new ArrayList<>();
 	private Map<String, Tree> deadNodeTrees = new HashMap<>();
 	
 	private final String TYPE_SEQ = "SEQ";
@@ -87,9 +87,7 @@ public class AffectAtCaptureEquation {
 	}
 	
 	public void setDeadNodes(List<String> deadNodes) {
-		if (deadNodes == null || deadNodes.isEmpty()) {
-			this.deadNodes = new ArrayList<String>();
-		} else {
+		if (deadNodes != null && ! deadNodes.isEmpty()) {
 			this.deadNodes = deadNodes;
 		}
 	}
@@ -372,8 +370,6 @@ public class AffectAtCaptureEquation {
 									list.add(tokenPairs);
 								}
 							} else {
-								// track affecting_at_capture pairs
-//								trackAffectPairs(nodeStr, father.rawId);
 								if (superRoots.isEmpty()) {
 									list.clear();
 									tokenPairs.put("TRUE", "TRUE");
