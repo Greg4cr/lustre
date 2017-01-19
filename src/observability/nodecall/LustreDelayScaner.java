@@ -8,7 +8,7 @@ import jkind.lustre.Node;
 import jkind.lustre.Program;
 import types.ExprTypeVisitor;
 
-public class LustreDelayScaner {
+public final class LustreDelayScaner {
 	private final ExprTypeVisitor exprTypeVisitor;
 	
 	private LustreDelayScaner(Program program) {

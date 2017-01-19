@@ -16,7 +16,7 @@ import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
-public class ObservabilityObligation {
+public final class ObservabilityObligation {
 	private Map<String, Map<String, Integer>> affectAtCaptureMap;
 	private Coverage coverage;
 	private Map<String, List<String>> affectPairs = new HashMap<>();

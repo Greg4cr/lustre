@@ -15,7 +15,7 @@ import jkind.lustre.IdExpr;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
-public class CombObservedEquation {
+public final class CombObservedEquation {
 	private final String combObs = "_COMB_OBSERVED";
 	private final String combUsedBy = "_COMB_USED_BY_";
 	private Map<String, Expr> combObservedMap = new HashMap<>();

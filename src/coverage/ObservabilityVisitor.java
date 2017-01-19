@@ -16,7 +16,7 @@ import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
 /* Generate COMB_USED equations */
-public class ObservabilityVisitor extends ConditionVisitor {
+public final class ObservabilityVisitor extends ConditionVisitor {
 	private boolean isDef = false;
 	private final String prefix = "token_";
 	

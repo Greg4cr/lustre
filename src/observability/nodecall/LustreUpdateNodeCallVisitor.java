@@ -22,7 +22,7 @@ import jkind.lustre.visitors.AstMapVisitor;
  * adding two more arguments to node calls:
  * 		token_nondet and token_init
  */
-public class LustreUpdateNodeCallVisitor extends AstMapVisitor {
+public final class LustreUpdateNodeCallVisitor extends AstMapVisitor {
 	private final ExprTypeVisitor exprTypeVisitor;
 	private Map<String, Integer> delayMap;
 	private int maxTokens = 0;

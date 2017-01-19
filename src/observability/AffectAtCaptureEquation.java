@@ -20,17 +20,15 @@ import coverage.Obligation;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
-public class AffectAtCaptureEquation {
+public final class AffectAtCaptureEquation {
 	private Map<String, Expr> map = new HashMap<>();
 	private Map<String, List<String>> affectPairs = new HashMap<>();
 	
 	private Map<String, Tree> delayTrees;
 	private Map<String, Tree> observerTrees;
-	private Map<String, List<String>> delayTable = new HashMap<>();
 	private Coverage coverage;
 	private String cov;
 	
-	private List<String> deadNodes = new ArrayList<>();
 	private Map<String, Tree> deadNodeTrees = new HashMap<>();
 	
 	private final String TYPE_SEQ = "SEQ";
@@ -51,14 +49,13 @@ public class AffectAtCaptureEquation {
 	
 	public AffectAtCaptureEquation(Map<String, Tree> delayTrees,
 									Map<String, Tree> observerTrees,
-									Map<String, List<String>> delayTable,
 									Map<String, Map<String, Integer>> affectAtCaptureTable,
 									Coverage coverage,
 									Map<TreeNode, List<TreeNode>> tokenDepTable,
 									Map<TreeNode, IdExpr> nodeToToken) {
 		this.delayTrees = delayTrees;
 		this.observerTrees = observerTrees;
-		this.delayTable = delayTable;
+//		this.delayTable = delayTable;
 		this.affectAtCaptureTable = affectAtCaptureTable;
 		this.coverage = coverage;
 		this.cov = "_" + coverage.name();
@@ -85,13 +82,7 @@ public class AffectAtCaptureEquation {
 		
 		return obligations;
 	}
-	
-	public void setDeadNodes(List<String> deadNodes) {
-		if (deadNodes != null && ! deadNodes.isEmpty()) {
-			this.deadNodes = deadNodes;
-		}
-	}
-	
+
 	public void setSingleNodeTrees(Map<String, Tree> trees) {
 		if (trees == null || trees.keySet().size() == 0) {
 			deadNodeTrees = new HashMap<String, Tree>();

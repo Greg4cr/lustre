@@ -17,7 +17,7 @@ import jkind.lustre.IfThenElseExpr;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
-public class TokenAction {
+public final class TokenAction {
 	private final IdExpr token_first = new IdExpr("token_first");
 	private final IdExpr token_init = new IdExpr("token_init");
 	private final IdExpr token_next = new IdExpr("token_next");

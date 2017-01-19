@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
@@ -288,9 +289,11 @@ public final class ObservabilityCoverage {
 	// generate affecting_at_capture expressions
 	private List<Obligation> generateAffectAtCaptureEquations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayTrees,
-							observerTrees, delayTable, affectAtCaptureTable,
+							observerTrees, 
+							//delayTable, 
+							affectAtCaptureTable,
 							coverage, tokenDepTable, nodeToToken);
-		affect.setDeadNodes(deadNodes);
+//		affect.setDeadNodes(deadNodes);
 		affect.setSingleNodeTrees(deadNodeTrees);
 		
 		List<Obligation> affectObligations = new ArrayList<>();
@@ -339,42 +342,27 @@ public final class ObservabilityCoverage {
 		
 		observerTrees = builder.buildObserverTree();
 		delayTrees = builder.buildDelayTree();
-		
+				
 		populateDeadNodes(this.deadNodes);
 		deadNodeTrees = builder.buildDeadRootTree(this.deadNodes);
 	}
 	
 	private void populateDeadNodes(List<String> deadNodes) {
-		Set<String> reachedSet = new HashSet<>();
-		Set<String> handled = new HashSet<>();
+		Set<String> reachedItems = new HashSet<>();
 		
-		Map<String, Expr> exprTable = getExprTable();
-		
-		for (String root : outputs) {
-			if (exprTable.get(root) == null) {
-				continue;
-			} else {
-				VariableVisitor visitor = new VariableVisitor(exprTypeVisitor);
-				reachedSet.add(root);
-				
-				for (String lhs : reachedSet) {
-					if (reachedSet.size() == handled.size()) {
-						break;
-					}
-					if (handled.contains(lhs)) {
-						continue;
-					}
-					reachedSet.addAll(exprTable.get(lhs).accept(visitor));
-					handled.add(lhs);
-				}
+		for (String root : observerTrees.keySet()) {
+			reachedItems.add(root);
+						
+			for (TreeNode id : observerTrees.get(root).convertToList()) {
+				reachedItems.add(id.rawId);
 			}
 		}
 		
 		for (String id : strIds) {
-			if (! reachedSet.contains(id) && ! id.startsWith("token")) {
+			if (! reachedItems.contains(id) && ! id.startsWith("token")) {
 				deadNodes.add(id);
 			}
-		}		
+		}
 	}
 	
 	private void populateIds(Map<String, VarDecl> ids) {

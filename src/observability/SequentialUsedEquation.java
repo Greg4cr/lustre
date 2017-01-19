@@ -13,7 +13,7 @@ import jkind.lustre.IdExpr;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
-public class SequentialUsedEquation {
+public final class SequentialUsedEquation {
 	private Map<String, Tree> delayTrees;
 	private Map<String, Expr> exprsMap = new HashMap<>();
 	private final String seqUsedBy = "_SEQ_USED_BY_";

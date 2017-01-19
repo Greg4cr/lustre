@@ -22,7 +22,7 @@ import jkind.lustre.UnaryOp;
 import jkind.lustre.visitors.ExprVisitor;
 import types.ExprTypeVisitor;
 
-public class LustreDelayCounter implements ExprVisitor<Integer> {
+public final class LustreDelayCounter implements ExprVisitor<Integer> {
 	protected final ExprTypeVisitor exprTypeVisitor;
 	
 	public LustreDelayCounter(ExprTypeVisitor exprTypeVisitor) {

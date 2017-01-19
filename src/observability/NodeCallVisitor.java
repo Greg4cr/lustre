@@ -26,7 +26,7 @@ import jkind.lustre.RecordUpdateExpr;
 import jkind.lustre.TupleExpr;
 import types.ExprTypeVisitor;
 
-public class NodeCallVisitor implements ExprVisitor<Map<String, Type>> {
+public final class NodeCallVisitor implements ExprVisitor<Map<String, Type>> {
 	private ExprTypeVisitor exprTypeVisitor;
 	
 	public static Map<String, Type> get(ExprTypeVisitor exprTypeVisitor, 
