@@ -290,10 +290,8 @@ public final class ObservabilityCoverage {
 	private List<Obligation> generateAffectAtCaptureEquations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayTrees,
 							observerTrees, 
-							//delayTable, 
 							affectAtCaptureTable,
 							coverage, tokenDepTable, nodeToToken);
-//		affect.setDeadNodes(deadNodes);
 		affect.setSingleNodeTrees(deadNodeTrees);
 		
 		List<Obligation> affectObligations = new ArrayList<>();

@@ -55,7 +55,6 @@ public final class AffectAtCaptureEquation {
 									Map<TreeNode, IdExpr> nodeToToken) {
 		this.delayTrees = delayTrees;
 		this.observerTrees = observerTrees;
-//		this.delayTable = delayTable;
 		this.affectAtCaptureTable = affectAtCaptureTable;
 		this.coverage = coverage;
 		this.cov = "_" + coverage.name();
