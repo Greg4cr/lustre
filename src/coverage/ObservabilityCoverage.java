@@ -31,7 +31,6 @@ import observability.ObserverVisitor;
 import observability.SequentialUsedEquation;
 import observability.TokenAction;
 import observability.TreeBuilder;
-import observability.VariableVisitor;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
@@ -250,7 +249,6 @@ public final class ObservabilityCoverage {
 					}
 					
 					handledList.put(ob.condition, i);
-					
 					property = property + "_"
 							+ (ob.polarity ? "TRUE" : "FALSE") + "_AT_"
 							+ id + "_" + coverage.name() + "_"
@@ -312,7 +310,6 @@ public final class ObservabilityCoverage {
 	 * 			utilities
 	 * ****************************************************** 
 	 */
-	
 	private void populateMaps() {
 		populateIds(ids);
 		getNodeCallList();
@@ -333,25 +330,38 @@ public final class ObservabilityCoverage {
 		populateArithMaps();
 		
 		TreeBuilder builder = new TreeBuilder(this.observerArithMap, 
-											this.delayArithMap,
-											Obligation.arithExprById,
-											this.nodecalls, this.ids, this.outputs);
+				this.delayArithMap,
+				Obligation.arithExprById,
+				this.nodecalls, this.ids, this.outputs);
+
 		
 		observerTrees = builder.buildObserverTree();
 		delayTrees = builder.buildDelayTree();
-				
+			
 		populateDeadNodes(this.deadNodes);
 		deadNodeTrees = builder.buildDeadRootTree(this.deadNodes);
 	}
 	
 	private void populateDeadNodes(List<String> deadNodes) {
 		Set<String> reachedItems = new HashSet<>();
+		Set<TreeNode> observedLeaves = new HashSet<>();
 		
 		for (String root : observerTrees.keySet()) {
 			reachedItems.add(root);
-						
+			observedLeaves.addAll(observerTrees.get(root).getAllLeaves());
+			
 			for (TreeNode id : observerTrees.get(root).convertToList()) {
 				reachedItems.add(id.rawId);
+			}
+		}
+		
+		for (TreeNode leaf : observedLeaves) {
+			if (delayTrees.containsKey(leaf)) {
+				reachedItems.add(leaf.rawId);
+				
+				for (TreeNode id : delayTrees.get(leaf).convertToList()) {
+					reachedItems.add(id.rawId);
+				}
 			}
 		}
 		
@@ -414,7 +424,6 @@ public final class ObservabilityCoverage {
 				}
 			}
 		}
-		
 	}
 	
 	private void populateObserverTable(Map<String, List<String>> observerTable) {
@@ -508,7 +517,6 @@ public final class ObservabilityCoverage {
 			}
 			delayArithMap.put(lhs, map);
 		}
-		
 	}
 	
 	public int getTokenRange() {
