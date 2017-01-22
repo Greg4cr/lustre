@@ -31,4 +31,8 @@ public class Tree {
     public boolean containsNode(String data) {
     	return this.root.containsNode(data);
     }
+    
+    public List<TreeNode> getAllLeaves() {
+    	return this.root.getAllLeafNodes();
+    }
 }
