@@ -164,7 +164,7 @@ public final class LustreCoverage {
 				}
 				
 				String property = obligation.condition;
-				if (property.startsWith("property_")) {
+				if (property.startsWith(coverage.name() + "_")) {
 					builder.addProperty(property);
 				}
 				

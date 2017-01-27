@@ -20,6 +20,7 @@ public final class ObservabilityObligation {
 	private Map<String, Map<String, Integer>> affectAtCaptureMap;
 	private Coverage coverage;
 	private Map<String, List<String>> affectPairs = new HashMap<>();
+	private static int count = 0;
 	
 	private ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
 									Map<String, List<String>> affectPairs,
@@ -42,8 +43,8 @@ public final class ObservabilityObligation {
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String at = "_AT_", cov = "_" + coverage.name();
 		String observed = "_COMB_OBSERVED";
-		int count = 0;
-		String property = "property";
+//		String property = "property";
+		String property = coverage.name();
 		String token = "token";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};
