@@ -65,10 +65,12 @@ public final class AffectAtCaptureEquation {
 	
 	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
+		
 		generateEquationsForDelayTrees(map);
 		generateEquationsForObserverTrees(map);
 		generateForSingleNodes(map);
 		obligations.addAll(getObligations(map));
+		
 		return obligations;
 	}
 	
@@ -116,10 +118,10 @@ public final class AffectAtCaptureEquation {
 					father = root.rawId;
 					
 					int occurence = 0;
-					if (affectAtCaptureTable.get(father).containsKey(node)) {
+					if (affectAtCaptureTable.get(father).containsKey(child.rawId)) {
 						occurence = this.affectAtCaptureTable.get(father).get(child.rawId) / 2;
 					} else {
-						occurence = child.renamedIds.get(child.rawId);
+						occurence = child.renamedIds.get(childStr);
 					}
 					
 					for (int i = 0; i < occurence; i++) {
@@ -169,7 +171,7 @@ public final class AffectAtCaptureEquation {
 			for (int j = path.size() - 1; j > 0; --j) {
 				child = path.get(j);
 				
-				if ("int".equals(path.get(j - 1).type.toString())) {
+				if ((j > 1) && "int".equals(path.get(j - 1).type.toString())) {
 					continue;
 				}
 				if ("int".equals(child.type.toString()) && !child.isArithExpr) {
@@ -177,6 +179,7 @@ public final class AffectAtCaptureEquation {
 				} 
 				
 				father = path.get(j - 1).rawId;
+				
 				for (String renamedId : child.renamedIds.keySet()) {
 					node = renamedId;
 					
@@ -349,7 +352,7 @@ public final class AffectAtCaptureEquation {
 							
 							Map<String, String> tokenPairs = new TreeMap<>();
 							
-							if (path.size() <= 2) {
+							if (superRoots.isEmpty() && (path.size() <= 2)) {
 								if (!tokenPairs.containsKey("FALSE")) {
 									list.clear();
 									tokenPairs.put("FALSE", "FALSE");

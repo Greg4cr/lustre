@@ -2,8 +2,10 @@ package observability.tree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import jkind.lustre.Type;
 
@@ -144,6 +146,46 @@ public class TreeNode {
     			child.getPaths(child, paths, path);
     		}
     	}
+    }
+    
+    // for testing
+    public void print() {
+    	System.out.println(bfs(this));
+    }
+    
+    private List<List<String>> bfs(TreeNode root) {
+    	List<List<String>> result = new ArrayList<>();
+    	
+    	if (root == null) {
+    		return result;
+    	}
+    	
+    	Queue<TreeNode> queue1 = new LinkedList<>();
+    	Queue<TreeNode> queue2 = new LinkedList<>();
+    	
+    	queue1.offer(root);
+    	
+    	while (! queue1.isEmpty()) {
+    		List<String> level = new ArrayList<>();
+    		
+    		queue2.clear();
+    		
+    		for (TreeNode node : queue1) {
+    			level.add(node.rawId);
+    			
+    			for (TreeNode child : node.children) {
+    				queue2.offer(child);
+    			}
+    		}
+    		
+    		Queue<TreeNode> temp = queue1;
+    		queue1 = queue2;
+    		queue2 = temp;
+    		
+    		result.add(level);
+    	}    	
+    	
+    	return result;
     }
     
     @Override

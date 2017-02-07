@@ -14,15 +14,15 @@ import observability.tree.TreeNode;
 
 public class TreeBuilder {
 	/* <lhs_of_equation, <raw_var_in_rhs, <renamed_var, time_seen>>> */
-	private Map<String, Map<String, Map<String, Integer>>> observerArithTable = new HashMap<>();
+	private final Map<String, Map<String, Map<String, Integer>>> observerArithTable;
 	/* <lhs_of_equation, <raw_var_in_rhs, <renamed_var, time_seen>>> */
-	private Map<String, Map<String, Map<String, Integer>>> delayArithTable = new HashMap<>();
+	private final Map<String, Map<String, Map<String, Integer>>> delayArithTable;
 	// Mapping from a name to an arithmetic expression
-	private Map<String, String> arithExprById = new HashMap<String, String>();
+	private final Map<String, String> arithExprById;
 		
-	private Map<String, VarDecl> ids = new HashMap<>();
-	private List<String> outputs = new ArrayList<>();
-	private Map<String, Type> nodecalls = new HashMap<>();
+	private final Map<String, VarDecl> ids;
+	private final List<String> outputs;
+	private final Map<String, Type> nodecalls;
 	
 	public TreeBuilder(Map<String, Map<String, Map<String, Integer>>> observerArithTable,
 			Map<String, Map<String, Map<String, Integer>>> delayArithTable,
@@ -53,10 +53,10 @@ public class TreeBuilder {
 	}
 
 	
-	public Map<String, Tree> buildDeadRootTree(List<String> deadNodes) {
+	public Map<String, Tree> buildUnreachableTree(List<String> unreachableNodes) {
 		Map<String, Tree> trees = new HashMap<>();
 		
-		for (String strRoot : deadNodes) {
+		for (String strRoot : unreachableNodes) {
 			TreeNode root = new TreeNode(strRoot, ids.get(strRoot).type);
 			buildSubTree(root);
 			trees.put(strRoot, new Tree(root));
@@ -123,12 +123,13 @@ public class TreeBuilder {
 	
 	private void buildSubTree(TreeNode root) {
 		Queue<TreeNode> rootList = new LinkedList<>();
-		rootList.add(root);
+		rootList.offer(root);
 		
-		TreeNode subroot = rootList.poll();
-		while (subroot != null) {
-			if (observerArithTable.get(subroot.rawId) == null) {
-				return;
+		while (! rootList.isEmpty()) {
+			TreeNode subroot = rootList.poll();
+			
+			if (! observerArithTable.containsKey(subroot.rawId)) {
+				continue;
 			}
 			
 			Map<String, Map<String, Integer>> variableTable = observerArithTable.get(subroot.rawId);
@@ -158,8 +159,9 @@ public class TreeBuilder {
 				subroot.addChild(child);
 			}
 			
-			rootList.addAll(subroot.children);
-			subroot = rootList.poll();
+			for (TreeNode child : subroot.children) {
+				rootList.offer(child);
+			}
 		}
 	}
 }
