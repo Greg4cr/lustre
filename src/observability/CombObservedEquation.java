@@ -49,7 +49,7 @@ public final class CombObservedEquation {
 		for (String rootStr : observerTrees.keySet()) {
 			tree = observerTrees.get(rootStr);
 			
-			generateForTree(combObservedMap, tree.root);
+			generateForTree(this.combObservedMap, tree.root);
 		}
 		
 		for (String rootStr : delayTrees.keySet()) {
@@ -62,15 +62,15 @@ public final class CombObservedEquation {
 				nodeStr.add(node.rawId);
 			}
 			
-			genereateForSingleNodes(combObservedMap, nodeStr);
+			genereateForSingleNodes(this.combObservedMap, nodeStr);
 		}
 		
-		// for dead nodes
+		// for unreachable nodes
 		if (! deadNodes.isEmpty()) {
-			genereateForSingleNodes(combObservedMap, deadNodes);
+			genereateForSingleNodes(this.combObservedMap, deadNodes);
 		}
 		
-		obligations.addAll(getObligations(combObservedMap));
+		obligations.addAll(getObligations(this.combObservedMap));
 		
 		return obligations;
 	}

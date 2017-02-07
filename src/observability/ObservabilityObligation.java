@@ -43,8 +43,8 @@ public final class ObservabilityObligation {
 		String affect = "_AFFECTING_AT_CAPTURE";
 		String at = "_AT_", cov = "_" + coverage.name();
 		String observed = "_COMB_OBSERVED";
-//		String property = "property";
-		String property = coverage.name();
+		String property = "property";
+//		String property = coverage.name();
 		String token = "token";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};

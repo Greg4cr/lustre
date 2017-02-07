@@ -8,6 +8,7 @@ import java.util.Map;
 import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
+import jkind.lustre.BoolExpr;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import observability.tree.Tree;
@@ -60,7 +61,9 @@ public final class SequentialUsedEquation {
 		for (TreeNode node : firstLevel) {
 			lhs = node.rawId + seqUsedBy + root.rawId;
 			rhs = node.rawId + combUsedBy + root.rawId;
-			exprsMap.put(lhs, new IdExpr(rhs));
+//			exprsMap.put(lhs, new IdExpr(rhs));
+			
+			exprsMap.put(lhs, new BoolExpr(true));
 			
 			for (TreeNode child : node.children) {
 				generateObligation(exprsMap, child, root);
