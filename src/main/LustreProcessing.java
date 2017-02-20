@@ -16,6 +16,7 @@ import cse.LustreCSE;
 import jkind.JKindExecution;
 import jkind.lustre.Program;
 import lustre.LustreTrace;
+import observability.subexpr.LustrePreSubexpr;
 
 public final class LustreProcessing {
 	private final Program program;
@@ -30,7 +31,19 @@ public final class LustreProcessing {
 
 	public void process() {
 		Program programTranslated = this.program;
-
+		
+		// Process un-inline subexpressions under PRE
+		if (!settings.inlinePre) {
+			//TODO
+			LustreMain.log("----------Un-inline PRE subexperssions");
+			programTranslated = LustrePreSubexpr.program(programTranslated);
+			
+			String outputFile = this.nameNoExtension + "_noninline_pre.lus";
+			
+			LustreMain.log("output file:\t" + outputFile);
+			printToFile(outputFile, programTranslated.toString());
+		}
+		
 		// Process coverage
 		if (settings.coverage != null) {
 			if (settings.polarity == null) {

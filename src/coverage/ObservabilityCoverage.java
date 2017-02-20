@@ -56,7 +56,6 @@ public final class ObservabilityCoverage {
 	
 	private Map<String, VarDecl> ids = new HashMap<>();
 	private List<VarDecl> decls = new ArrayList<>();
-	private List<String> strIds = new ArrayList<>();
 	private List<String> outputs = new ArrayList<>();
 	private List<String> inputs = new ArrayList<>();
 	
@@ -65,6 +64,7 @@ public final class ObservabilityCoverage {
 	private Map<String, Tree> unreachableTrees = new HashMap<>();
 	private List<String> unreachableNodes = new ArrayList<>();
 	private Map<String, Map<String, Integer>> affectAtCaptureTable = new TreeMap<>();
+	private Set<String> combObservedVars = new HashSet<>();
 	
 	// node calls in a node
 	private Map<String, Type> nodecalls = new HashMap<>();
@@ -100,7 +100,7 @@ public final class ObservabilityCoverage {
 		
 		buildTrees();
 		drawTokenMaps();
-		drawTokenDependantTable();
+		drawTokenDepTable();
 		
 		obligations.addAll(generateCombObervedEquations());
 		obligations.addAll(generateSeqUsedByEquations());
@@ -272,9 +272,17 @@ public final class ObservabilityCoverage {
 		
 	// generate COMB_OBSERVED expressions
 	private List<Obligation> generateCombObervedEquations() {
-		return CombObservedEquation.generate(this.observerTrees, 
-										this.delayTrees,
-										this.unreachableNodes, this.nodecalls.keySet());
+		CombObservedEquation combObsGenerator = new CombObservedEquation(this.observerTrees, 
+															this.delayTrees,
+															this.unreachableNodes, 
+															this.nodecalls.keySet());
+		List<Obligation> combObsEquations = new ArrayList<>();
+		combObsEquations.addAll(combObsGenerator.generate());
+		
+		this.combObservedVars.addAll(combObsGenerator.getCombObservedVars());
+		
+		return combObsEquations;
+		
 	}
 	
 	// generate SEQ_USED_BY expressions
@@ -308,6 +316,7 @@ public final class ObservabilityCoverage {
 	// generate observability obligations for each expression
 	private List<Obligation> generateObligations() {
 		return ObservabilityObligation.generate(this.affectAtCaptureTable,
+								this.combObservedVars,
 								this.affectPairs, this.coverage);
 	}
 	
@@ -318,7 +327,6 @@ public final class ObservabilityCoverage {
 	private void populateMaps() {
 		populateIds(ids);
 		getNodeCallList();
-		populateStrIds(strIds);
 		populateOutputs(outputs);
 		populateInputs(inputs);
 		populateDecls(decls);
@@ -330,10 +338,18 @@ public final class ObservabilityCoverage {
 
 	private void buildTrees() {
 		populateDelayTable(this.delayTable);
+//		System.out.println("------ delay table\n" + this.delayTable);
 		populateObserverTable(this.observerTable);
+//		System.out.println("------ observer table\n" + this.observerTable);
 		this.unreachableNodes = searchUnreachableNodes();
+//		System.out.println("------ unreachable nodes\n" + this.unreachableNodes);
 		
 		populateArithMaps();
+//		System.out.println("------ delay\n" + this.delayArithMap);
+//		System.out.println("------ observable\n" + this.observerArithMap);
+//		System.out.println("------ unreachable\n" + this.unreachableArithMap);
+		
+//		System.out.println("------ ids\n" + this.ids);
 		
 		TreeBuilder builder = new TreeBuilder(this.observerArithMap, 
 				this.delayArithMap,
@@ -341,14 +357,28 @@ public final class ObservabilityCoverage {
 				this.nodecalls, this.ids, this.outputs);
 
 		observerTrees = builder.buildObserverTree();
+//		System.out.println("------ observer trees");
+//		for (String root : observerTrees.keySet()) {
+//			observerTrees.get(root).root.print();
+//		}
+		
 		delayTrees = builder.buildDelayTree();
+//		System.out.println("------ delay trees");
+//		for (String root : delayTrees.keySet()) {
+//			delayTrees.get(root).root.print();
+//		}
 		
 		unreachableTrees = builder.buildUnreachableTree(this.unreachableNodes);
+//		System.out.println("------ unreachable trees");
+//		for (String root : unreachableTrees.keySet()) {
+//			unreachableTrees.get(root).root.print();
+//		}
 	}
 	
 	private List<String> searchUnreachableNodes() {
 		List<String> unreachableNodes = new ArrayList<>();
 		Set<String> visitedNodes = new HashSet<>();
+		Set<String> allNodes = new HashSet<>();
 		
 		Queue<String> traces1 = new LinkedList<>();
 		Stack<String> traces2 = new Stack<>();
@@ -356,16 +386,24 @@ public final class ObservabilityCoverage {
 		traces1.addAll(outputs);
 		traces2.addAll(outputs);
 		
+		allNodes.addAll(inputs);
+		allNodes.addAll(outputs);
+		
 		while (! traces2.empty()) {
 			String root = traces2.pop();
 			
 			visitedNodes.add(root);
+			allNodes.add(root);
 			
 			if (observerTable.containsKey(root)) {
+				allNodes.addAll(observerTable.get(root));
+				
 				for (String step : observerTable.get(root)) {
-					traces1.offer(step);
-					traces2.push(step);
-					visitedNodes.add(step);
+					if (! visitedNodes.contains(step)) {
+						traces1.offer(step);
+						traces2.push(step);
+						visitedNodes.add(step);
+					}
 				}
 			}
 		}
@@ -373,7 +411,11 @@ public final class ObservabilityCoverage {
 		while (! traces1.isEmpty()) {
 			String step = traces1.poll();
 			
+			allNodes.add(step);
+			
 			if (delayTable.containsKey(step)) {
+				allNodes.addAll(delayTable.get(step));
+				
 				for (String node : delayTable.get(step)) {
 					if (! visitedNodes.contains(node)) {
 						traces1.offer(node);
@@ -383,8 +425,8 @@ public final class ObservabilityCoverage {
 			}
 		}
 		
-		for (String id : strIds) {
-			if (! visitedNodes.contains(id) && ! id.startsWith("token")) {
+		for (String id : allNodes) {
+			if (! visitedNodes.contains(id) && ! id.startsWith("token_")) {
 				unreachableNodes.add(id);
 			}
 		}
@@ -410,12 +452,6 @@ public final class ObservabilityCoverage {
 		decls.addAll(node.inputs);
 		decls.addAll(node.outputs);
 		decls.addAll(node.locals);
-	}
-	
-	private void populateStrIds(List<String> strIds) {
-		for (String id : ids.keySet()) {
-			strIds.add(id);
-		}
 	}
 
 	private void populateOutputs(List<String> outputs) {
@@ -508,9 +544,7 @@ public final class ObservabilityCoverage {
 				}
 				unreachableArithMap.put(lhs, map);
 			}
-		}
-		
-		
+		}		
 		
 		for (String lhs : observerTable.keySet()) {
 			Map<String, Map<String, Integer>> map = new HashMap<>();
@@ -603,7 +637,7 @@ public final class ObservabilityCoverage {
 		}
 	}
 		
-	public void drawTokenDependantTable() {
+	private void drawTokenDepTable() {
 		for (TreeNode node : nodeToToken.keySet()) {
 			List<TreeNode> list = new ArrayList<>();
 			for (String rootStr : delayTrees.keySet()) {

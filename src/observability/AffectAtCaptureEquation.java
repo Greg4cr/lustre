@@ -29,7 +29,7 @@ public final class AffectAtCaptureEquation {
 	private Coverage coverage;
 	private String cov;
 	
-	private Map<String, Tree> deadNodeTrees = new HashMap<>();
+	private Map<String, Tree> unreachableTrees = new HashMap<>();
 	
 	private final String TYPE_SEQ = "SEQ";
 	private final String TYPE_COMB = "COMB";
@@ -86,9 +86,9 @@ public final class AffectAtCaptureEquation {
 
 	public void setSingleNodeTrees(Map<String, Tree> trees) {
 		if (trees == null || trees.keySet().size() == 0) {
-			deadNodeTrees = new HashMap<String, Tree>();
+			unreachableTrees = new HashMap<String, Tree>();
 		} else {
-			deadNodeTrees = trees;
+			unreachableTrees = trees;
 		}
 	}
 	
@@ -99,12 +99,12 @@ public final class AffectAtCaptureEquation {
 		String nonMasked = "";
 		Expr premise, conclusion1, conclusion2;
 		
-		if (deadNodeTrees.keySet() == null) {
+		if (unreachableTrees.keySet() == null) {
 			return;
 		}
 		
-		for (String exprId : deadNodeTrees.keySet()) {
-			TreeNode root = deadNodeTrees.get(exprId).root;
+		for (String exprId : unreachableTrees.keySet()) {
+			TreeNode root = unreachableTrees.get(exprId).root;
 			List<TreeNode> children = root.children;
 			for (TreeNode child : children) {
 				
@@ -144,7 +144,9 @@ public final class AffectAtCaptureEquation {
 							Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
 														new BinaryExpr(conclusion1, 
 																BinaryOp.OR, conclusion2));
+							
 							if (!map.containsKey(lhs)) {
+								//TODO
 								trackAffectPairs(node, father);
 								map.put(lhs, expr);
 							} else if (!map.get(lhs).toString().contains(expr.toString())) {
@@ -171,7 +173,7 @@ public final class AffectAtCaptureEquation {
 			for (int j = path.size() - 1; j > 0; --j) {
 				child = path.get(j);
 				
-				if ((j > 1) && "int".equals(path.get(j - 1).type.toString())) {
+				if ((j > 1) && path.get(j - 1).type.toString().contains("int")) {
 					continue;
 				}
 				if ("int".equals(child.type.toString()) && !child.isArithExpr) {
@@ -213,7 +215,10 @@ public final class AffectAtCaptureEquation {
 							Expr expr = new BinaryExpr(premise, BinaryOp.ARROW, 
 														new BinaryExpr(conclusion1, 
 																BinaryOp.OR, conclusion2));
+							
+														
 							if (!map.containsKey(lhs)) {
+								//TODO
 								trackAffectPairs(fNode, father);
 								map.put(lhs, expr);
 								
@@ -309,6 +314,10 @@ public final class AffectAtCaptureEquation {
 			for (int index = path.size() - 1; index > 0; --index) {
 				TreeNode child = path.get(index);
 				
+				if ((index > 1) && "int".equals(path.get(index - 1).type.toString())) {
+					continue;
+				}
+				
 				for (String childStr : child.renamedIds.keySet()) {
 					int occ = 0;
 					if (affectAtCaptureTable.get(root.rawId).containsKey(child.rawId)) {
@@ -378,6 +387,7 @@ public final class AffectAtCaptureEquation {
 							}
 							
 							// track affecting_at_capture pairs
+							//TODO
 							trackAffectPairs(nodeStr, father.rawId);
 
 							if (!addedNonMaskeds.containsKey(nonMasked)) {
@@ -406,7 +416,6 @@ public final class AffectAtCaptureEquation {
 	
 	private void trackAffectPairs(String affecter, String affectee) {
 		List<String> affectingList = new ArrayList<>();
-		affectingList.clear();
 		
 		if (! affectPairs.containsKey(affecter)) {
 			affectingList.add(affectee);
@@ -473,7 +482,8 @@ public final class AffectAtCaptureEquation {
 			TreeNode root = trees.get(node).root;
 			root.getPaths(paths);
 		}
-
+		
+//		System.out.println(paths);
 		return paths;
 	}
 }

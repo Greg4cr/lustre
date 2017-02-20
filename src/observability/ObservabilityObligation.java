@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import coverage.Obligation;
 import enums.Coverage;
@@ -18,23 +19,27 @@ import jkind.lustre.UnaryOp;
 
 public final class ObservabilityObligation {
 	private Map<String, Map<String, Integer>> affectAtCaptureMap;
+	private Set<String> combObservedVars;
 	private Coverage coverage;
 	private Map<String, List<String>> affectPairs = new HashMap<>();
 	private static int count = 0;
 	
 	private ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
+									Set<String> combObservedVars,
 									Map<String, List<String>> affectPairs,
 									Coverage coverage) {
 		this.affectAtCaptureMap = affectAtCaptureMap;
+		this.combObservedVars = combObservedVars;
 		this.affectPairs = affectPairs;
 		this.coverage = coverage;
 	}
 	
 	public static List<Obligation> generate(Map<String, Map<String, Integer>> affectAtCaptureMap,
+			Set<String> combObservedVars,
 			Map<String, List<String>> affectPairs,
 			Coverage coverage) {
 		return new ObservabilityObligation(affectAtCaptureMap, 
-				affectPairs, coverage).generate();
+				combObservedVars, affectPairs, coverage).generate();
 	}
 	
 	private List<Obligation> generate() {
@@ -56,6 +61,11 @@ public final class ObservabilityObligation {
 				BinaryOp.EQUAL, new IdExpr(TokenState.TOKEN_OUTPUT_STATE.name()));
 		
 		for (String key : affectAtCaptureMap.keySet()) {
+			//TODO
+			if (! this.combObservedVars.contains(key + observed)) {
+				continue;
+			}
+			
 			Map<String, Integer> conditions = affectAtCaptureMap.get(key);
 			for (String cond : conditions.keySet()) {
 				condStr = cond;

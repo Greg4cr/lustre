@@ -56,12 +56,10 @@ public final class SequentialUsedEquation {
 												Tree tree) {
 		TreeNode root = tree.root;
 		List<TreeNode> firstLevel = root.children;
-		String lhs, rhs;
+		String lhs;
 		
 		for (TreeNode node : firstLevel) {
 			lhs = node.rawId + seqUsedBy + root.rawId;
-			rhs = node.rawId + combUsedBy + root.rawId;
-//			exprsMap.put(lhs, new IdExpr(rhs));
 			
 			exprsMap.put(lhs, new BoolExpr(true));
 			

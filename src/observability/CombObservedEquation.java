@@ -20,29 +20,26 @@ public final class CombObservedEquation {
 	private final String combUsedBy = "_COMB_USED_BY_";
 	private Map<String, Expr> combObservedMap = new HashMap<>();
 	
-	private final List<String> deadNodes;
+	private final List<String> unreachableNodes;
 	private final Map<String, Tree> observerTrees;
 	private final Map<String, Tree> delayTrees;
 	private final Set<String> nodecalls;
 	
-	private CombObservedEquation(Map<String, Tree> observerTrees,
+	public CombObservedEquation(Map<String, Tree> observerTrees,
 								Map<String, Tree> delayTrees,
-								List<String> deadNodes,
+								List<String> unreachableNodes,
 								Set<String> nodecalls) {
 		this.observerTrees = observerTrees;
 		this.delayTrees = delayTrees;
-		this.deadNodes = deadNodes;
+		this.unreachableNodes = unreachableNodes;
 		this.nodecalls = nodecalls;
 	}
-	
-	public static List<Obligation> generate(Map<String, Tree> observerTrees,
-			Map<String, Tree> delayTrees,
-			List<String> deadNodes, Set<String> nodecalls) {
-		return new CombObservedEquation(observerTrees, 
-				delayTrees, deadNodes, nodecalls).generate();
+		
+	public Set<String> getCombObservedVars() {
+		return this.combObservedMap.keySet();
 	}
 	
-	private List<Obligation> generate() {
+	public List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		Tree tree;
 		
@@ -66,8 +63,8 @@ public final class CombObservedEquation {
 		}
 		
 		// for unreachable nodes
-		if (! deadNodes.isEmpty()) {
-			genereateForSingleNodes(this.combObservedMap, deadNodes);
+		if (! unreachableNodes.isEmpty()) {
+			genereateForSingleNodes(this.combObservedMap, unreachableNodes);
 		}
 		
 		obligations.addAll(getObligations(this.combObservedMap));
