@@ -98,6 +98,8 @@ public final class ObservabilityCoverage {
 		obligations.addAll(generateNonObservedEquations());
 		obligations.addAll(generateObservedEquations());
 		
+//		System.out.println("structure criterion:\n" + this.affectAtCaptureTable);
+		
 		buildTrees();
 		drawTokenMaps();
 		drawTokenDepTable();
@@ -299,16 +301,17 @@ public final class ObservabilityCoverage {
 	// generate affecting_at_capture expressions
 	private List<Obligation> generateAffectAtCaptureEquations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayTrees,
-							observerTrees, 
 							affectAtCaptureTable,
-							coverage, tokenDepTable, nodeToToken);
-		affect.setSingleNodeTrees(unreachableTrees);
+							coverage, nodeToToken);
+		
 		
 		List<Obligation> affectObligations = new ArrayList<>();
 		affectObligations.addAll(affect.generate());
 		
 		// get affect pairs for final obligations generation
 		affectPairs = affect.getAffectPairs();
+		
+//		System.out.println("------affect pairs:\n" + affectPairs);
 		
 		return affectObligations;
 	}
@@ -635,6 +638,8 @@ public final class ObservabilityCoverage {
 
 			count++;
 		}
+		
+//		System.out.println("------tokens:\n" + nodeToToken);
 	}
 		
 	private void drawTokenDepTable() {
@@ -650,5 +655,7 @@ public final class ObservabilityCoverage {
 			}
 			tokenDepTable.put(node, list);
 		}
+		
+//		System.out.println("------ Token Dependency:\n" + this.tokenDepTable);
 	}
 }

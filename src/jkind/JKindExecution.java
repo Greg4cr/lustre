@@ -23,8 +23,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 
 public final class JKindExecution {
 	// Default parameters for JKind (updated for observability test)
-	public static int iteration = 5000; // 5000 rounds
-	public static int timeout = 60 * 60 * 24; // 24 hours
+	public static int iteration = 250; // 250 rounds
+	public static int timeout = 60 * 60 * 10; // 10 hours
 
 	public static List<LustreTrace> generateTests(Program program) {
 		Map<String, LustreTrace> mapping = execute(program);

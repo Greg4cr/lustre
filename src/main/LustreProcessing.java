@@ -34,7 +34,6 @@ public final class LustreProcessing {
 		
 		// Process un-inline subexpressions under PRE
 		if (!settings.inlinePre) {
-			//TODO
 			LustreMain.log("----------Un-inline PRE subexperssions");
 			programTranslated = LustrePreSubexpr.program(programTranslated);
 			
