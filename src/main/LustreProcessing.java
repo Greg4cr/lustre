@@ -34,6 +34,7 @@ public final class LustreProcessing {
 		
 		// Process un-inline subexpressions under PRE
 		if (!settings.inlinePre) {
+			//TODO
 			LustreMain.log("----------Un-inline PRE subexperssions");
 			programTranslated = LustrePreSubexpr.program(programTranslated);
 			
@@ -56,7 +57,7 @@ public final class LustreProcessing {
 			String outputFile = this.nameNoExtension + "." + settings.coverage
 					+ ".lus";
 			LustreMain.log("------------Printing obligations to file");
-			LustreMain.log("output file:\t" +  outputFile);
+			LustreMain.log(outputFile);
 			printToFile(outputFile, programTranslated.toString());
 		}
 
@@ -69,18 +70,6 @@ public final class LustreProcessing {
 			// LustreMain.log("------------Printing CSE to file");
 			// LustreMain.log(outputFile);
 			// printToFile(outputFile, programTranslated.toString());
-		}
-	
-
-		// Aggressively un-linine a Lustre program. 
-		// Equivalent of CSE=0	
-		if (settings.noninline) {
-			programTranslated = LustreCSE.program(programTranslated, 0, true);
-
-			 String outputFile = this.nameNoExtension + ".noninlined.lus";
-			 LustreMain.log("------------Printing CSE to file");
-			 LustreMain.log(outputFile);
-			 printToFile(outputFile, programTranslated.toString());
 		}
 
 		// Process generation

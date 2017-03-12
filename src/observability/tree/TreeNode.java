@@ -69,8 +69,7 @@ public class TreeNode {
     
     public boolean containsChild(String id) {
     	for (TreeNode child : this.children) {
-    		if (id.equals(child.rawId)
-    				|| child.renamedIds.containsKey(id)) {
+    		if (id.equals(child.rawId)) {
     			return true;
     		}
     	}
@@ -111,7 +110,7 @@ public class TreeNode {
     	convertToList(this, list);
     	
     	for (TreeNode node : list) {
-    		if (node.rawId.equals(id) || node.renamedIds.containsKey(id)) {
+    		if (node.rawId.equals(id)) {
     			return true;
     		}
     	}
