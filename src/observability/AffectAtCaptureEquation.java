@@ -75,9 +75,9 @@ public final class AffectAtCaptureEquation {
 		String nonMasked = "";
 		
 		for (String father : coverageTable.keySet()) {
-			Map<String, Integer> vars = this.coverageTable.get(father);
+			Map<String, Integer> vars = coverageTable.get(father);
 			
-			if (vars == null) {
+			if (vars == null || vars.isEmpty()) {
 				continue;
 			}
 			
@@ -91,21 +91,21 @@ public final class AffectAtCaptureEquation {
 						node = var + "_" + i;
 					}
 					
-					for (int j = 0; j < this.vals.length; j++) {
-						nonMasked = node + this.vals[j] + at + father 
-								+ this.cov + this.vals[j];
-						lhs = node + this.vals[j] + at + father + affect;
+					for (int j = 0; j < vals.length; j++) {
+						nonMasked = node + vals[j] + at + father 
+								+ cov + vals[j];
+						lhs = node + vals[j] + at + father + affect;
 						
 						Expr tokenExpr = null;
 						Expr seqUsedExpr = null;
 						
-						for (String root : this.delayTrees.keySet()) {
-							Tree tree = this.delayTrees.get(root);
+						for (String root : delayTrees.keySet()) {
+							Tree tree = delayTrees.get(root);
 							
 							if ((! father.equalsIgnoreCase(root)) 
 									&& (tree.containsNode(father))) {
 								String seqUsedVar = father + seq + root;
-								IdExpr tokenId = this.nodeToToken.get(tree.root);
+								IdExpr tokenId = nodeToToken.get(tree.root);
 								
 								tokenExpr = new BinaryExpr(new IdExpr("token"),
 										BinaryOp.EQUAL, tokenId);
@@ -127,10 +127,10 @@ public final class AffectAtCaptureEquation {
 						
 						Expr premise = new BinaryExpr(new IdExpr(nonMasked),
 								BinaryOp.AND, seqUsedExpr);
-						Expr conclusion2 = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs));
+						Expr conclusion = new UnaryExpr(UnaryOp.PRE, new IdExpr(lhs));
 						
 						Expr expr = new BinaryExpr(premise, BinaryOp.ARROW,
-								new BinaryExpr(premise, BinaryOp.OR, conclusion2));
+								new BinaryExpr(premise, BinaryOp.OR, conclusion));
 						
 						trackAffectPairs(node, father);
 						

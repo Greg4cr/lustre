@@ -46,14 +46,15 @@ public final class ObservabilityObligation {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String at = "_AT_", cov = "_" + coverage.name();
+		String at = "_AT_";
+		String cov = "_" + coverage.name();
 		String observed = "_COMB_OBSERVED";
 		String property = "property";
-//		String property = coverage.name();
 		String token = "token";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};
-		Expr[] nonMaskedExpr = new Expr[2], affectExpr = new Expr[2];
+		Expr[] nonMaskedExpr = new Expr[2];
+		Expr[] affectExpr = new Expr[2];
 		Expr leftOperand, rightOperand;
 		Obligation obligation;
 		String condStr = "";
@@ -70,6 +71,7 @@ public final class ObservabilityObligation {
 			for (String cond : conditions.keySet()) {
 				condStr = cond;
 				int occurence = conditions.get(cond) / 2;
+				
 				for (int i = 0; i < occurence; i++) {
 					if (occurence > 1) {
 						condStr = cond + "_" + i;

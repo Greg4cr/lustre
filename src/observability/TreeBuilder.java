@@ -51,18 +51,18 @@ public class TreeBuilder {
 		return trees;
 	}
 
-	
-	public Map<String, Tree> buildUnreachableTree(List<String> unreachableNodes) {
-		Map<String, Tree> trees = new HashMap<>();
-		
-		for (String strRoot : unreachableNodes) {
-			TreeNode root = new TreeNode(strRoot, ids.get(strRoot).type);
-			buildSubTree(root);
-			trees.put(strRoot, new Tree(root));
-		}
-		
-		return trees;
-	}
+//	
+//	public Map<String, Tree> buildUnreachableTree(List<String> unreachableNodes) {
+//		Map<String, Tree> trees = new HashMap<>();
+//		
+//		for (String strRoot : unreachableNodes) {
+//			TreeNode root = new TreeNode(strRoot, ids.get(strRoot).type);
+//			buildSubTree(root);
+//			trees.put(strRoot, new Tree(root));
+//		}
+//		
+//		return trees;
+//	}
 	
 	public Map<String, Tree> buildDelayTree() {
 		Map<String, Tree> trees = new HashMap<>();
@@ -86,9 +86,10 @@ public class TreeBuilder {
 					// child is not an input/variable/expression
 					if (! nodecalls.containsKey(rawVar)) {
 						continue;
-					} else {
-						child = new TreeNode(arithExprById.get(rawVar), nodecalls.get(rawVar));
 					}
+					
+					child = new TreeNode(arithExprById.get(rawVar), nodecalls.get(rawVar));
+
 				} else {
 					// child is an input/variable/expression
 					child = new TreeNode(rawVar, ids.get(rawVar).type);
@@ -114,6 +115,7 @@ public class TreeBuilder {
 			for (TreeNode subRoot : root.children) {
 				buildSubTree(subRoot);
 			}
+			
 			trees.put(rootStr, new Tree(root));
 		}
 		
@@ -139,9 +141,10 @@ public class TreeBuilder {
 				if (ids.get(rawVar) == null) {
 					if (! nodecalls.containsKey(rawVar)) {
 						continue;
-					} else {
-						child = new TreeNode(rawVar, nodecalls.get(rawVar));
 					}
+					
+					child = new TreeNode(rawVar, nodecalls.get(rawVar));
+
 				} else {
 					child = new TreeNode(rawVar, ids.get(rawVar).type);
 				}

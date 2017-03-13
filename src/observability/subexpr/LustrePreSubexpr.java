@@ -204,38 +204,40 @@ public final class LustrePreSubexpr extends AstMapVisitor {
 	// Get a variable Expr for a sub-expression under PRE
 	private Expr getPreSubexprVar(Expr expr, Type type) {
 		String exprStr = expr.toString();
+		
 		// Get and return the variable if the expression already exists
 		if (this.exprToVarMapping.containsKey(exprStr)) {
 			return this.exprToVarMapping.get(exprStr).exprVar;
-		} else {
-			List<Expr> elements = new ArrayList<Expr>();
+		}
+		
+		List<Expr> elements = new ArrayList<Expr>();
 
-			// Although we do not replace TupleExpr directly, they can appear in
-			// other expressions.
-			if (type instanceof TupleType) {
-				TupleType tupleType = (TupleType) type;
+		// Although we do not replace TupleExpr directly, they can appear in
+		// other expressions.
+		if (type instanceof TupleType) {
+			TupleType tupleType = (TupleType) type;
 
-				// Create the same number of IdExpr for this TupleType
-				for (int i = 0; i < tupleType.types.size(); i++) {
-					elements.add(new IdExpr(getExprId()));
-				}
-			} else {
+			// Create the same number of IdExpr for this TupleType
+			for (int i = 0; i < tupleType.types.size(); i++) {
 				elements.add(new IdExpr(getExprId()));
 			}
-			
-			Expr exprVar = TupleExpr.compress(elements);
-			PreSubExpr preSubExpr = new PreSubExpr(((UnaryExpr)expr).expr, exprVar, type);
-			this.exprToVarMapping.put(exprStr, preSubExpr);
-			this.replacedExprs.add(preSubExpr);
-			return exprVar;
+		} else {
+			elements.add(new IdExpr(getExprId()));
 		}
+		
+		Expr exprVar = TupleExpr.compress(elements);
+		PreSubExpr preSubExpr = new PreSubExpr(((UnaryExpr)expr).expr, exprVar, type);
+		this.exprToVarMapping.put(exprStr, preSubExpr);
+		this.replacedExprs.add(preSubExpr);
+		return exprVar;
 	}
 
 	// Get an unused expression id
 	private String getExprId() {
-		while (this.existingVars.contains("PreVar_" + count)) {
-			count++;
+		while (this.existingVars.contains("PreVar_" + this.count)) {
+			this.count++;
 		}
-		return "PreVar_" + count++;
+		
+		return "PreVar_" + this.count++;
 	}	
 }
