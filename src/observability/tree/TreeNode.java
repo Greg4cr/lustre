@@ -23,7 +23,7 @@ public class TreeNode {
     	setType(type);
     	setRenamedIds(new HashMap<String, Integer>());
     	this.parent = null;
-    	children = new ArrayList<>();
+    	this.children = new ArrayList<>();
     }
     
     public int getNumberOfChildren() {
@@ -69,7 +69,8 @@ public class TreeNode {
     
     public boolean containsChild(String id) {
     	for (TreeNode child : this.children) {
-    		if (id.equals(child.rawId)) {
+    		if (id.equals(child.rawId)
+    				|| child.renamedIds.containsKey(id)) {
     			return true;
     		}
     	}
@@ -97,7 +98,9 @@ public class TreeNode {
     	if (root == null) {
     		return;
     	}
+    	
     	list.add(root);
+    	
     	if (root.children != null) {
 	    	for (TreeNode child : root.children) {
 	    		convertToList(child, list);
@@ -110,7 +113,8 @@ public class TreeNode {
     	convertToList(this, list);
     	
     	for (TreeNode node : list) {
-    		if (node.rawId.equals(id)) {
+    		if ((node.rawId.equals(id))
+    				|| (node.renamedIds.containsKey(id))) {
     			return true;
     		}
     	}
