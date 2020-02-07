@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import coverage.Obligation;
 import jkind.lustre.BinaryExpr;
@@ -14,19 +15,28 @@ import jkind.lustre.IdExpr;
 import observability.tree.Tree;
 import observability.tree.TreeNode;
 
-public class CombObservedEquation {
-	private List<String> deadNodes;
+public final class CombObservedEquation {
+	private final String combObs = "_COMB_OBSERVED";
+	private final String combUsedBy = "_COMB_USED_BY_";
 	private Map<String, Expr> combObservedMap = new HashMap<>();
-//	private Map<String, Map<String, Map<String, Integer>>> observerTable = new HashMap<>();
-	private Map<String, Tree> observerTrees;
-	private List<String> nonCombObservedSeqRoots;
+	
+	private final List<String> unreachableNodes;
+	private final Map<String, Tree> observerTrees;
+	private final Map<String, Tree> delayTrees;
+	private final Set<String> nodecalls;
 	
 	public CombObservedEquation(Map<String, Tree> observerTrees,
-								List<String> nonCombObservedSeqRoots,
-								List<String> deadNodes) {
+								Map<String, Tree> delayTrees,
+								List<String> unreachableNodes,
+								Set<String> nodecalls) {
 		this.observerTrees = observerTrees;
-		this.nonCombObservedSeqRoots = nonCombObservedSeqRoots;
-		this.deadNodes = deadNodes;
+		this.delayTrees = delayTrees;
+		this.unreachableNodes = unreachableNodes;
+		this.nodecalls = nodecalls;
+	}
+		
+	public Set<String> getCombObservedVars() {
+		return this.combObservedMap.keySet();
 	}
 	
 	public List<Obligation> generate() {
@@ -36,24 +46,28 @@ public class CombObservedEquation {
 		for (String rootStr : observerTrees.keySet()) {
 			tree = observerTrees.get(rootStr);
 			
-			if (tree.root.children.isEmpty()) {
-				// single-node
-				genereateForSingleNodes(combObservedMap, deadNodes, tree.root);
-			} else {
-				// for nodes in observer trees
-				generateForTree(combObservedMap, tree.root);
-				
-				if (!this.nonCombObservedSeqRoots.isEmpty()) {
-					genereateForSingleNodes(combObservedMap, this.nonCombObservedSeqRoots, tree.root);
-				}
-				
-				// for dead nodes
-				if (!this.deadNodes.isEmpty()) {
-					genereateForSingleNodes(combObservedMap, this.deadNodes, tree.root);
-				}
-			}
+			generateForTree(this.combObservedMap, tree.root);
 		}
-		obligations.addAll(getObligations(combObservedMap));
+		
+		for (String rootStr : delayTrees.keySet()) {
+			List<String> nodeStr = new ArrayList<>();
+			
+			for (TreeNode node : delayTrees.get(rootStr).convertToList()) {
+				if (nodecalls.contains(node.rawId)) {
+					continue;
+				}
+				nodeStr.add(node.rawId);
+			}
+			
+			genereateForSingleNodes(this.combObservedMap, nodeStr);
+		}
+		
+		// for unreachable nodes
+		if (! unreachableNodes.isEmpty()) {
+			genereateForSingleNodes(this.combObservedMap, unreachableNodes);
+		}
+		
+		obligations.addAll(getObligations(this.combObservedMap));
 		
 		return obligations;
 	}
@@ -70,24 +84,20 @@ public class CombObservedEquation {
 	}
 
 	private void genereateForSingleNodes(Map<String, Expr> map,
-										List<String> nonObservedNodes,
-										TreeNode root) {
-		String combObs = "_COMB_OBSERVED";
-		String lhs;
-		
+										List<String> nonObservedNodes) {
 		for (String node : nonObservedNodes) {
-			lhs = node + combObs;
-
-			if (node.equals(root.rawId)) {
-				map.put(lhs, new BoolExpr(true));
-			} else {
-				map.put(lhs, new BoolExpr(false));
+			if (nodecalls.contains(node)) {
+				continue;
 			}
+			String lhs = node + combObs;
+			if (map.containsKey(lhs)) {
+				continue;
+			}
+			map.put(lhs, new BoolExpr(false));
 		}
 	}
 	
 	private void generateForTree(Map<String, Expr> map, TreeNode root) {
-		String combObs = "_COMB_OBSERVED";
 		String lhs = root.rawId + combObs;
 		// COMB_OBSERVED for root
 		map.put(lhs, new BoolExpr(true));
@@ -98,14 +108,12 @@ public class CombObservedEquation {
 	}
 	
 	private void generateForNode(Map<String, Expr> map, TreeNode node) {
-		if (node == null) {
+		if (node == null || nodecalls.contains(node.rawId)) {
 			return;
 		}
 		
-		String lhs;
-		String combObs = "_COMB_OBSERVED";
-		String combUsedBy = "_COMB_USED_BY_";
-		lhs = node.rawId + combObs;
+		String lhs = node.rawId + combObs;
+				
 		IdExpr opr1 = new IdExpr(node.rawId + combUsedBy + node.parent.rawId);
 		IdExpr opr2 = new IdExpr(node.parent.rawId + combObs);
 		BinaryExpr expr = new BinaryExpr(opr1, BinaryOp.AND, opr2);

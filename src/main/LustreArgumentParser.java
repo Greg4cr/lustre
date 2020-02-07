@@ -24,6 +24,8 @@ public final class LustreArgumentParser {
 	private static final String MEASURE = "measure";
 	private static final String NO_CSE = "no_cse";
 	private static final String NONINLINE = "noninline";
+	// un-inline pre experssions only
+	private static final String NONINLINE_PRE = "noninline_pre";
 
 	private final String name;
 	private final LustreSettings settings;
@@ -59,6 +61,8 @@ public final class LustreArgumentParser {
 		options.addOption(NO_CSE, false,
 				"Disable common subexpression elimination");
 		options.addOption(NONINLINE, false, "Aggressively un-inline the program (equivalent of CSE=0)");
+		
+		options.addOption(NONINLINE_PRE, false, "Aggressively un-inline only the PRE expressions");
 		return options;
 	}
 
@@ -119,6 +123,16 @@ public final class LustreArgumentParser {
 		if (line.hasOption(NO_CSE)) {
 			this.settings.cse = false;
 		}
+		
+		if (line.hasOption(NONINLINE_PRE)) {
+			this.settings.inlinePre = false;
+		}
+		
+		// for test, ying
+		/*if (line.hasOption(NONINLINE)) {
+			this.settings.noninline = true;
+		}*/
+		
 	}
 
 	private void checkSettings() {

@@ -1,3 +1,4 @@
+
 package coverage;
 
 import enums.Coverage;
@@ -6,8 +7,13 @@ import types.ExprTypeVisitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import jkind.lustre.BinaryExpr;
@@ -16,11 +22,14 @@ import jkind.lustre.Equation;
 import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.Node;
+import jkind.lustre.NodeCallExpr;
+import jkind.lustre.Type;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.VarDecl;
 import observability.AffectAtCaptureEquation;
 import observability.CombObservedEquation;
 import observability.DelayVisitor;
+import observability.NodeCallVisitor;
 import observability.ObservabilityObligation;
 import observability.ObserverVisitor;
 import observability.SequentialUsedEquation;
@@ -35,7 +44,7 @@ public final class ObservabilityCoverage {
 	private final ExprTypeVisitor exprTypeVisitor;
 	private final Polarity polarity;
 	private ObservabilityVisitor observabilityVisitor;
-	private int count = 0;
+	private int count;
 	
 	private Map<String, List<String>> delayTable = new HashMap<>();
 	private Map<String, List<String>> observerTable = new HashMap<>();
@@ -43,19 +52,23 @@ public final class ObservabilityCoverage {
 	private Map<String, Map<String, Map<String, Integer>>> observerArithMap = new HashMap<>();
 	/* <lhs_of_equation, <raw_var_in_rhs, <renamed_var, time_seen>>> */
 	private Map<String, Map<String, Map<String, Integer>>> delayArithMap = new HashMap<>();
+	/* <lhs_of_equation, <raw_var_in_rhs, <renamed_var, time_seen>>> */
+	private Map<String, Map<String, Map<String, Integer>>> unreachableArithMap = new HashMap<>();
 	
 	private Map<String, VarDecl> ids = new HashMap<>();
 	private List<VarDecl> decls = new ArrayList<>();
-	private List<String> strIds = new ArrayList<>();
 	private List<String> outputs = new ArrayList<>();
 	private List<String> inputs = new ArrayList<>();
 	
 	private Map<String, Tree> observerTrees = new HashMap<>();
 	private Map<String, Tree> delayTrees = new HashMap<>();
-	private Map<String, Tree> deadNodeTrees = new HashMap<>();
-	private List<String> deadNodes = new ArrayList<>();
+//	private Map<String, Tree> unreachableTrees = new HashMap<>();
+	private List<String> unreachableNodes = new ArrayList<>();
 	private Map<String, Map<String, Integer>> affectAtCaptureTable = new TreeMap<>();
-	private List<String> nonCombObservedSeqRoots = new ArrayList<>();
+	private Set<String> combObservedVars = new HashSet<>();
+	
+	// node calls in a node
+	private Map<String, Type> nodecalls = new HashMap<>();
 	
 	// dynamic tokens
 	private final String prefix = "TOKEN_D";
@@ -88,7 +101,7 @@ public final class ObservabilityCoverage {
 		
 		buildTrees();
 		drawTokenMaps();
-		drawTokenDependantTable();
+		drawTokenDepTable();
 		
 		obligations.addAll(generateCombObervedEquations());
 		obligations.addAll(generateSeqUsedByEquations());
@@ -120,6 +133,7 @@ public final class ObservabilityCoverage {
 			
 			// A = B; or A = (UnaryOp B);
 			if (equation.expr instanceof IdExpr
+					|| equation.expr instanceof NodeCallExpr
 					|| ((equation.expr instanceof UnaryExpr)
 							&& ((UnaryExpr)equation.expr).expr instanceof IdExpr)) {
 				observabilityVisitor.setIsDef(true);
@@ -133,20 +147,20 @@ public final class ObservabilityCoverage {
 			
 			HashMap<String, Expr> map = new HashMap<>();
 			
-			for (Obligation observabilityOb : observabilityObs) {
+			for (Obligation ob : observabilityObs) {				
 				if (polarity.equals(Polarity.TRUE)
-						&& !observabilityOb.expressionPolarity) {
+						&& !ob.expressionPolarity) {
 					continue;
 				}
 				if (polarity.equals(Polarity.FALSE)
-						&& observabilityOb.expressionPolarity) {
+						&& ob.expressionPolarity) {
 					continue;
 				}
 				
-				String lhs = observabilityOb.condition + "_COMB_USED_BY_" + id;
+				String lhs = ob.condition + "_COMB_USED_BY_" + id;
 				count++;
 				
-				Expr expr = observabilityOb.obligation;
+				Expr expr = ob.obligation;
 				
 				if (!map.containsKey(lhs)) {
 					map.put(lhs, expr);
@@ -159,8 +173,6 @@ public final class ObservabilityCoverage {
 			for (String lhs : map.keySet()) {
 				obligations.add(new Obligation(new IdExpr(lhs), true, map.get(lhs)));
 			}
-			
-//			System.out.println(obligations);
 		}
 				
 		return obligations;
@@ -190,6 +202,7 @@ public final class ObservabilityCoverage {
 		
 		for (Equation equation : node.equations) {
 			List<Obligation> obs = equation.expr.accept(coverageVisitor);
+			List<Obligation> updatedObs = new ArrayList<>();
 			
 			String id = null;
 			/* for rename: <renamedId, timeSeen>*/
@@ -206,8 +219,17 @@ public final class ObservabilityCoverage {
 				id += "_" + equation.lhs.get(i);
 			}
 			
-			// count occurrence of each var (ob.condition) in the equation, for renaming
 			for (Obligation ob : obs) {
+				if (ob.condition.toLowerCase().startsWith("token_")) {
+					// skip equations of "token_something"
+					continue;
+				}
+				updatedObs.add(ob);
+			}
+			
+			// count occurrence of each var (ob.condition) in the equation, for renaming
+			for (Obligation ob : updatedObs) {
+				
 				if (conditions.containsKey(ob.condition)) {
 					conditions.put(ob.condition, conditions.get(ob.condition) + 1);
 				} else {
@@ -219,7 +241,7 @@ public final class ObservabilityCoverage {
 			int i;
 			
 			// generate obligations
-			for (Obligation ob : obs) {
+			for (Obligation ob : updatedObs) {
 				i = 0;
 				
 				int occ = conditions.get(ob.condition);
@@ -233,7 +255,6 @@ public final class ObservabilityCoverage {
 					}
 					
 					handledList.put(ob.condition, i);
-					
 					property = property + "_"
 							+ (ob.polarity ? "TRUE" : "FALSE") + "_AT_"
 							+ id + "_" + coverage.name() + "_"
@@ -244,204 +265,215 @@ public final class ObservabilityCoverage {
 			}
 			
 			// populate map
-//			System.out.println(id + " vs " + conditions);
 			affectAtCaptureTable.put(id, conditions);
 		}
-//		System.out.println("\naffectAtCaptureTable ::: \n" + affectAtCaptureTable);
 		
 		return obligations;
 	}
 		
 	// generate COMB_OBSERVED expressions
 	private List<Obligation> generateCombObervedEquations() {
-		CombObservedEquation combObsEquation = new CombObservedEquation(this.observerTrees, 
-												this.nonCombObservedSeqRoots, this.deadNodes);
-		return combObsEquation.generate();
+		CombObservedEquation combObsGenerator = new CombObservedEquation(this.observerTrees, 
+															this.delayTrees,
+															this.unreachableNodes, 
+															this.nodecalls.keySet());
+		List<Obligation> combObsEquations = new ArrayList<>();
+		combObsEquations.addAll(combObsGenerator.generate());
+		
+		this.combObservedVars.addAll(combObsGenerator.getCombObservedVars());
+		
+		return combObsEquations;
+		
 	}
 	
 	// generate SEQ_USED_BY expressions
 	private List<Obligation> generateSeqUsedByEquations() {
-		SequentialUsedEquation delayDepdnEquation = new SequentialUsedEquation(delayTrees);
-		return delayDepdnEquation.generate();
+		return SequentialUsedEquation.generate(this.delayTrees);
 	}
 	
 	// generate TOKEN Actions
 	private List<Obligation> generateTokenActions() {
-		TokenAction tokenAction = new TokenAction(delayTrees, tokenDepTable, 
-											tokenToNode, nodeToToken, tokens);
-		
-		return tokenAction.generate();
+		return TokenAction.generate(this.delayTrees, this.tokenDepTable,
+								this.tokenToNode, this.nodeToToken, this.tokens);
 	}
 	
 	// generate affecting_at_capture expressions
 	private List<Obligation> generateAffectAtCaptureEquations() {
 		AffectAtCaptureEquation affect = new AffectAtCaptureEquation(delayTrees,
-							observerTrees, delayTable, affectAtCaptureTable,
-							coverage, tokenDepTable, nodeToToken);
-		affect.setDeadNodes(deadNodes);
-		affect.setSingleNodeTrees(deadNodeTrees);
+							affectAtCaptureTable,
+							coverage, nodeToToken);
 		
 		List<Obligation> affectObligations = new ArrayList<>();
 		affectObligations.addAll(affect.generate());
 		
 		// get affect pairs for final obligations generation
 		affectPairs = affect.getAffectPairs();
-//		System.out.println("::: AffectPairs :::");
-//		System.out.println(affectPairs);
 		
 		return affectObligations;
 	}
 	
 	// generate observability obligations for each expression
 	private List<Obligation> generateObligations() {
-		ObservabilityObligation obligation = new ObservabilityObligation(affectAtCaptureTable, 
-																affectPairs, coverage);
-		return obligation.generate();
+		return ObservabilityObligation.generate(this.affectAtCaptureTable,
+								this.combObservedVars,
+								this.affectPairs, this.coverage);
 	}
 	
 	/* ******************************************************
 	 * 			utilities
 	 * ****************************************************** 
 	 */
-	
 	private void populateMaps() {
 		populateIds(ids);
-		getStrIds(strIds);
-		getOutputs(outputs);
-		getInputs(inputs);
-		getDecls(decls);
+		getNodeCallList();
+		populateOutputs(outputs);
+		populateInputs(inputs);
+		populateDecls(decls);
 	}
 	
+	private void getNodeCallList() {
+		this.nodecalls.putAll(NodeCallVisitor.get(exprTypeVisitor, node));
+	}
+
 	private void buildTrees() {
-		populateDelayTable(delayTable);
-//		System.out.println("::: delayTable :::");
-//		System.out.println(delayTable);
-		populateObserverTable(observerTable);
-//		System.out.println("::: observerTable :::");
-//		System.out.println(observerTable);
+		populateDelayTable(this.delayTable);
+//		System.out.println("------ delay table\n" + this.delayTable);
+		populateObserverTable(this.observerTable);
+//		System.out.println("------ observer table\n" + this.observerTable);
+		this.unreachableNodes = searchUnreachableNodes();
+//		System.out.println("------ unreachable nodes\n" + this.unreachableNodes);
 		
 		populateArithMaps();
+//		System.out.println("------ delay\n" + this.delayArithMap);
+//		System.out.println("------ observable\n" + this.observerArithMap);
+//		System.out.println("------ unreachable\n" + this.unreachableArithMap);
 		
-		TreeBuilder builder = new TreeBuilder(observerArithMap, delayArithMap,
-				ids, outputs);
+//		System.out.println("------ ids\n" + this.ids);
 		
-		observerTrees = builder.buildObserverTree();
-//		System.out.println("::: observer trees :::");
+		TreeBuilder builder = new TreeBuilder(this.observerArithMap, 
+				this.delayArithMap,
+				Obligation.arithExprById,
+				this.nodecalls, this.ids, this.outputs);
+
+		this.observerTrees = builder.buildObserverTree();
+//		System.out.println("------ observer trees");
 //		for (String root : observerTrees.keySet()) {
-//			System.out.println(observerTrees.get(root).convertToList());
+//			observerTrees.get(root).root.print();
 //		}
 		
-		delayTrees = builder.buildDelayTree();
-//		System.out.println("::: delay trees :::");
+		this.delayTrees = builder.buildDelayTree();
+//		System.out.println("------ delay trees");
 //		for (String root : delayTrees.keySet()) {
-//			System.out.println(delayTrees.get(root).convertToList());
+//			delayTrees.get(root).root.print();
 //		}
 		
-		populateNonCombObservedSeqRoots();
-//		System.out.println("::: non-combObserved sequential roots :::");
-//		System.out.println(this.nonCombObservedSeqRoots);
-		
-		populateDeadNodes(deadNodes);
-		deadNodeTrees = builder.buildDeadRootTree(deadNodes);
-//		System.out.println("::: dead trees :::");
-//		for (String root : deadNodeTrees.keySet()) {
-//			System.out.println(deadNodeTrees.get(root).convertToList());
+//		this.unreachableTrees = builder.buildUnreachableTree(this.unreachableNodes);
+//		System.out.println("------ unreachable trees");
+//		for (String root : unreachableTrees.keySet()) {
+//			unreachableTrees.get(root).root.print();
 //		}
 	}
 	
-	private void populateNonCombObservedSeqRoots() {
-		for (String seqRoot : delayTrees.keySet()) {
+	private List<String> searchUnreachableNodes() {
+		List<String> unreachableNodes = new ArrayList<>();
+		Set<String> visitedNodes = new HashSet<>();
+		Set<String> allNodes = new HashSet<>();
+		
+		Queue<String> traces1 = new LinkedList<>();
+		Stack<String> traces2 = new Stack<>();
+		
+		traces1.addAll(this.outputs);
+		traces2.addAll(this.outputs);
+		
+		allNodes.addAll(this.inputs);
+		allNodes.addAll(this.outputs);
+		
+		while (! traces2.empty()) {
+			String root = traces2.pop();
 			
-			for (String obsRoot : observerTrees.keySet()) {
-				Tree obsTree = observerTrees.get(obsRoot);
+			visitedNodes.add(root);
+			allNodes.add(root);
+			
+			if (observerTable.containsKey(root)) {
+				allNodes.addAll(observerTable.get(root));
 				
-				if (!obsTree.equals(seqRoot) && !obsTree.containsNode(seqRoot)) {
-					this.nonCombObservedSeqRoots.add(seqRoot);
+				for (String step : observerTable.get(root)) {
+					if (! visitedNodes.contains(step)) {
+						traces1.offer(step);
+						traces2.push(step);
+						visitedNodes.add(step);
+					}
 				}
 			}
 		}
 		
-	}
-
-	private void populateDeadNodes(List<String> deadNodes) {
-		List<String> reachedList = new ArrayList<>();
-		
-		for (String used : observerArithMap.keySet()) {
-			reachedList.add(used);
+		while (! traces1.isEmpty()) {
+			String step = traces1.poll();
 			
-			for (String reached : observerArithMap.get(used).keySet()) {
-				reachedList.add(reached);
-			}
-		}
-		
-		for (String used : delayArithMap.keySet()) {
-			reachedList.add(used);
+			allNodes.add(step);
 			
-			for (String reached : delayArithMap.get(used).keySet()) {
-				reachedList.add(reached);
+			if (this.delayTable.containsKey(step)) {
+				allNodes.addAll(delayTable.get(step));
+				
+				for (String node : delayTable.get(step)) {
+					if (! visitedNodes.contains(node)) {
+						traces1.offer(node);
+						visitedNodes.add(node);
+					}
+				}
 			}
 		}
 		
-		for (String used : strIds) {
-			if (inputs.contains(used)) {
-				continue;
-			}
-			if (! reachedList.contains(used)) {
-				deadNodes.add(used);
+		for (String id : allNodes) {
+			if (! visitedNodes.contains(id) && ! id.startsWith("token_")) {
+				unreachableNodes.add(id);
 			}
 		}
+		
+		return unreachableNodes;
 	}
 	
 	private void populateIds(Map<String, VarDecl> ids) {
-		for (VarDecl decl : node.inputs) {
+		for (VarDecl decl : this.node.inputs) {
 			ids.put(decl.id, decl);
 		}
 		
-		for (VarDecl decl : node.outputs) {
+		for (VarDecl decl : this.node.outputs) {
 			ids.put(decl.id, decl);
 		}
 		
-		for (VarDecl decl : node.locals) {
+		for (VarDecl decl : this.node.locals) {
 			ids.put(decl.id, decl);
 		}
 	}
 
-	public void getDecls(List<VarDecl> decls) {
-		decls.addAll(node.inputs);
-		decls.addAll(node.outputs);
-		decls.addAll(node.locals);
-	}
-	
-	public void getStrIds(List<String> strIds) {
-		for (String id : ids.keySet()) {
-			strIds.add(id);
-		}
+	private void populateDecls(List<VarDecl> decls) {
+		decls.addAll(this.node.inputs);
+		decls.addAll(this.node.outputs);
+		decls.addAll(this.node.locals);
 	}
 
-	public void getOutputs(List<String> outputs) {
-		for (VarDecl decl : node.outputs) {
+	private void populateOutputs(List<String> outputs) {
+		for (VarDecl decl : this.node.outputs) {
 			outputs.add(decl.id);
 		}
 	}
 	
-	public void getInputs(List<String> inputs) {
-		for (VarDecl decl : node.inputs) {
+	private void populateInputs(List<String> inputs) {
+		for (VarDecl decl : this.node.inputs) {
 			inputs.add(decl.id);
 		}
 	}
 
 	private void populateDelayTable(Map<String, List<String>> delayTable) {
-		DelayVisitor visitor = new DelayVisitor(exprTypeVisitor);
+		DelayVisitor visitor = new DelayVisitor(this.exprTypeVisitor);
 		
-		for (Equation equation : node.equations) {
-			String rhs = equation.expr.toString();
-//			System.out.println(equation);
+		for (Equation equation : this.node.equations) {
+			String rhs = equation.expr.toString().toLowerCase();
 			
-			if (rhs.contains("pre ") ||
-					rhs.contains("PRE ")) {
+			if (rhs.contains("pre ")) {
 				List<String> list = new ArrayList();
 				list.addAll(equation.expr.accept(visitor));
-//				System.out.println("list >>> " + list);
 				if (list != null && !list.isEmpty()) {
 					delayTable.put(equation.lhs.get(0).id, list);
 				}
@@ -450,31 +482,74 @@ public final class ObservabilityCoverage {
 	}
 	
 	private void populateObserverTable(Map<String, List<String>> observerTable) {
-		ObserverVisitor visitor = new ObserverVisitor(exprTypeVisitor);
+		ObserverVisitor visitor = new ObserverVisitor(this.exprTypeVisitor);
 		
-		for (Equation equation : node.equations) {
+		for (Equation equation : this.node.equations) {
 			observerTable.put(equation.lhs.get(0).id, equation.expr.accept(visitor));
 		}
 	}
 	
-	private Map<String, String> getExprTable() {
-		Map<String, String> exprTable = new HashMap<>();
+	private Map<String, Expr> getExprTable() {
+		Map<String, Expr> exprTable = new HashMap<>();
 		
-		for (Equation equation : node.equations) {
-			exprTable.put(equation.lhs.get(0).id, equation.expr.toString());
+		for (Equation equation : this.node.equations) {
+			exprTable.put(equation.lhs.get(0).id, equation.expr);
 		}
 		
 		return exprTable;
 	}
 	
 	private void populateArithMaps() {
-		Map<String, String> exprTable = getExprTable();
+		Map<String, Expr> exprTable = getExprTable();
 		
-		for (String lhs : observerTable.keySet()) {
+		for (String lhs : this.unreachableNodes) {
 			Map<String, Map<String, Integer>> map = new HashMap<>();
-			String rhs = exprTable.get(lhs);
+			if (! exprTable.containsKey(lhs)) {
+				continue;
+			}
 			
-			for (String id : observerTable.get(lhs)) {
+			String rhs = exprTable.get(lhs).toString();
+			
+			if (this.observerTable.containsKey(lhs)) {
+				for (String id : this.observerTable.get(lhs)) {
+					Map<String, Integer> ariths = new HashMap<>();
+					
+					for (String arithExpr : Obligation.arithExprByExpr.keySet()) {
+						if (rhs.contains(arithExpr) && arithExpr.contains(id)) {
+							String arith = Obligation.arithExprByExpr.get(arithExpr);
+							
+							if (ariths.containsKey(arith)) {
+								ariths.put(arith, ariths.get(arith) + 1);
+							} else {
+								ariths.put(Obligation.arithExprByExpr.get(arithExpr), 1);
+							}
+						}
+					}
+					
+					if (ariths.isEmpty()) {
+						for (String strId : this.observerTable.get(lhs)) {
+							if (! strId.equals(id)) {
+								continue;
+							}
+							if (ariths.containsKey(id)) {
+								ariths.put(id, ariths.get(id) + 1);
+							} else {
+								ariths.put(id, 1);
+							}
+						}
+					}
+					
+					map.put(id, ariths);
+				}
+				this.unreachableArithMap.put(lhs, map);
+			}
+		}		
+		
+		for (String lhs : this.observerTable.keySet()) {
+			Map<String, Map<String, Integer>> map = new HashMap<>();
+			String rhs = exprTable.get(lhs).toString();
+			
+			for (String id : this.observerTable.get(lhs)) {
 				Map<String, Integer> ariths = new HashMap<>();
 				
 				for (String arithExpr : Obligation.arithExprByExpr.keySet()) {
@@ -489,7 +564,7 @@ public final class ObservabilityCoverage {
 				}
 				
 				if (ariths.isEmpty()) {
-					for (String strId : observerTable.get(lhs)) {
+					for (String strId : this.observerTable.get(lhs)) {
 						if (! strId.equals(id)) {
 							continue;
 						}
@@ -504,17 +579,17 @@ public final class ObservabilityCoverage {
 				map.put(id, ariths);
 			}
 						
-			observerArithMap.put(lhs, map);
+			this.observerArithMap.put(lhs, map);
 		}
 		
-		for (String lhs : delayTable.keySet()) {
+		for (String lhs : this.delayTable.keySet()) {
 			Map<String, Map<String, Integer>> map = new HashMap<>();
-			String rhs = exprTable.get(lhs);
+			String rhs = exprTable.get(lhs).toString();
 			
-			for (String id : delayTable.get(lhs)) {
+			for (String id : this.delayTable.get(lhs)) {
 				Map<String, Integer> ariths = new HashMap<>();
 				for (String arithExpr : Obligation.arithExprByExpr.keySet()) {
-					if (rhs.contains(arithExpr) && arithExpr.contains(id)) {
+					if (rhs.contains(arithExpr) && arithExpr.equals(id)) {
 						String arith = Obligation.arithExprByExpr.get(arithExpr);
 						if (ariths.containsKey(arith)) {
 							ariths.put(arith, ariths.get(arith) + 1);
@@ -525,7 +600,7 @@ public final class ObservabilityCoverage {
 				}
 				
 				if (ariths.isEmpty()) {
-					for (String strId : delayTable.get(lhs)) {
+					for (String strId : this.delayTable.get(lhs)) {
 						if (! strId.equals(id)) {
 							continue;
 						}
@@ -538,11 +613,8 @@ public final class ObservabilityCoverage {
 				}
 				map.put(id, ariths);
 			}
-			delayArithMap.put(lhs, map);
+			this.delayArithMap.put(lhs, map);
 		}
-		
-//		System.out.println("::: observer map :::\n" + observerArithMap);
-//		System.out.println("::: delay map :::\n" + delayArithMap);
 	}
 	
 	public int getTokenRange() {
@@ -551,33 +623,31 @@ public final class ObservabilityCoverage {
 	
 	// build token-to-node, node-to-token maps
 	private void drawTokenMaps() {
-		tokens = new IdExpr[delayTrees.size()];
+		this.tokens = new IdExpr[delayTrees.size()];
 		int count = 0;
 		
-		for (String tree : delayTrees.keySet()) {
+		for (String tree : this.delayTrees.keySet()) {
 			tokens[count] = new IdExpr(prefix + (count + 1));
-			TreeNode node = delayTrees.get(tree).root;
-			tokenToNode.put(tokens[count], node);
-			nodeToToken.put(node, tokens[count]);
+			TreeNode node = this.delayTrees.get(tree).root;
+			this.tokenToNode.put(this.tokens[count], node);
+			this.nodeToToken.put(node, this.tokens[count]);
 
 			count++;
 		}
-		
-//		System.out.println("token to node:\n" + tokenToNode);
 	}
 		
-	public void drawTokenDependantTable() {
-		for (TreeNode node : nodeToToken.keySet()) {
+	private void drawTokenDepTable() {
+		for (TreeNode node : this.nodeToToken.keySet()) {
 			List<TreeNode> list = new ArrayList<>();
-			for (String rootStr : delayTrees.keySet()) {
+			for (String rootStr : this.delayTrees.keySet()) {
 				Tree delayTree = delayTrees.get(rootStr);
 				for (TreeNode child : delayTree.root.children) {
 					if (child.containsNode(node.rawId)) {
-						list.add(delayTrees.get(rootStr).root);
+						list.add(this.delayTrees.get(rootStr).root);
 					}
 				}
 			}
-			tokenDepTable.put(node, list);
+			this.tokenDepTable.put(node, list);
 		}
-	} 
+	}
 }

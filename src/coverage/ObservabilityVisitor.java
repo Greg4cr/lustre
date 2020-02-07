@@ -7,14 +7,18 @@ import types.ExprTypeVisitor;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
+import jkind.lustre.Expr;
 import jkind.lustre.IdExpr;
 import jkind.lustre.IfThenElseExpr;
+import jkind.lustre.NamedType;
+import jkind.lustre.NodeCallExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
 /* Generate COMB_USED equations */
-public class ObservabilityVisitor extends ConditionVisitor {
+public final class ObservabilityVisitor extends ConditionVisitor {
 	private boolean isDef = false;
+	private final String prefix = "token_";
 	
 	public ObservabilityVisitor(ExprTypeVisitor exprTypeVisitor) {
 		super(exprTypeVisitor);
@@ -36,9 +40,11 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		if (expr.op.equals(BinaryOp.AND)) {
 			for (Obligation leftOb : leftObs) {
 				if (expr.left instanceof IdExpr 
+						|| expr.left instanceof NodeCallExpr
 						|| (expr.left instanceof UnaryExpr 
 								&& ((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
 					// A and subexpr, or
+					// nodeA_call(args), or
 					// (not A) and subexpr
 					leftOb.obligation = expr.right;
 				} else {
@@ -49,9 +55,11 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			}
 			for (Obligation rightOb : rightObs) {
 				if (expr.right instanceof IdExpr 
+						|| expr.right instanceof NodeCallExpr
 						|| (expr.right instanceof UnaryExpr 
 								&& ((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					// subexpr and A, or
+					// subexpr and nodeA_call(args), or
 					// subexpr and (not A)
 					rightOb.obligation = expr.left;
 				} else {
@@ -66,6 +74,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		else if (expr.op.equals(BinaryOp.OR)) {
 			for (Obligation leftOb : leftObs) {
 				if (expr.left instanceof IdExpr
+						|| expr.left instanceof NodeCallExpr
 						|| (expr.left instanceof UnaryExpr
 								&& ((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
 					// A or subexpr
@@ -79,6 +88,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			}
 			for (Obligation rightOb : rightObs) {
 				if (expr.right instanceof IdExpr
+						|| expr.right instanceof NodeCallExpr
 						|| (expr.right instanceof UnaryExpr
 								&& ((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					// subexpr or A
@@ -125,6 +135,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		else if (expr.op.equals(BinaryOp.IMPLIES)) {
 			for (Obligation leftOb : leftObs) {
 				if (expr.left instanceof IdExpr
+						|| expr.left instanceof NodeCallExpr
 						|| (expr.left instanceof UnaryExpr
 								&& ((UnaryExpr) expr.left).op.equals(UnaryOp.NOT))) {
 					leftOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.right);
@@ -136,6 +147,7 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			
 			for (Obligation rightOb : rightObs) {
 				if (expr.right instanceof IdExpr
+						|| expr.right instanceof NodeCallExpr
 						|| (expr.right instanceof UnaryExpr
 								&& ((UnaryExpr) expr.right).op.equals(UnaryOp.NOT))) {
 					rightOb.obligation = new UnaryExpr(UnaryOp.NOT, expr.left);
@@ -171,13 +183,15 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			}
 			
 			for (Obligation rightOb : rightObs) {
-				if (expr.right instanceof IdExpr) {
+				if (expr.right instanceof IdExpr
+						|| expr.right instanceof NodeCallExpr) {
 					// ... -> A
 					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
 							BinaryOp.ARROW, new BoolExpr(true));
 				} else if (expr.right instanceof UnaryExpr
 						&& ((UnaryExpr)expr.right).op.equals(UnaryOp.NOT)
-						&& ((UnaryExpr)expr.right).expr instanceof IdExpr) {
+						&& (((UnaryExpr)expr.right).expr instanceof IdExpr
+							|| ((UnaryExpr)expr.right).expr instanceof NodeCallExpr)) {
 					// ... -> (not A)
 					rightOb.obligation = new BinaryExpr(new BoolExpr(false),
 							BinaryOp.ARROW, new BoolExpr(true));
@@ -215,8 +229,10 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		if (expr.cond instanceof IdExpr
+				|| expr.cond instanceof NodeCallExpr
 				|| (expr.cond instanceof UnaryExpr
-						&& ((UnaryExpr)expr.cond).expr instanceof IdExpr)) {
+						&& ((((UnaryExpr)expr.cond).expr instanceof IdExpr)
+							|| ((UnaryExpr) expr.cond).expr instanceof NodeCallExpr))) {
 			// if (A) else subexpr, or if (not A) else subexpr
 			setIsDef(true);
 		} else {
@@ -230,7 +246,8 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		List<Obligation> elseObs = expr.elseExpr.accept(this);
 		
 		for (Obligation thenOb : thenObs) {
-			if ((expr.thenExpr instanceof IdExpr)
+			if ((expr.thenExpr instanceof IdExpr
+					|| expr.thenExpr instanceof NodeCallExpr)
 					|| (expr.thenExpr instanceof UnaryExpr
 						&& ((UnaryExpr)expr.thenExpr).op.equals(UnaryOp.NOT)
 						&& ((UnaryExpr)expr.thenExpr).expr instanceof IdExpr)) {
@@ -238,11 +255,11 @@ public class ObservabilityVisitor extends ConditionVisitor {
 			} else {
 				thenOb.obligation = new BinaryExpr(expr.cond, BinaryOp.AND, thenOb.obligation);
 			}
-			
 		}
 		
 		for (Obligation elseOb : elseObs) {
-			if ((expr.elseExpr instanceof IdExpr)
+			if ((expr.elseExpr instanceof IdExpr
+					|| expr.elseExpr instanceof NodeCallExpr)
 					|| (expr.elseExpr instanceof UnaryExpr
 							&& ((UnaryExpr)expr.elseExpr).op.equals(UnaryOp.NOT)
 							&& ((UnaryExpr)expr.elseExpr).expr instanceof IdExpr)) {
@@ -291,7 +308,37 @@ public class ObservabilityVisitor extends ConditionVisitor {
 		} else {
 			obligations.add(new Obligation(expr, true, expr));
 		}
-		
+
 		return obligations;
+	}
+	
+	@Override
+	public List<Obligation> visit(NodeCallExpr expr) {
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		// Add conditions
+		currentObs.addAll(this.addConditions(expr));
+		
+		for (Expr e : expr.args) {
+			if (e.toString().toLowerCase().startsWith(prefix)) {
+				continue;
+			}
+			
+			currentObs.addAll(e.accept(this));
+		}
+
+		return currentObs;
+	}
+	
+	@Override
+	public List<Obligation> addConditions(Expr expr) {
+		List<Obligation> currentObs = new ArrayList<Obligation>();
+
+		// Add conditions for booleans
+		if (expr.accept(this.exprTypeVisitor).equals(NamedType.BOOL)) {
+			currentObs.add(new Obligation(expr, true, expr));
+		}
+
+		return currentObs;
 	}
 }

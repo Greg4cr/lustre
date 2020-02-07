@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import coverage.Obligation;
 import enums.Coverage;
+import enums.TokenState;
 import jkind.lustre.BinaryExpr;
 import jkind.lustre.BinaryOp;
 import jkind.lustre.BoolExpr;
@@ -15,41 +17,61 @@ import jkind.lustre.IdExpr;
 import jkind.lustre.UnaryExpr;
 import jkind.lustre.UnaryOp;
 
-public class ObservabilityObligation {
+public final class ObservabilityObligation {
 	private Map<String, Map<String, Integer>> affectAtCaptureMap;
+	private Set<String> combObservedVars;
 	private Coverage coverage;
 	private Map<String, List<String>> affectPairs = new HashMap<>();
+	private static int count = 0;
 	
-	public ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
+	private ObservabilityObligation(Map<String, Map<String, Integer>> affectAtCaptureMap,
+									Set<String> combObservedVars,
 									Map<String, List<String>> affectPairs,
 									Coverage coverage) {
 		this.affectAtCaptureMap = affectAtCaptureMap;
+		this.combObservedVars = combObservedVars;
 		this.affectPairs = affectPairs;
 		this.coverage = coverage;
 	}
 	
-	public List<Obligation> generate() {
+	public static List<Obligation> generate(Map<String, Map<String, Integer>> affectAtCaptureMap,
+			Set<String> combObservedVars,
+			Map<String, List<String>> affectPairs,
+			Coverage coverage) {
+		return new ObservabilityObligation(affectAtCaptureMap, 
+				combObservedVars, affectPairs, coverage).generate();
+	}
+	
+	private List<Obligation> generate() {
 		List<Obligation> obligations = new ArrayList<>();
 		
 		String affect = "_AFFECTING_AT_CAPTURE";
-		String at = "_AT_", cov = "_" + coverage.name();
+		String at = "_AT_";
+		String cov = "_" + coverage.name();
 		String observed = "_COMB_OBSERVED";
-		int count = 0;
 		String property = "property";
+		String token = "token";
 		IdExpr lhs;
 		String[] vals = {"_TRUE", "_FALSE"};
-		Expr[] nonMaskedExpr = new Expr[2], affectExpr = new Expr[2];
+		Expr[] nonMaskedExpr = new Expr[2];
+		Expr[] affectExpr = new Expr[2];
 		Expr leftOperand, rightOperand;
 		Obligation obligation;
 		String condStr = "";
-		Expr transition = new BinaryExpr(new IdExpr("token"), BinaryOp.EQUAL, 
-				new IdExpr("TOKEN_OUTPUT_STATE"));
+		Expr transition = new BinaryExpr(new IdExpr(token), 
+				BinaryOp.EQUAL, new IdExpr(TokenState.TOKEN_OUTPUT_STATE.name()));
 		
 		for (String key : affectAtCaptureMap.keySet()) {
+			//TODO
+			if (! this.combObservedVars.contains(key + observed)) {
+				continue;
+			}
+			
 			Map<String, Integer> conditions = affectAtCaptureMap.get(key);
 			for (String cond : conditions.keySet()) {
 				condStr = cond;
 				int occurence = conditions.get(cond) / 2;
+				
 				for (int i = 0; i < occurence; i++) {
 					if (occurence > 1) {
 						condStr = cond + "_" + i;
@@ -60,25 +82,13 @@ public class ObservabilityObligation {
 						
 						leftOperand = new BinaryExpr(nonMaskedExpr[j], BinaryOp.AND, 
 												new IdExpr(key + observed));
-						
-//						if (affectPairs.containsKey(condStr)) {
-//							if (affectPairs.get(condStr).contains(key)) {
-//								System.out.println("[v] <" + condStr + ", " + key + ">");
-//							} else {
-//								System.out.println("[-] <" + condStr + ", ***>");
-//							}
-//						} else {
-//							System.out.println("[x] " + condStr);
-//						}
-						
+
 						if (affectPairs.containsKey(condStr)
 								&& affectPairs.get(condStr).contains(key)) {
 							affectExpr[j] = new IdExpr(condStr + vals[j] + at + key + affect);
 						} else {
 							affectExpr[j] = new BoolExpr(false);
 						}
-						
-//						System.out.println("affecting pair:\n\t" + affectExpr[j]);
 						
 						rightOperand = new BinaryExpr(affectExpr[j], BinaryOp.AND,
 												transition);
@@ -88,7 +98,6 @@ public class ObservabilityObligation {
 						obligation = new Obligation(lhs, false, condition);
 						obligations.add(obligation);
 					}
-					
 				}
 			}
 		}

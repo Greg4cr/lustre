@@ -76,7 +76,7 @@ public final class LustreCSE extends AstMapVisitor {
 	/* Alternative constructor used for noninlining. In the noninlined version, 
 	 * we do not perform CSE elimination on pre expressions */
 	private LustreCSE(Program program, int cse, boolean noninline) {
-		if ((cse < 1) || (cse == 0 && !noninline)) {
+		if ((cse < 0) || (cse == 0 && !noninline)) {//TODO
 			throw new IllegalArgumentException("CSE has to be positive.");
 		}
 		this.exprTypeVisitor = new ExprTypeVisitor(program);

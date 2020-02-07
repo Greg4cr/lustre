@@ -18,4 +18,6 @@ public final class LustreSettings {
 
 	public boolean noninline = false;
 	public boolean cse = true;
+	
+	public boolean inlinePre = true;
 }
